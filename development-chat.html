@@ -361,68 +361,119 @@ var HS_URL = "/.netlify/functions/hubspot";
 // WORKFLOW STEPS
 // ─────────────────────────────────────────────
 var STEPS = [
-  // STEP 0 — Category
+  // ══════════════════════════════════════════
+  // ENTRY — Category & Sub-category
+  // ══════════════════════════════════════════
   { id: "category", msg: "Welcome to getkredit.ai. I'll guide you through your development finance application and generate a full indicative term sheet — takes about 5 minutes.<br><br>What type of development are you planning?",
-    chips: ["Residential","Commercial","Mixed Use"], field: "category" },
-  // STEP 1 — Sub-type (dynamic)
+    chips: ["Residential","Commercial","Land Subdivision","Other"], field: "category" },
   { id: "subtype", msg: null, chips: null, field: "subtype", dynamic: true },
-  // STEP 2 — Name
-  { id: "name", msg: "Great choice. Let's start with your details — what's your full name?", field: "name" },
-  // STEP 3 — Email
-  { id: "email", msg: null, field: "email" },  // msg set dynamically with name
-  // STEP 4 — Phone
+
+  // ══════════════════════════════════════════
+  // SCREEN 1 — Tell us about your loan
+  // ══════════════════════════════════════════
+  { id: "address", msg: "Great. First, what's the site address? Start typing and suggestions will appear.", field: "address", addressMode: true },
+  { id: "loanAmount", msg: "How much are you looking to borrow?", field: "loanAmount" },
+  { id: "loanTerm", msg: "What loan term are you looking for?",
+    chips: ["12 months","18 months","24 months","36 months"], field: "loanTerm" },
+
+  // ══════════════════════════════════════════
+  // SCREEN 2 — Tell us about yourself
+  // ══════════════════════════════════════════
+  { id: "borrowerType", msg: "What type of borrowing entity?",
+    chips: ["Individual","Company","Trust","SMSF"], field: "borrowerType" },
+  { id: "name", msg: "What's your full name?", field: "name" },
+  { id: "email", msg: null, field: "email", dynamic: true },
   { id: "phone", msg: "And your best phone number?", field: "phone" },
-  // STEP 5 — Address
-  { id: "address", msg: "Now, what's the site address? Start typing and suggestions will appear.", field: "address", addressMode: true },
-  // STEP 6 — DA Status
-  { id: "daStatus", msg: "What's the current planning approval status?",
-    chips: ["DA Approved","DA Lodged / Pending","No DA yet","CDC (Complying Development)"], field: "daStatus" },
-  // STEP 7 — Units
-  { id: "units", msg: null, field: "units", dynamic: true },
-  // STEP 8 — Avg price
-  { id: "avgPrice", msg: null, field: "avgPrice", dynamic: true },
-  // STEP 9 — Land purchase price
-  { id: "landCost", msg: "What did you pay for the land — or what's the current contract price?", field: "landCost" },
-  // STEP 10 — Current land value
-  { id: "landValue", msg: "And what's the land worth today — do you have a recent valuation or estimate?", field: "landValue" },
-  // STEP 11 — Existing debt
-  { id: "existingDebt", msg: "Is there any existing debt on the land — mortgage or other finance?",
-    chips: ["Yes","No existing debt"], field: "existingDebt" },
-  // STEP 11b — Debt amount (conditional)
-  { id: "debtAmount", msg: "What's the current balance owing?", field: "debtAmount", conditional: true },
-  // STEP 12 — Construction cost
-  { id: "constCost", msg: "What's the construction contract value — or your best estimate if you don't have a fixed-price contract yet?", field: "constCost" },
-  // STEP 13 — Land settlement timing
-  { id: "settleDays", msg: "When do you want to settle on the land?",
+  { id: "employmentType", msg: "What's your employment type?",
+    chips: ["PAYG","Self Employed"], field: "employmentType" },
+  { id: "occupation", msg: "What's your occupation?", field: "occupation" },
+  { id: "income", msg: null, field: "income", dynamic: true },
+  { id: "devExperience", msg: "Do you have any previous development experience?",
+    chips: ["Yes","No — first project"], field: "devExperience" },
+  { id: "personalGuarantee", msg: "Are you happy to provide a personal guarantee?",
+    chips: ["Yes","No"], field: "personalGuarantee" },
+  { id: "cleanCredit", msg: "Do you have a clean credit record?",
+    chips: ["Yes","No"], field: "cleanCredit" },
+
+  // ══════════════════════════════════════════
+  // SCREEN 3 — Project timeline detail
+  // ══════════════════════════════════════════
+  { id: "settleDays", msg: "Now let's talk about your project's timeline. When do you want to settle on the land?",
     chips: ["Already settled","1 month","2 months","3 months"], field: "settleDays" },
-  // STEP 14 — Pre-construction lead
   { id: "preConst", msg: "How long after settlement before construction starts?",
     chips: ["Immediately","1 month","2 months","3 months"], field: "preConst" },
-  // STEP 15 — Construction duration
   { id: "constTerm", msg: "How long is the construction program?",
     chips: ["12 months","15 months","18 months","24 months"], field: "constTerm" },
-  // STEP 16 — Post-construction sales
   { id: "salesPeriod", msg: "How many months after construction should we allow for sales and settlement?",
     chips: ["2 months","3 months","4 months","6 months"], field: "salesPeriod" },
-  // STEP 17 — Professional fees
-  { id: "profFees", msg: "Now let's cover your other project costs. What are the professional fees — architect, engineers, quantity surveyor, project management?", field: "profFees" },
-  // STEP 18 — Holding costs
-  { id: "holdingCosts", msg: "Holding costs during construction — council rates, land tax, insurance?", field: "holdingCosts" },
-  // STEP 19 — Marketing
-  { id: "marketingCosts", msg: "Marketing and sales agent costs?", field: "marketingCosts" },
-  // STEP 20 — Contingency
-  { id: "contingency", msg: "And your contingency allowance?", field: "contingency" },
-  // STEP 21 — How much borrowing
-  { id: "borrowAmount", msg: "How much are you looking to borrow — or would you like us to calculate the maximum available facility?",
-    chips: ["I have a figure in mind","Calculate maximum for me"], field: "borrowAmount" },
-  // STEP 21b — Specific borrow amount (conditional)
-  { id: "borrowFigure", msg: "What amount are you looking to borrow?", field: "borrowFigure", conditional: true },
-  // STEP 22 — Presales
+
+  // ══════════════════════════════════════════
+  // SCREEN 4 — Revenue
+  // ══════════════════════════════════════════
+  { id: "units", msg: null, field: "units", dynamic: true },
+  { id: "avgPrice", msg: null, field: "avgPrice", dynamic: true },
+  { id: "useAdvancedGRV", msg: "Would you like to do a detailed unit-by-unit breakdown of your project revenue? This gives a more accurate feasibility.",
+    chips: ["Yes — detailed breakdown","No — keep it simple"], field: "useAdvancedGRV" },
+  // Advanced GRV would be a table UI — for now we collect basic, advanced is Phase 2
+
+  // ══════════════════════════════════════════
+  // SCREEN 4.2/4.3 — Presales
+  // ══════════════════════════════════════════
   { id: "hasPresales", msg: "Do you have any unconditional presales in place?",
     chips: ["Yes","No presales yet"], field: "hasPresales" },
-  // STEP 22b — Presales value (conditional)
   { id: "presalesValue", msg: "What's the total value of your unconditional presales?", field: "presalesValue", conditional: true },
-  // STEP 23 — Confirm (handled by Claude)
+
+  // ══════════════════════════════════════════
+  // SCREEN 5 — Site details
+  // ══════════════════════════════════════════
+  { id: "landCost", msg: "Now let's talk about the site. How much did you pay for the property — or what's the contract price?", field: "landCost" },
+  { id: "settlementDate", msg: "When did you settle, or when will you settle on the property?",
+    chips: ["Already settled","Within 1 month","Within 3 months","Within 6 months"], field: "settlementDate" },
+  { id: "hasDA", msg: "Have you achieved Development Approval?",
+    chips: ["Yes — DA approved","No — not yet","CDC (Complying Development)"], field: "hasDA" },
+  { id: "daValue", msg: "What is the expected DA value?", field: "daValue", conditional: true },
+  { id: "landValue", msg: "And what's the land worth today — do you have a recent valuation or estimate?", field: "landValue" },
+  { id: "existingDebt", msg: "Is there any existing debt on the land — mortgage or other finance?",
+    chips: ["Yes","No existing debt"], field: "existingDebt" },
+  { id: "debtAmount", msg: "What's the current balance owing?", field: "debtAmount", conditional: true },
+
+  // ══════════════════════════════════════════
+  // SCREEN 6 — Project costs
+  // ══════════════════════════════════════════
+  { id: "costLand", msg: "Now let's talk about the project costs. All figures should be exclusive of GST.<br><br>First, confirm the land cost (this has been pre-filled from your earlier answer).", field: "costLand" },
+  { id: "costAcquisition", msg: "Acquisition costs — stamp duty, legals, due diligence?", field: "costAcquisition" },
+  { id: "costBuildContract", msg: "Build contract value (ex GST)?", field: "costBuildContract" },
+  { id: "costCivilContract", msg: "Civil contract — site works, earthworks, services? Enter $0 if included in the build contract.", field: "costCivilContract" },
+  { id: "costContingency", msg: "Contingency allowance? You can enter a dollar amount or a percentage of construction (e.g. 5%).", field: "costContingency" },
+  { id: "costProfFees", msg: "Professional fees — architect, engineers, quantity surveyor, project management?", field: "costProfFees" },
+  { id: "costCouncil", msg: "Council contributions — s7.11, s7.12, infrastructure levies?", field: "costCouncil" },
+  { id: "costProjectMgmt", msg: "Project management fee? Enter $0 if included in professional fees.", field: "costProjectMgmt" },
+  { id: "costMarketing", msg: "Marketing and sales agent costs?", field: "costMarketing" },
+  { id: "costGST", msg: "GST facility required? Enter $0 if not applicable.", field: "costGST" },
+  { id: "costOther", msg: "Any other project costs not covered above? Enter $0 if none.", field: "costOther" },
+  { id: "costNotes", msg: "Any comments or notes on the project costs? Type 'none' to skip.", field: "costNotes" },
+
+  // ══════════════════════════════════════════
+  // SCREEN 7 — Feasibility output (auto)
+  // ══════════════════════════════════════════
+  // This is handled by updatePanel — no step needed, metrics show live
+
+  // ══════════════════════════════════════════
+  // SCREEN 8 — Project description + owner builder
+  // ══════════════════════════════════════════
+  { id: "ownerBuilder", msg: "Are you an owner builder — i.e. no licensed builder contract?",
+    chips: ["Yes — owner builder","No — licensed builder"], field: "ownerBuilder" },
+  { id: "landArea", msg: "What is the total land area of the site in square metres?", field: "landArea" },
+
+  // ══════════════════════════════════════════
+  // DOCUMENT CHECKLIST
+  // ══════════════════════════════════════════
+  { id: "docsAvailable", msg: "Last step — please confirm which documents you can provide:<br><br>• Feasibility Report<br>• Contract of Sale (Site Purchase)<br>• Pre-Sale Contracts<br>• Copy of Build/Civil Contract<br>• Taxation Returns<br><br>Can you provide these?",
+    chips: ["Yes — all available","Some available","Not yet — still preparing"], field: "docsAvailable" },
+
+  // ══════════════════════════════════════════
+  // CONFIRM — Claude summary
+  // ══════════════════════════════════════════
   { id: "confirm", msg: null, field: null, useClaude: true }
 ];
 
@@ -446,15 +497,20 @@ function runCalc(d) {
   function num(v) { return typeof v === "number" ? v : parseFloat(v) || 0; }
   var units = num(d.units);
   var avgPrice = num(d.avgPrice);
-  var landCost = num(d.landCost);
-  var constCost = num(d.constCost);
-  var profFees = num(d.profFees);
-  var holdingCosts = num(d.holdingCosts);
-  var marketingCosts = num(d.marketingCosts);
-  var contingency = num(d.contingency);
-  var otherCosts = profFees + holdingCosts + marketingCosts + contingency;
-  var loanAmount = num(d.borrowFigure);
-  var loanTerm = num(d.totalLoanTerm) || 18;
+  var landCost = num(d.costLand) || num(d.landCost);
+  var constCost = num(d.costBuildContract);
+  var civilCost = num(d.costCivilContract);
+  var profFees = num(d.costProfFees);
+  var councilContribs = num(d.costCouncil);
+  var projectMgmt = num(d.costProjectMgmt);
+  var marketingCosts = num(d.costMarketing);
+  var contingency = num(d.costContingency);
+  var gstFacility = num(d.costGST);
+  var acquisitionCosts = num(d.costAcquisition);
+  var otherCosts = num(d.costOther);
+  var allProjectCosts = constCost + civilCost + profFees + councilContribs + projectMgmt + marketingCosts + contingency + gstFacility + otherCosts;
+  var loanAmount = num(d.loanAmount);
+  var loanTerm = num(d.totalLoanTerm) || num(d.loanTerm) || 18;
   var constTerm = num(d.constTerm) || loanTerm;
   var presales = num(d.presalesValue);
   var existingDebt = num(d.debtAmount);
@@ -469,7 +525,8 @@ function runCalc(d) {
   var netSalesRev = grv - sellingCosts;
   var nrv = netSalesRev - gst;
 
-  var totalPreFin = landCost + constCost + otherCosts;
+  var totalLandAcq = landCost + acquisitionCosts;
+  var totalPreFin = totalLandAcq + allProjectCosts;
 
   var bankPct = totalPreFin > 0 ? Math.max(0, (totalPreFin - landCost) / totalPreFin) : 0.65;
   var bankBase = totalPreFin * bankPct;
@@ -521,8 +578,11 @@ function runCalc(d) {
 
   return {
     grv: grv, gst: gst, sellingCosts: sellingCosts, nrv: nrv,
-    landCost: landCost, constCost: constCost, otherCosts: otherCosts,
-    profFees: profFees, holdingCosts: holdingCosts, marketingCosts: marketingCosts, contingency: contingency,
+    landCost: landCost, constCost: constCost, civilCost: civilCost,
+    profFees: profFees, councilContribs: councilContribs, projectMgmt: projectMgmt,
+    marketingCosts: marketingCosts, contingency: contingency, gstFacility: gstFacility,
+    acquisitionCosts: acquisitionCosts, otherCosts: otherCosts,
+    totalLandAcq: totalLandAcq, allProjectCosts: allProjectCosts,
     totalPreFin: totalPreFin, interest: interest, lineFee: lineFee, appFee: appFee,
     tdc: tdc, facility: facility, equity: equity, profit: profit, existingDebt: existingDebt,
     lvr: lvr, ltc: ltc, poc: poc, debtCover: debtCover, devIRR: devIRR,
@@ -636,16 +696,12 @@ function parseUnits(text) {
 // STEP ENGINE
 // ─────────────────────────────────────────────
 function getCurrentStep() {
-  // Skip conditional steps if not needed
   while (S.step < STEPS.length) {
     var step = STEPS[S.step];
     if (step.conditional) {
-      // debtAmount — only if existingDebt is "Yes"
       if (step.id === "debtAmount" && S.data.existingDebt !== "Yes") { S.step++; continue; }
-      // borrowFigure — only if borrowAmount is "I have a figure in mind"
-      if (step.id === "borrowFigure" && S.data.borrowAmount !== "I have a figure in mind") { S.step++; continue; }
-      // presalesValue — only if hasPresales is "Yes"
       if (step.id === "presalesValue" && S.data.hasPresales !== "Yes") { S.step++; continue; }
+      if (step.id === "daValue" && S.data.hasDA !== "Yes — DA approved") { S.step++; continue; }
     }
     return step;
   }
@@ -656,57 +712,76 @@ function showStep() {
   var step = getCurrentStep();
   if (!step) return;
 
-  // Handle dynamic messages
   var msg = step.msg;
   var chips = step.chips;
 
+  // ── DYNAMIC MESSAGES ──
+
+  // Sub-type depends on category
   if (step.id === "subtype") {
     if (S.data.category === "Residential") {
       msg = "What type of residential development?";
-      chips = ["Houses / Land Lots","Duplex / Dual Occ","Townhouses","Apartments / Units"];
+      chips = ["Duplex","Townhouses","Villas","Apartments","House & Land","Other"];
     } else if (S.data.category === "Commercial") {
       msg = "What type of commercial development?";
-      chips = ["Retail","Office","Industrial","Hotel / Hospitality"];
-    } else {
-      msg = "Let's start with the residential component — what type?";
-      chips = ["Houses / Land Lots","Duplex / Dual Occ","Townhouses","Apartments / Units"];
+      chips = ["Building","Strata Unit"];
+    } else if (S.data.category === "Land Subdivision") {
+      msg = "What type of land subdivision?";
+      chips = ["Residential Lots","House & Land","Retail","Office","Industrial"];
+    } else if (S.data.category === "Other") {
+      msg = "What type of development?";
+      chips = ["Childcare","Medical Centre","Nursing Home","Pubs/Clubs","Service Station","Other"];
     }
   }
 
+  // Email — personalised
   if (step.id === "email") {
     msg = "Thanks " + (S.data.name || "") + ". What's your email address?";
   }
 
-  if (step.id === "units") {
-    var plurals = {
-      "Houses / Land Lots": "houses",
-      "Duplex / Dual Occ": "duplexes",
-      "Townhouses": "townhouses",
-      "Villas": "villas",
-      "Apartments / Units": "apartments",
-      "Retail": "retail units",
-      "Office": "office units",
-      "Industrial": "industrial units",
-      "Hotel / Hospitality": "rooms"
-    };
-    var typeLabel = plurals[S.data.subtype] || (S.data.subtype || "units").toLowerCase();
-    msg = "How many " + typeLabel + " are you planning?";
+  // Income — label depends on employment type
+  if (step.id === "income") {
+    if (S.data.employmentType === "PAYG") {
+      msg = "What is your annual wage or salary?";
+    } else {
+      msg = "What is your annual income — wage or business profit?";
+    }
   }
 
+  // Units — plural labels
+  if (step.id === "units") {
+    var plurals = {
+      "Duplex": "duplexes", "Townhouses": "townhouses", "Villas": "villas",
+      "Apartments": "apartments", "House & Land": "house & land lots",
+      "Building": "suites", "Strata Unit": "strata units",
+      "Residential Lots": "residential lots", "Retail": "retail lots",
+      "Office": "office lots", "Industrial": "industrial lots",
+      "Childcare": "childcare centres", "Medical Centre": "medical suites",
+      "Nursing Home": "nursing home beds", "Pubs/Clubs": "venues",
+      "Service Station": "service stations", "Other": "units"
+    };
+    var typeLabel = plurals[S.data.subtype] || "units";
+    msg = "Now let's talk about your project's revenue. How many " + typeLabel + " are you planning?";
+  }
+
+  // Avg price — singular labels
   if (step.id === "avgPrice") {
     var singulars = {
-      "Houses / Land Lots": "house",
-      "Duplex / Dual Occ": "duplex",
-      "Townhouses": "townhouse",
-      "Villas": "villa",
-      "Apartments / Units": "apartment",
-      "Retail": "retail unit",
-      "Office": "office unit",
-      "Industrial": "industrial unit",
-      "Hotel / Hospitality": "room"
+      "Duplex": "duplex", "Townhouses": "townhouse", "Villas": "villa",
+      "Apartments": "apartment", "House & Land": "house & land lot",
+      "Building": "suite", "Strata Unit": "strata unit",
+      "Residential Lots": "lot", "Retail": "retail lot",
+      "Office": "office lot", "Industrial": "industrial lot",
+      "Childcare": "centre", "Medical Centre": "suite",
+      "Other": "unit"
     };
-    var typeLabel2 = singulars[S.data.subtype] || (S.data.subtype || "unit").toLowerCase();
+    var typeLabel2 = singulars[S.data.subtype] || "unit";
     msg = "What's the expected average sale price per " + typeLabel2 + "?";
+  }
+
+  // Cost land — pre-fill hint
+  if (step.id === "costLand" && S.data.landCost) {
+    msg = "Now let's talk about the project costs. All figures should be exclusive of GST.<br><br>You mentioned the land cost is " + fd(S.data.landCost) + " — confirm or update this figure.";
   }
 
   // Set address mode
@@ -714,7 +789,7 @@ function showStep() {
 
   // Auto-trigger the Claude confirm step
   if (step.useClaude) {
-    updatePanel(); // ensure calc is fresh
+    updatePanel();
     S.busy = true;
     document.getElementById("send-btn").disabled = true;
     showTyping();
@@ -728,7 +803,9 @@ function showStep() {
 }
 
 // Dollar amount fields that need validation
-var DOLLAR_FIELDS = ["avgPrice","landCost","landValue","debtAmount","constCost","profFees","holdingCosts","marketingCosts","contingency","borrowFigure","presalesValue"];
+var DOLLAR_FIELDS = ["avgPrice","loanAmount","landCost","landValue","debtAmount","daValue","income",
+  "costLand","costAcquisition","costBuildContract","costCivilContract","costContingency",
+  "costProfFees","costCouncil","costProjectMgmt","costMarketing","costGST","costOther","presalesValue"];
 
 // Validation: check if value is a valid email
 function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
@@ -780,26 +857,36 @@ function handleStepInput(text) {
       break;
 
     case "avgPrice":
+    case "loanAmount":
     case "landCost":
     case "landValue":
     case "debtAmount":
-    case "constCost":
-    case "profFees":
-    case "holdingCosts":
-    case "marketingCosts":
-    case "contingency":
-    case "borrowFigure":
+    case "daValue":
+    case "income":
+    case "costLand":
+    case "costAcquisition":
+    case "costBuildContract":
+    case "costCivilContract":
+    case "costContingency":
+    case "costProfFees":
+    case "costCouncil":
+    case "costProjectMgmt":
+    case "costMarketing":
+    case "costGST":
+    case "costOther":
     case "presalesValue":
       // Check for percentage (contingency often entered as %)
       var pct = parsePercentage(value);
-      if (pct !== null && field === "contingency" && S.data.constCost) {
-        S.data[field] = Math.round(S.data.constCost * pct / 100);
+      if (pct !== null && field === "costContingency" && S.data.costBuildContract) {
+        S.data[field] = Math.round(S.data.costBuildContract * pct / 100);
         confirmMsg = "Got it — " + pct + "% of construction = " + fd(S.data[field]) + ".";
         break;
       }
       var dv = parseDollars(value);
-      if (dv === null || typeof dv !== "number" || dv <= 0) {
-        addMsg("ai", "That doesn't look right — could you enter a dollar amount? For example, $2.4m or $500,000.");
+      // Allow $0 for optional cost fields
+      var allowZero = ["costCivilContract","costCouncil","costProjectMgmt","costGST","costOther","costAcquisition"].indexOf(field) >= 0;
+      if (dv === null || typeof dv !== "number" || (dv < 0) || (dv === 0 && !allowZero)) {
+        addMsg("ai", "That doesn't look right — could you enter a dollar amount? For example, $2.4m or $500,000." + (allowZero ? " Enter $0 if not applicable." : ""));
         S.busy = false;
         document.getElementById("send-btn").disabled = false;
         return;
@@ -841,6 +928,12 @@ function handleStepInput(text) {
     S.data.totalLoanTerm = settle + pre + cterm + sales;
   }
 
+  // Also parse loanTerm from Screen 1 if it's a chip value
+  if (field === "loanTerm") {
+    var ltm = parseMonths(value);
+    if (ltm !== null) S.data.loanTerm = ltm;
+  }
+
   // ── UPDATE PANEL (every step) ──
   updatePanel();
 
@@ -855,10 +948,18 @@ function handleStepInput(text) {
   S.busy = false;
   document.getElementById("send-btn").disabled = false;
 
+  // Special insight for no presales
+  if (field === "hasPresales" && value === "No presales yet") {
+    setTimeout(function() {
+      addMsg("ai", "Noted — no presales at this stage. That's fine, plenty of lenders fund without presales. Just be aware that without presales, lenders typically impose higher interest rates (usually 0.5–1.5% above standard), may restrict the LVR to 60–65%, and often require sales milestones during construction as a condition of the facility. We'll factor that into the lender matching.");
+      setTimeout(function() { showStep(); }, 600);
+    }, 300);
+    return;
+  }
+
   // Show confirmation + next question with slight delay
   setTimeout(function() {
     if (confirmMsg) {
-      // Show confirmation, then next question after brief pause
       addMsg("ai", confirmMsg);
       setTimeout(function() { showStep(); }, 400);
     } else {
@@ -885,8 +986,9 @@ async function handleClaudeStep(text) {
         lendersMatched: matchLenders(r.lvr, r.ltc, r.poc).length + " of " + PANEL.length
       }, null, 2) + "\n\n" : "")
     + "TASK: Provide a professional summary of the deal. Confirm every key number. Highlight any concerns (LVR over 65%, profit on cost below 18%, presales coverage below 100%). "
+    + "If there are no presales, DO NOT treat it as a dealbreaker. Instead explain that many lenders fund without presales but typically charge higher rates (0.5-1.5% premium), may restrict LVR to 60-65%, and often require sales milestones during construction as conditions of the facility. "
     + "Tell them the feasibility is live in the panel on the right and they can click 'View Term Sheet' to generate the full document. "
-    + "Keep it to 3-4 sentences. Speak like a senior Australian finance professional — warm, precise, confident. No bullet points.";
+    + "Keep it to 4-5 sentences. Speak like a senior Australian finance professional — warm, precise, confident. No bullet points.";
 
   S.history = [{ role: "user", content: "Please summarise my development finance application and the feasibility results." }];
 
@@ -1009,13 +1111,13 @@ document.addEventListener("click", function(e) {
 // ─────────────────────────────────────────────
 // Map panel IDs to step indices
 var PANEL_TO_STEP = {
-  "p-name": 2, "p-email": 3, "p-phone": 4,
-  "p-address": 5, "p-da": 6,
-  "p-units": 7, "p-avgprice": 8,
-  "p-land": 9, "p-landval": 10, "p-debt": 11,
-  "p-const": 13,
-  "p-proffees": 17, "p-holding": 18, "p-marketing": 19, "p-contingency": 20,
-  "p-presales": 22
+  "p-name": 6, "p-email": 7, "p-phone": 8,
+  "p-address": 2, "p-da": 31,
+  "p-units": 22, "p-avgprice": 23,
+  "p-land": 28, "p-landval": 34, "p-debt": 35,
+  "p-const": 44,
+  "p-proffees": 47, "p-marketing": 50, "p-contingency": 46,
+  "p-presales": 25
 };
 
 function goBackTo(panelId) {
@@ -1103,7 +1205,7 @@ function updatePanel() {
   }
 
   // DA
-  if (d.daStatus) { set("p-da", d.daStatus); tick("pg2b"); }
+  if (d.hasDA) { set("p-da", d.hasDA); tick("pg2b"); }
 
   // Revenue
   if (d.units) set("p-units", d.units + " units");
@@ -1121,23 +1223,24 @@ function updatePanel() {
   if (d.landCost) tick("pg4");
 
   // Construction
-  if (d.constCost) { set("p-const", fd(d.constCost)); tick("pg5"); }
+  if (d.costBuildContract) { set("p-const", fd(d.costBuildContract)); tick("pg5"); }
 
   // Timeline
   if (d.totalLoanTerm) {
     set("p-term", d.totalLoanTerm + " months");
     tick("pg6");
+  } else if (d.loanTerm) {
+    set("p-term", d.loanTerm + " months");
   }
 
   // Costs
-  if (d.profFees) set("p-proffees", fd(d.profFees));
-  if (d.holdingCosts) set("p-holding", fd(d.holdingCosts));
-  if (d.marketingCosts) set("p-marketing", fd(d.marketingCosts));
-  if (d.contingency) set("p-contingency", fd(d.contingency));
-  if (d.profFees || d.holdingCosts || d.marketingCosts || d.contingency) tick("pg7");
+  if (d.costProfFees) set("p-proffees", fd(d.costProfFees));
+  if (d.costMarketing) set("p-marketing", fd(d.costMarketing));
+  if (d.costContingency) set("p-contingency", fd(d.costContingency));
+  if (d.costProfFees || d.costMarketing || d.costContingency || d.costBuildContract) tick("pg7");
 
   // Funding
-  if (d.borrowAmount || d.borrowFigure) tick("pg8");
+  if (d.loanAmount) tick("pg8");
 
   // Presales
   if (d.hasPresales !== undefined) {
@@ -1154,11 +1257,11 @@ function updatePanel() {
   }).length;
   document.getElementById("prog-fill").style.width = (done / pgKeys.length * 100) + "%";
 
-  // Run calc if enough data — coerce to numbers first
+  // Run calc if enough data
   var numUnits = typeof d.units === "number" ? d.units : parseInt(d.units) || 0;
   var numAvgPrice = typeof d.avgPrice === "number" ? d.avgPrice : parseFloat(d.avgPrice) || 0;
-  var numLandCost = typeof d.landCost === "number" ? d.landCost : parseFloat(d.landCost) || 0;
-  var numConstCost = typeof d.constCost === "number" ? d.constCost : parseFloat(d.constCost) || 0;
+  var numLandCost = typeof d.landCost === "number" ? d.landCost : (typeof d.costLand === "number" ? d.costLand : 0);
+  var numConstCost = typeof d.costBuildContract === "number" ? d.costBuildContract : 0;
 
   var canCalc = numUnits > 0 && numAvgPrice > 0 && (numLandCost > 0 || numConstCost > 0);
   console.log("canCalc:", canCalc, "units:", numUnits, "avgPrice:", numAvgPrice, "land:", numLandCost, "const:", numConstCost);
@@ -1291,7 +1394,7 @@ function showTermSheet() {
 
   document.getElementById("ts-presales").textContent = d.presalesValue
     ? fd(d.presalesValue) + " gross / " + fp(r.debtCover) + " cover " + (r.flags.dcOk ? "✓" : "⚠")
-    : "No presales — required prior to first drawdown";
+    : "No presales — lender may impose higher rate, LVR restrictions, and sales milestones";
 
   document.getElementById("ts-irr").textContent = r.devIRR > 0 ? fp(r.devIRR) : "—";
 
