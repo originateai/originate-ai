@@ -594,13 +594,16 @@ function parseDollars(text) {
   // $2.4m, $2.4 million, 2.4m, $500,000, $500000
   var m = text.match(/\$?\s*(\d+(?:\.\d+)?)\s*(?:m(?:illion)?|mil)\b/i);
   if (m) return parseFloat(m[1]) * 1e6;
+  // $k shorthand — $500k, 500k
+  var k = text.match(/\$?\s*(\d+(?:\.\d+)?)\s*k\b/i);
+  if (k) return parseFloat(k[1]) * 1e3;
   var d = text.match(/\$\s*([\d,]+(?:\.\d+)?)/);
   if (d) return parseFloat(d[1].replace(/,/g, ""));
-  // plain number over 1000
+  // plain number — any size (user might type 50000 or 500000)
   var n = text.match(/^[\s]*(\d[\d,]*(?:\.\d+)?)[\s]*$/);
   if (n) {
     var v = parseFloat(n[1].replace(/,/g, ""));
-    if (v > 1000) return v;
+    if (v > 0) return v;
   }
   return null;
 }
@@ -677,6 +680,16 @@ function showStep() {
 
   // Set address mode
   S.addressMode = !!step.addressMode;
+
+  // Auto-trigger the Claude confirm step
+  if (step.useClaude) {
+    updatePanel(); // ensure calc is fresh
+    S.busy = true;
+    document.getElementById("send-btn").disabled = true;
+    showTyping();
+    handleClaudeStep("");
+    return;
+  }
 
   if (msg) {
     addMsg("ai", msg, chips);
@@ -761,11 +774,12 @@ function handleStepInput(text) {
 }
 
 async function handleClaudeStep(text) {
-  showTyping();
-
   // Build summary for Claude
   var summary = buildSummary();
   var r = S.calcResult;
+
+  console.log("Running Claude confirm step. Data:", JSON.stringify(S.data));
+  console.log("Calc result:", r ? "yes" : "no");
 
   var systemPrompt = "You are a senior commercial real estate finance originator at Originate.ai, Australia's leading AI-powered lending platform.\n\n"
     + "The user has just completed a development finance questionnaire. Here is all the data collected:\n\n"
@@ -783,12 +797,15 @@ async function handleClaudeStep(text) {
   S.history = [{ role: "user", content: "Please summarise my development finance application and the feasibility results." }];
 
   try {
+    console.log("Calling Claude API...");
     var res = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ system: systemPrompt, messages: S.history })
     });
+    console.log("Claude API response status:", res.status);
     var json = await res.json();
+    console.log("Claude API response:", json);
     var reply = (json.content && json.content[0] && json.content[0].text) || "Your feasibility is ready — check the panel on the right and click View Term Sheet to see the full breakdown.";
     addMsg("ai", reply);
   } catch(e) {
@@ -1155,3 +1172,4 @@ window.addEventListener("DOMContentLoaded", function() {
 </script>
 </body>
 </html>
+
