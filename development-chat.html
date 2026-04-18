@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Originate.ai — Development Finance</title>
+<title>getkredit.ai — Development Finance</title>
 <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <script>
 function loadGooglePlaces() {
@@ -16,118 +16,123 @@ function loadGooglePlaces() {
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --navy:#0a1628;--navy2:#112240;--navy3:#162e52;
-  --white:#fff;--off:#f8f6f2;--cream:#edece8;
-  --gold:#b8912e;--gold2:#d4aa50;
-  --text:#0d1520;--muted:#7a7a7a;--faint:#c8c4bc;--border:#e8e4de;
-  --green:#15803d;--red:#b91c1c;--amber:#b45309;
+  --teal:#0D9488;--teal-light:#14B8A6;--teal-dark:#0F766E;--teal-bg:#F0FDFA;--teal-subtle:#CCFBF1;
+  --white:#ffffff;--off:#f9fafb;--grey50:#f8fafc;--grey100:#f1f5f9;--grey200:#e2e8f0;
+  --grey500:#64748b;--grey600:#475569;--grey700:#334155;--grey800:#1e293b;--grey900:#0f172a;
+  --text:#0f172a;--muted:#64748b;--faint:#cbd5e1;--border:#e2e8f0;
+  --green:#059669;--red:#dc2626;--amber:#d97706;
 }
-html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);overflow:hidden}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);overflow:hidden}
 
-.topbar{height:58px;background:rgba(6,12,24,0.98);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;padding:0 32px;flex-shrink:0;position:relative;z-index:10}
-.tb-logo{font-family:'Libre Baskerville',serif;font-size:19px;font-weight:700;color:white;display:flex;align-items:baseline;gap:1px;cursor:pointer;text-decoration:none}
-.tb-logo span{color:var(--gold)}
-.tb-badge{padding:5px 13px;border-radius:2px;background:rgba(184,145,46,0.1);border:1px solid rgba(184,145,46,0.22);color:var(--gold);font-size:10.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase}
-.tb-back{font-size:12px;color:rgba(255,255,255,0.35);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;letter-spacing:0.3px;transition:color 0.2s;padding:0}
-.tb-back:hover{color:rgba(255,255,255,0.8)}
+.topbar{height:58px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 32px;flex-shrink:0;position:relative;z-index:10}
+.tb-logo{font-family:'Libre Baskerville',serif;font-size:19px;font-weight:700;color:var(--grey900);display:flex;align-items:baseline;gap:1px;cursor:pointer;text-decoration:none}
+.tb-logo span{color:var(--teal)}
+.tb-badge{padding:5px 13px;border-radius:20px;background:var(--teal-bg);border:1px solid var(--teal-subtle);color:var(--teal-dark);font-size:10.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase}
+.tb-back{font-size:12px;color:var(--grey500);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;letter-spacing:0.3px;transition:color 0.2s;padding:0}
+.tb-back:hover{color:var(--teal)}
 
 .layout{display:grid;grid-template-columns:1fr 340px;height:calc(100vh - 58px)}
 
-.chat{display:flex;flex-direction:column;height:100%;border-right:1px solid rgba(255,255,255,0.06);overflow:hidden}
+.chat{display:flex;flex-direction:column;height:100%;border-right:1px solid var(--border);overflow:hidden;background:var(--grey50)}
 .msgs{flex:1;overflow-y:auto;padding:28px 36px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
 .msgs::-webkit-scrollbar{width:3px}
-.msgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:2px}
+.msgs::-webkit-scrollbar-thumb{background:var(--grey200);border-radius:2px}
 
 .msg{display:flex;gap:11px;animation:fadein 0.22s ease}
 .msg.u{flex-direction:row-reverse;align-self:flex-end;max-width:75%}
 @keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 .av{width:31px;height:31px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:3px;font-weight:700;font-size:12px}
-.av.o{background:linear-gradient(135deg,var(--gold) 0%,#7a5200 100%);color:var(--navy);font-family:'Libre Baskerville',serif;font-size:13px}
-.av.y{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.38);font-size:10px}
+.av.o{background:var(--teal);color:white;font-family:'Libre Baskerville',serif;font-size:13px}
+.av.y{background:var(--grey200);border:1px solid var(--grey200);color:var(--grey600);font-size:10px}
 .bbl{padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.7}
-.msg.ai .bbl{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.88);border-top-left-radius:3px}
-.msg.u .bbl{background:var(--gold);color:var(--navy);border-top-right-radius:3px;font-weight:500}
-.bbl b,.bbl strong{color:var(--gold2);font-weight:600}
+.msg.ai .bbl{background:var(--white);border:1px solid var(--border);color:var(--text);border-top-left-radius:3px}
+.msg.u .bbl{background:var(--teal);color:white;border-top-right-radius:3px;font-weight:500}
+.bbl b,.bbl strong{color:var(--teal-dark);font-weight:600}
 
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.chip{padding:7px 13px;border-radius:2px;border:1px solid rgba(255,255,255,0.13);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.75);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.16s;font-weight:500}
-.chip:hover{border-color:var(--gold);color:var(--gold);background:rgba(184,145,46,0.07)}
-.chip.selected{border-color:var(--gold);color:var(--gold);background:rgba(184,145,46,0.12);pointer-events:none}
+.chip{padding:7px 13px;border-radius:6px;border:1px solid var(--border);background:var(--white);color:var(--grey700);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.16s;font-weight:500}
+.chip:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-bg)}
+.chip.selected{border-color:var(--teal);color:var(--teal);background:var(--teal-bg);pointer-events:none}
 .chips.disabled .chip{pointer-events:none;opacity:0.35}
 
 .typing-row{display:flex;gap:11px;align-items:flex-start}
-.dots{display:flex;gap:4px;align-items:center;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;border-top-left-radius:3px}
-.dots span{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.2);animation:bounce 1.2s infinite}
+.dots{display:flex;gap:4px;align-items:center;padding:12px 16px;background:var(--white);border:1px solid var(--border);border-radius:12px;border-top-left-radius:3px}
+.dots span{width:5px;height:5px;border-radius:50%;background:var(--grey300);animation:bounce 1.2s infinite}
 .dots span:nth-child(2){animation-delay:.2s}
 .dots span:nth-child(3){animation-delay:.4s}
 @keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
 
-.input-area{padding:14px 36px 20px;border-top:1px solid rgba(255,255,255,0.06);background:rgba(6,12,24,0.5);flex-shrink:0;position:relative}
-.addr-drop{position:absolute;bottom:100%;left:36px;right:36px;background:var(--navy2);border:1px solid rgba(255,255,255,0.12);border-radius:4px;overflow:hidden;display:none;z-index:20;box-shadow:0 -8px 24px rgba(0,0,0,0.4)}
-.addr-item{padding:11px 15px;cursor:pointer;font-size:13.5px;color:rgba(255,255,255,0.78);border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.14s;display:flex;flex-direction:column;gap:2px}
+.input-area{padding:14px 36px 20px;border-top:1px solid var(--border);background:var(--white);flex-shrink:0;position:relative}
+.addr-drop{position:absolute;bottom:100%;left:36px;right:36px;background:var(--white);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:none;z-index:20;box-shadow:0 -8px 24px rgba(0,0,0,0.08)}
+.addr-item{padding:11px 15px;cursor:pointer;font-size:13.5px;color:var(--grey700);border-bottom:1px solid var(--border);transition:background 0.14s;display:flex;flex-direction:column;gap:2px}
 .addr-item:last-child{border:none}
-.addr-item:hover{background:rgba(255,255,255,0.05)}
-.addr-main{font-weight:500;color:white}
-.addr-sub{font-size:11.5px;color:rgba(255,255,255,0.4)}
-.input-box{display:flex;gap:9px;align-items:flex-end;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:10px 13px;transition:border-color 0.2s}
-.input-box:focus-within{border-color:rgba(184,145,46,0.45)}
-#ta{flex:1;background:none;border:none;outline:none;color:rgba(255,255,255,0.9);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;resize:none;min-height:22px;max-height:96px}
-#ta::placeholder{color:rgba(255,255,255,0.2)}
-.send{width:33px;height:33px;border-radius:4px;background:var(--gold);border:none;cursor:pointer;color:white;font-size:18px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.18s}
-.send:hover{background:var(--gold2);transform:scale(1.05)}
+.addr-item:hover{background:var(--teal-bg)}
+.addr-main{font-weight:500;color:var(--grey900)}
+.addr-sub{font-size:11.5px;color:var(--grey500)}
+.input-box{display:flex;gap:9px;align-items:flex-end;background:var(--grey50);border:1px solid var(--border);border-radius:8px;padding:10px 13px;transition:border-color 0.2s}
+.input-box:focus-within{border-color:var(--teal)}
+#ta{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;resize:none;min-height:22px;max-height:96px}
+#ta::placeholder{color:var(--grey500)}
+.send{width:33px;height:33px;border-radius:6px;background:var(--teal);border:none;cursor:pointer;color:white;font-size:18px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.18s}
+.send:hover{background:var(--teal-dark);transform:scale(1.05)}
 .send:disabled{opacity:0.4;cursor:default;transform:none}
-.hint{margin-top:6px;font-size:11px;color:rgba(255,255,255,0.16);text-align:center}
+.hint{margin-top:6px;font-size:11px;color:var(--grey500);text-align:center}
 
-.panel{background:rgba(255,255,255,0.02);overflow-y:auto;display:flex;flex-direction:column}
+.panel{background:var(--white);overflow-y:auto;display:flex;flex-direction:column}
 .panel::-webkit-scrollbar{width:3px}
-.panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06)}
-.pb{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,0.05)}
-.pbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.22);margin-bottom:13px}
-.pr{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12.5px;gap:8px}
+.panel::-webkit-scrollbar-thumb{background:var(--grey200)}
+.pb{padding:18px 20px;border-bottom:1px solid var(--border)}
+.pbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--grey500);margin-bottom:13px}
+.pr{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--border);font-size:12.5px;gap:8px}
 .pr:last-child{border:none}
-.pk{color:rgba(255,255,255,0.35);flex-shrink:0}
-.pv{font-weight:500;color:rgba(255,255,255,0.82);text-align:right;font-size:12px}
-.pv.g{color:var(--gold)}.pv.gr{color:#6ee7b7}.pv.dim{color:rgba(255,255,255,0.2);font-style:italic;font-weight:400;font-size:11px}
+.pk{color:var(--grey500);flex-shrink:0}
+.pv{font-weight:500;color:var(--grey900);text-align:right;font-size:12px}
+.pv.g{color:var(--teal)}.pv.gr{color:var(--green)}.pv.dim{color:var(--grey500);font-style:italic;font-weight:400;font-size:11px}
+.pr.clickable{cursor:pointer;transition:background 0.15s;border-radius:6px;margin:0 -4px;padding:6px 4px}
+.pr.clickable:hover{background:var(--teal-bg)}
+.pr.editing{background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.2);border-radius:6px;margin:0 -4px;padding:5px 4px}
+.pr.editing .pv{color:var(--red)}
+.pv.error{color:var(--red);font-weight:600}
 
 .mg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px}
-.mbox{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:3px;padding:11px 10px;text-align:center}
-.mv{font-family:'Libre Baskerville',serif;font-size:19px;font-weight:400;line-height:1;color:rgba(255,255,255,0.75)}
-.mv.gr{color:#6ee7b7}.mv.g{color:var(--gold)}.mv.r{color:#f87171}.mv.am{color:#fbbf24}
-.ml{font-size:9px;color:rgba(255,255,255,0.25);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+.mbox{background:var(--grey50);border:1px solid var(--border);border-radius:8px;padding:11px 10px;text-align:center}
+.mv{font-family:'Libre Baskerville',serif;font-size:19px;font-weight:400;line-height:1;color:var(--grey900)}
+.mv.gr{color:var(--green)}.mv.g{color:var(--teal)}.mv.r{color:var(--red)}.mv.am{color:var(--amber)}
+.ml{font-size:9px;color:var(--grey500);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
 
-.lrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px}
+.lrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
 .lrow:last-child{border:none}
-.ln{color:rgba(255,255,255,0.48)}.lr{color:#6ee7b7;font-weight:600;font-size:11.5px}
+.ln{color:var(--grey600)}.lr{color:var(--green);font-weight:600;font-size:11.5px}
 
 .prog-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px}
-.prog-k{color:rgba(255,255,255,0.34)}.prog-v{font-size:13px;color:rgba(255,255,255,0.16)}
-.prog-v.done{color:#6ee7b7}
-.prog-bar{height:2px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:12px;overflow:hidden}
-.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width 0.5s}
+.prog-k{color:var(--grey500)}.prog-v{font-size:13px;color:var(--grey300)}
+.prog-v.done{color:var(--green)}
+.prog-bar{height:2px;background:var(--grey200);border-radius:2px;margin-top:12px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--teal-light));transition:width 0.5s}
 
-.ts-btn{width:100%;padding:13px;border-radius:2px;background:var(--gold);color:white;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;border:none;cursor:pointer;letter-spacing:0.8px;text-transform:uppercase;margin-top:12px;transition:all 0.2s;display:none}
-.ts-btn:hover{background:var(--gold2)}
-.crm-ok{font-size:11px;margin-top:8px;padding:6px 10px;border-radius:2px;background:rgba(21,128,61,0.1);border:1px solid rgba(21,128,61,0.2);color:#6ee7b7;text-align:center;display:none}
+.ts-btn{width:100%;padding:13px;border-radius:8px;background:var(--teal);color:white;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;border:none;cursor:pointer;letter-spacing:0.8px;text-transform:uppercase;margin-top:12px;transition:all 0.2s;display:none}
+.ts-btn:hover{background:var(--teal-dark)}
+.crm-ok{font-size:11px;margin-top:8px;padding:6px 10px;border-radius:6px;background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.2);color:var(--green);text-align:center;display:none}
 
 /* TERM SHEET OVERLAY */
-.ts-overlay{display:none;position:fixed;inset:0;background:rgba(4,8,18,0.96);z-index:100;overflow-y:auto;padding:32px 16px}
+.ts-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.92);z-index:100;overflow-y:auto;padding:32px 16px}
 .ts-overlay.show{display:block}
-.ts-doc{max-width:800px;margin:0 auto;background:white;border-radius:3px;overflow:hidden;font-family:'DM Sans',sans-serif}
-.ts-topbar{background:var(--navy);padding:13px 26px;display:flex;justify-content:space-between;align-items:center}
+.ts-doc{max-width:800px;margin:0 auto;background:white;border-radius:12px;overflow:hidden;font-family:'DM Sans',sans-serif}
+.ts-topbar{background:var(--grey900);padding:13px 26px;display:flex;justify-content:space-between;align-items:center}
 .ts-topbar span{font-size:12px;color:rgba(255,255,255,0.4)}
 .ts-actions{display:flex;gap:8px}
-.ts-action{padding:7px 16px;border-radius:2px;font-size:11.5px;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.5px;text-transform:uppercase}
-.ts-action.primary{background:var(--gold);color:white}
+.ts-action{padding:7px 16px;border-radius:6px;font-size:11.5px;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.5px;text-transform:uppercase}
+.ts-action.primary{background:var(--teal);color:white}
 .ts-action.ghost{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.65)}
 .ts-content{padding:48px}
-.ts-header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:24px;border-bottom:3px solid var(--navy);margin-bottom:32px}
-.ts-logo{font-family:'Libre Baskerville',serif;font-size:22px;font-weight:700;color:var(--navy)}
-.ts-logo span{color:var(--gold)}
+.ts-header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:24px;border-bottom:3px solid var(--grey900);margin-bottom:32px}
+.ts-logo{font-family:'Libre Baskerville',serif;font-size:22px;font-weight:700;color:var(--grey900)}
+.ts-logo span{color:var(--teal)}
 .ts-tag{font-size:12px;color:var(--muted);margin-top:4px}
 .ts-ref{text-align:right;font-size:12px;color:var(--muted);line-height:1.8}
 .ts-ref strong{color:var(--text)}
 .ts-section{margin-bottom:24px}
-.ts-section-head{background:var(--navy);color:white;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:9px 16px}
+.ts-section-head{background:var(--grey900);color:white;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:9px 16px;border-radius:4px 4px 0 0}
 .ts-table{border:1px solid var(--border);border-top:none}
 .ts-tr{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;gap:16px}
 .ts-tr:last-child{border:none}
@@ -139,9 +144,9 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--navy);co
 .ft-table th:first-child{text-align:left}
 .ft-table td{padding:8px 14px;border-bottom:1px solid var(--cream);text-align:right;color:var(--text)}
 .ft-table td:first-child{text-align:left}
-.ft-table .grp td{background:var(--off);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--navy);padding:7px 14px}
+.ft-table .grp td{background:var(--off);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--grey900);padding:7px 14px}
 .ft-table .sub td{background:var(--cream);font-weight:600;border-top:1px solid var(--border)}
-.ft-table .tot td{background:var(--navy);color:white;font-weight:600;font-size:13px}
+.ft-table .tot td{background:var(--grey900);color:white;font-weight:600;font-size:13px}
 .ts-disc{font-size:11px;color:var(--muted);line-height:1.65;padding:14px 16px;background:var(--off);border:1px solid var(--border);border-radius:2px;margin-top:20px}
 
 @media(max-width:768px){
@@ -160,7 +165,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--navy);co
 <div class="ts-overlay" id="ts-overlay">
   <div class="ts-doc">
     <div class="ts-topbar">
-      <span>Originate.ai — Indicative Term Sheet</span>
+      <span>getkredit.ai — Indicative Term Sheet</span>
       <div class="ts-actions">
         <button class="ts-action ghost" onclick="closeTS()">Close</button>
         <button class="ts-action primary" onclick="window.print()">Print / Save PDF</button>
@@ -169,7 +174,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--navy);co
     <div class="ts-content">
       <div class="ts-header">
         <div>
-          <div class="ts-logo">Originate<span>.ai</span></div>
+          <div class="ts-logo">get<span>kredit.ai</span></div>
           <div class="ts-tag">Indicative Term Sheet — Subject to Formal Credit Approval</div>
         </div>
         <div class="ts-ref">
@@ -251,14 +256,14 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--navy);co
         </div>
       </div>
 
-      <div class="ts-disc"><strong>Important Notice:</strong> This indicative term sheet is prepared by Originate.ai for discussion purposes only and does not constitute an offer or commitment to provide finance. All terms are indicative and subject to formal credit approval, satisfactory due diligence, independent valuation, execution of facility documentation and satisfaction of all conditions precedent. Originate.ai is not a credit provider or Australian Credit Licence holder. Finance is arranged through licensed lenders. © 2025 Originate.ai Pty Ltd.</div>
+      <div class="ts-disc"><strong>Important Notice:</strong> This indicative term sheet is prepared by getkredit.ai for discussion purposes only and does not constitute an offer or commitment to provide finance. All terms are indicative and subject to formal credit approval, satisfactory due diligence, independent valuation, execution of facility documentation and satisfaction of all conditions precedent. getkredit.ai is not a credit provider or Australian Credit Licence holder. Finance is arranged through licensed lenders. © 2025 getkredit.ai Pty Ltd.</div>
     </div>
   </div>
 </div>
 
 <!-- TOP BAR -->
 <div class="topbar">
-  <a class="tb-logo" href="index.html">Originate<span>.ai</span></a>
+  <a class="tb-logo" href="index.html">get<span>kredit.ai</span></a>
   <div class="tb-badge">Development Finance</div>
   <button class="tb-back" onclick="history.back()">← Back</button>
 </div>
@@ -321,7 +326,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--navy);co
     </div>
     <div class="pb">
       <div class="pbl">Lender Panel</div>
-      <div id="lender-list"><div style="font-size:12px;color:rgba(255,255,255,0.18);font-style:italic;padding:4px 0">Collecting deal details...</div></div>
+      <div id="lender-list"><div style="font-size:12px;color:var(--grey500);font-style:italic;padding:4px 0">Collecting deal details...</div></div>
     </div>
     <div class="pb">
       <div class="pbl">Progress</div>
@@ -357,7 +362,7 @@ var HS_URL = "/.netlify/functions/hubspot";
 // ─────────────────────────────────────────────
 var STEPS = [
   // STEP 0 — Category
-  { id: "category", msg: "Welcome to Originate.ai. I'll guide you through your development finance application and generate a full indicative term sheet — takes about 5 minutes.<br><br>What type of development are you planning?",
+  { id: "category", msg: "Welcome to getkredit.ai. I'll guide you through your development finance application and generate a full indicative term sheet — takes about 5 minutes.<br><br>What type of development are you planning?",
     chips: ["Residential","Commercial","Mixed Use"], field: "category" },
   // STEP 1 — Sub-type (dynamic)
   { id: "subtype", msg: null, chips: null, field: "subtype", dynamic: true },
@@ -438,20 +443,21 @@ var S = {
 // FEASIBILITY ENGINE
 // ─────────────────────────────────────────────
 function runCalc(d) {
-  var units = d.units || 0;
-  var avgPrice = d.avgPrice || 0;
-  var landCost = d.landCost || 0;
-  var constCost = d.constCost || 0;
-  var profFees = d.profFees || 0;
-  var holdingCosts = d.holdingCosts || 0;
-  var marketingCosts = d.marketingCosts || 0;
-  var contingency = d.contingency || 0;
+  function num(v) { return typeof v === "number" ? v : parseFloat(v) || 0; }
+  var units = num(d.units);
+  var avgPrice = num(d.avgPrice);
+  var landCost = num(d.landCost);
+  var constCost = num(d.constCost);
+  var profFees = num(d.profFees);
+  var holdingCosts = num(d.holdingCosts);
+  var marketingCosts = num(d.marketingCosts);
+  var contingency = num(d.contingency);
   var otherCosts = profFees + holdingCosts + marketingCosts + contingency;
-  var loanAmount = d.borrowFigure || 0;
-  var loanTerm = d.totalLoanTerm || 18;
-  var constTerm = d.constTerm || loanTerm;
-  var presales = d.presalesValue || 0;
-  var existingDebt = d.debtAmount || 0;
+  var loanAmount = num(d.borrowFigure);
+  var loanTerm = num(d.totalLoanTerm) || 18;
+  var constTerm = num(d.constTerm) || loanTerm;
+  var presales = num(d.presalesValue);
+  var existingDebt = num(d.debtAmount);
   var rate = 0.065;
   var lineFeeRate = 0.010;
   var appFeeRate = 0.005;
@@ -591,6 +597,9 @@ function pickAddress(addr) {
 // PARSE HELPERS
 // ─────────────────────────────────────────────
 function parseDollars(text) {
+  // Percentage — e.g. "5%" or "10%" — converted later using constCost
+  var pct = text.match(/^[\s]*(\d+(?:\.\d+)?)\s*%[\s]*$/);
+  if (pct) return { pct: parseFloat(pct[1]) };
   // $2.4m, $2.4 million, 2.4m, $500,000, $500000
   var m = text.match(/\$?\s*(\d+(?:\.\d+)?)\s*(?:m(?:illion)?|mil)\b/i);
   if (m) return parseFloat(m[1]) * 1e6;
@@ -599,7 +608,7 @@ function parseDollars(text) {
   if (k) return parseFloat(k[1]) * 1e3;
   var d = text.match(/\$\s*([\d,]+(?:\.\d+)?)/);
   if (d) return parseFloat(d[1].replace(/,/g, ""));
-  // plain number — any size (user might type 50000 or 500000)
+  // plain number — any size
   var n = text.match(/^[\s]*(\d[\d,]*(?:\.\d+)?)[\s]*$/);
   if (n) {
     var v = parseFloat(n[1].replace(/,/g, ""));
@@ -669,12 +678,34 @@ function showStep() {
   }
 
   if (step.id === "units") {
-    var typeLabel = (S.data.subtype || "units").toLowerCase();
+    var plurals = {
+      "Houses / Land Lots": "houses",
+      "Duplex / Dual Occ": "duplexes",
+      "Townhouses": "townhouses",
+      "Villas": "villas",
+      "Apartments / Units": "apartments",
+      "Retail": "retail units",
+      "Office": "office units",
+      "Industrial": "industrial units",
+      "Hotel / Hospitality": "rooms"
+    };
+    var typeLabel = plurals[S.data.subtype] || (S.data.subtype || "units").toLowerCase();
     msg = "How many " + typeLabel + " are you planning?";
   }
 
   if (step.id === "avgPrice") {
-    var typeLabel2 = (S.data.subtype || "unit").toLowerCase().replace(/s$/, "");
+    var singulars = {
+      "Houses / Land Lots": "house",
+      "Duplex / Dual Occ": "duplex",
+      "Townhouses": "townhouse",
+      "Villas": "villa",
+      "Apartments / Units": "apartment",
+      "Retail": "retail unit",
+      "Office": "office unit",
+      "Industrial": "industrial unit",
+      "Hotel / Hospitality": "room"
+    };
+    var typeLabel2 = singulars[S.data.subtype] || (S.data.subtype || "unit").toLowerCase();
     msg = "What's the expected average sale price per " + typeLabel2 + "?";
   }
 
@@ -696,6 +727,18 @@ function showStep() {
   }
 }
 
+// Dollar amount fields that need validation
+var DOLLAR_FIELDS = ["avgPrice","landCost","landValue","debtAmount","constCost","profFees","holdingCosts","marketingCosts","contingency","borrowFigure","presalesValue"];
+
+// Validation: check if value is a valid email
+function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+// Percentage check
+function parsePercentage(text) {
+  var m = text.match(/^(\d+(?:\.\d+)?)\s*%$/);
+  return m ? parseFloat(m[1]) : null;
+}
+
 function handleStepInput(text) {
   if (S.busy) return;
   var step = getCurrentStep();
@@ -705,20 +748,37 @@ function handleStepInput(text) {
   document.getElementById("send-btn").disabled = true;
 
   addMsg("u", text);
-
-  // Disable chips on previous AI message
   disableLastChips();
 
-  // Store the value
   var field = step.field;
   var value = text.trim();
+  var confirmMsg = null; // will hold confirmation message
 
-  // Parse based on field type
+  // ── VALIDATION + PARSING ──
   switch (field) {
+    case "email":
+      if (!isValidEmail(value)) {
+        addMsg("ai", "That doesn't look like a valid email address — could you re-enter it? Something like name@example.com.");
+        S.busy = false;
+        document.getElementById("send-btn").disabled = false;
+        return; // stay on same step
+      }
+      S.data.email = value.toLowerCase();
+      break;
+
     case "units":
       var uv = parseUnits(value);
-      if (uv) S.data.units = uv; else S.data.units = value;
+      if (!uv || uv <= 0) {
+        addMsg("ai", "I need a number for the units — could you enter that as a figure? For example, 4 or 12.");
+        S.busy = false;
+        document.getElementById("send-btn").disabled = false;
+        return;
+      }
+      S.data.units = uv;
+      var unitLabel = (S.data.subtype || "units").toLowerCase();
+      confirmMsg = "Got it — " + uv + " " + unitLabel + ".";
       break;
+
     case "avgPrice":
     case "landCost":
     case "landValue":
@@ -730,21 +790,48 @@ function handleStepInput(text) {
     case "contingency":
     case "borrowFigure":
     case "presalesValue":
+      // Check for percentage (contingency often entered as %)
+      var pct = parsePercentage(value);
+      if (pct !== null && field === "contingency" && S.data.constCost) {
+        S.data[field] = Math.round(S.data.constCost * pct / 100);
+        confirmMsg = "Got it — " + pct + "% of construction = " + fd(S.data[field]) + ".";
+        break;
+      }
       var dv = parseDollars(value);
-      if (dv) S.data[field] = dv; else S.data[field] = value;
+      if (dv === null || typeof dv !== "number" || dv <= 0) {
+        addMsg("ai", "That doesn't look right — could you enter a dollar amount? For example, $2.4m or $500,000.");
+        S.busy = false;
+        document.getElementById("send-btn").disabled = false;
+        return;
+      }
+      S.data[field] = dv;
+      confirmMsg = "Got it — " + fd(dv) + ".";
       break;
+
     case "settleDays":
     case "preConst":
     case "constTerm":
     case "salesPeriod":
       var mv = parseMonths(value);
-      S.data[field] = mv !== null ? mv : value;
+      if (mv === null) {
+        addMsg("ai", "Could you enter that as a number of months? For example, 18 months.");
+        S.busy = false;
+        document.getElementById("send-btn").disabled = false;
+        return;
+      }
+      S.data[field] = mv;
+      if (mv === 0) {
+        confirmMsg = field === "settleDays" ? "Got it — already settled." : "Got it — starting immediately.";
+      } else {
+        confirmMsg = "Got it — " + mv + " months.";
+      }
       break;
+
     default:
       S.data[field] = value;
   }
 
-  // Calculate total loan term when we have all timeline parts
+  // ── CALCULATE LOAN TERM ──
   if (S.data.settleDays !== undefined && S.data.preConst !== undefined &&
       S.data.constTerm !== undefined && S.data.salesPeriod !== undefined) {
     var settle = typeof S.data.settleDays === "number" ? S.data.settleDays : 0;
@@ -754,23 +841,30 @@ function handleStepInput(text) {
     S.data.totalLoanTerm = settle + pre + cterm + sales;
   }
 
+  // ── UPDATE PANEL (every step) ──
   updatePanel();
 
-  // If this is the confirm step, use Claude
+  // ── CONFIRM step → Claude ──
   if (step.useClaude) {
     handleClaudeStep(text);
     return;
   }
 
-  // Move to next step
+  // ── ADVANCE TO NEXT STEP ──
   S.step++;
   S.busy = false;
   document.getElementById("send-btn").disabled = false;
 
-  // Small delay before next question
+  // Show confirmation + next question with slight delay
   setTimeout(function() {
-    showStep();
-  }, 500);
+    if (confirmMsg) {
+      // Show confirmation, then next question after brief pause
+      addMsg("ai", confirmMsg);
+      setTimeout(function() { showStep(); }, 400);
+    } else {
+      showStep();
+    }
+  }, 300);
 }
 
 async function handleClaudeStep(text) {
@@ -781,7 +875,7 @@ async function handleClaudeStep(text) {
   console.log("Running Claude confirm step. Data:", JSON.stringify(S.data));
   console.log("Calc result:", r ? "yes" : "no");
 
-  var systemPrompt = "You are a senior commercial real estate finance originator at Originate.ai, Australia's leading AI-powered lending platform.\n\n"
+  var systemPrompt = "You are a senior commercial real estate finance originator at getkredit.ai, Australia's leading AI-powered lending platform.\n\n"
     + "The user has just completed a development finance questionnaire. Here is all the data collected:\n\n"
     + JSON.stringify(S.data, null, 2) + "\n\n"
     + (r ? "FEASIBILITY RESULTS:\n" + JSON.stringify({
@@ -911,6 +1005,54 @@ document.addEventListener("click", function(e) {
 });
 
 // ─────────────────────────────────────────────
+// GO BACK — click panel item to re-ask
+// ─────────────────────────────────────────────
+// Map panel IDs to step indices
+var PANEL_TO_STEP = {
+  "p-name": 2, "p-email": 3, "p-phone": 4,
+  "p-address": 5, "p-da": 6,
+  "p-units": 7, "p-avgprice": 8,
+  "p-land": 9, "p-landval": 10, "p-debt": 11,
+  "p-const": 13,
+  "p-proffees": 17, "p-holding": 18, "p-marketing": 19, "p-contingency": 20,
+  "p-presales": 22
+};
+
+function goBackTo(panelId) {
+  if (S.busy) return;
+  var targetStep = PANEL_TO_STEP[panelId];
+  if (targetStep === undefined) return;
+
+  // Find the step by index
+  var step = STEPS[targetStep];
+  if (!step) return;
+
+  // Clear the old value
+  if (step.field && S.data[step.field] !== undefined) {
+    delete S.data[step.field];
+  }
+
+  // Mark the panel item as editing
+  var panelRow = document.getElementById(panelId);
+  if (panelRow) {
+    var pr = panelRow.closest(".pr");
+    if (pr) {
+      pr.classList.add("editing");
+      panelRow.textContent = "✗ Re-entering...";
+      panelRow.className = "pv error";
+    }
+  }
+
+  // Jump back to that step
+  S.step = targetStep;
+  S.calcResult = null; // force recalc
+
+  // Show the step question
+  addMsg("ai", "No worries — let's update that. I'll re-ask the question.");
+  setTimeout(function() { showStep(); }, 400);
+}
+
+// ─────────────────────────────────────────────
 // PANEL UPDATE
 // ─────────────────────────────────────────────
 function updatePanel() {
@@ -919,8 +1061,22 @@ function updatePanel() {
   function set(id, val, cls) {
     var el = document.getElementById(id);
     if (!el) return;
-    if (val) { el.textContent = val; el.className = "pv " + (cls || ""); }
-    else { el.textContent = "—"; el.className = "pv dim"; }
+    if (val) {
+      el.textContent = val;
+      el.className = "pv " + (cls || "");
+      // Make the parent row clickable for go-back
+      var pr = el.closest(".pr");
+      if (pr && PANEL_TO_STEP[id] !== undefined) {
+        pr.classList.remove("editing");
+        if (!pr.classList.contains("clickable")) {
+          pr.classList.add("clickable");
+          pr.onclick = function() { goBackTo(id); };
+        }
+      }
+    } else {
+      el.textContent = "—";
+      el.className = "pv dim";
+    }
   }
   function tick(id) {
     var el = document.getElementById(id);
@@ -998,8 +1154,15 @@ function updatePanel() {
   }).length;
   document.getElementById("prog-fill").style.width = (done / pgKeys.length * 100) + "%";
 
-  // Run calc if enough data
-  var canCalc = d.units && d.avgPrice && (d.landCost || d.constCost);
+  // Run calc if enough data — coerce to numbers first
+  var numUnits = typeof d.units === "number" ? d.units : parseInt(d.units) || 0;
+  var numAvgPrice = typeof d.avgPrice === "number" ? d.avgPrice : parseFloat(d.avgPrice) || 0;
+  var numLandCost = typeof d.landCost === "number" ? d.landCost : parseFloat(d.landCost) || 0;
+  var numConstCost = typeof d.constCost === "number" ? d.constCost : parseFloat(d.constCost) || 0;
+
+  var canCalc = numUnits > 0 && numAvgPrice > 0 && (numLandCost > 0 || numConstCost > 0);
+  console.log("canCalc:", canCalc, "units:", numUnits, "avgPrice:", numAvgPrice, "land:", numLandCost, "const:", numConstCost);
+
   if (canCalc) {
     try {
       var r = runCalc(d);
@@ -1020,11 +1183,11 @@ function updatePanel() {
       var matched = matchLenders(r.lvr, r.ltc, r.poc);
       var ll = document.getElementById("lender-list");
       if (matched.length === 0) {
-        ll.innerHTML = '<div style="font-size:12px;color:#f87171;padding:4px 0">Deal metrics exceed most panel criteria — speak to our team.</div>';
+        ll.innerHTML = '<div style="font-size:12px;color:var(--red);padding:4px 0">Deal metrics exceed most panel criteria — speak to our team.</div>';
       } else {
         ll.innerHTML = matched.map(function(l) {
           return '<div class="lrow"><span class="ln">' + l.name + '</span><span class="lr">' + l.rate.toFixed(2) + '% p.a.</span></div>';
-        }).join("") + '<div style="font-size:11px;color:rgba(255,255,255,0.18);margin-top:7px;padding:3px 0">' + matched.length + ' of ' + PANEL.length + ' lenders matched</div>';
+        }).join("") + '<div style="font-size:11px;color:var(--grey500);margin-top:7px;padding:3px 0">' + matched.length + ' of ' + PANEL.length + ' lenders matched</div>';
       }
     } catch(e) {
       console.error("Calc error:", e);
@@ -1172,4 +1335,3 @@ window.addEventListener("DOMContentLoaded", function() {
 </script>
 </body>
 </html>
-
