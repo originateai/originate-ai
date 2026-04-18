@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Originate.ai — Development Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script>
+// Load Google Places after page ready
+function loadGooglePlaces() {
+  var s = document.createElement('script');
+  s.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyB4idPsz29ElJRW1kU7EPrwV9W2Cdey6rg&libraries=places&callback=onPlacesReady';
+  s.async = true; s.defer = true;
+  document.head.appendChild(s);
+}
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0a1628;--navy2:#112240;--navy3:#162e52;
+  --white:#fff;--off:#f8f6f2;--cream:#edece8;
+  --gold:#b8912e;--gold2:#d4aa50;
+  --text:#0d1520;--muted:#7a7a7a;--faint:#c8c4bc;--border:#e8e4de;
+  --green:#15803d;--red:#b91c1c;--amber:#b45309;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--text);overflow:hidden}
+
+/* TOP BAR */
+.topbar{height:58px;background:rgba(6,12,24,0.98);border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;padding:0 32px;flex-shrink:0;position:relative;z-index:10}
+.tb-logo{font-family:'Libre Baskerville',serif;font-size:19px;font-weight:700;color:white;display:flex;align-items:baseline;gap:1px;cursor:pointer;text-decoration:none}
+.tb-logo span{color:var(--gold)}
+.tb-badge{padding:5px 13px;border-radius:2px;background:rgba(184,145,46,0.1);border:1px solid rgba(184,145,46,0.22);color:var(--gold);font-size:10.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase}
+.tb-back{font-size:12px;color:rgba(255,255,255,0.35);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;letter-spacing:0.3px;transition:color 0.2s;padding:0}
+.tb-back:hover{color:rgba(255,255,255,0.8)}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:1fr 340px;height:calc(100vh - 58px)}
+
+/* CHAT */
+.chat{display:flex;flex-direction:column;height:100%;border-right:1px solid rgba(255,255,255,0.06);overflow:hidden}
+.msgs{flex:1;overflow-y:auto;padding:28px 36px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+.msgs::-webkit-scrollbar{width:3px}
+.msgs::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.07);border-radius:2px}
+
+/* Messages */
+.msg{display:flex;gap:11px;animation:fadein 0.22s ease}
+.msg.u{flex-direction:row-reverse;align-self:flex-end;max-width:75%}
+@keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.av{width:31px;height:31px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:3px;font-weight:700;font-size:12px}
+.av.o{background:linear-gradient(135deg,var(--gold) 0%,#7a5200 100%);color:var(--navy);font-family:'Libre Baskerville',serif;font-size:13px}
+.av.y{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.38);font-size:10px}
+.bbl{padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.7}
+.msg.ai .bbl{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(255,255,255,0.88);border-top-left-radius:3px}
+.msg.u .bbl{background:var(--gold);color:var(--navy);border-top-right-radius:3px;font-weight:500}
+.bbl b,.bbl strong{color:var(--gold2);font-weight:600}
+
+/* Quick reply chips */
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{padding:7px 13px;border-radius:2px;border:1px solid rgba(255,255,255,0.13);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.75);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.16s;font-weight:500}
+.chip:hover{border-color:var(--gold);color:var(--gold);background:rgba(184,145,46,0.07)}
+
+/* Typing indicator */
+.typing-row{display:flex;gap:11px;align-items:flex-start}
+.dots{display:flex;gap:4px;align-items:center;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:12px;border-top-left-radius:3px}
+.dots span{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,0.2);animation:bounce 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.2s}
+.dots span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+/* Input area */
+.input-area{padding:14px 36px 20px;border-top:1px solid rgba(255,255,255,0.06);background:rgba(6,12,24,0.5);flex-shrink:0;position:relative}
+.addr-drop{position:absolute;bottom:100%;left:36px;right:36px;background:var(--navy2);border:1px solid rgba(255,255,255,0.12);border-radius:4px;overflow:hidden;display:none;z-index:20;box-shadow:0 -8px 24px rgba(0,0,0,0.4)}
+.addr-item{padding:11px 15px;cursor:pointer;font-size:13.5px;color:rgba(255,255,255,0.78);border-bottom:1px solid rgba(255,255,255,0.05);transition:background 0.14s;display:flex;flex-direction:column;gap:2px}
+.addr-item:last-child{border:none}
+.addr-item:hover{background:rgba(255,255,255,0.05)}
+.addr-main{font-weight:500;color:white}
+.addr-sub{font-size:11.5px;color:rgba(255,255,255,0.4)}
+.input-box{display:flex;gap:9px;align-items:flex-end;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:10px 13px;transition:border-color 0.2s}
+.input-box:focus-within{border-color:rgba(184,145,46,0.45)}
+#ta{flex:1;background:none;border:none;outline:none;color:rgba(255,255,255,0.9);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;resize:none;min-height:22px;max-height:96px}
+#ta::placeholder{color:rgba(255,255,255,0.2)}
+.send{width:33px;height:33px;border-radius:4px;background:var(--gold);border:none;cursor:pointer;color:white;font-size:18px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.18s}
+.send:hover{background:var(--gold2);transform:scale(1.05)}
+.send:disabled{opacity:0.4;cursor:default;transform:none}
+.hint{margin-top:6px;font-size:11px;color:rgba(255,255,255,0.16);text-align:center}
+
+/* SIDE PANEL */
+.panel{background:rgba(255,255,255,0.02);overflow-y:auto;display:flex;flex-direction:column}
+.panel::-webkit-scrollbar{width:3px}
+.panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.06)}
+.pb{padding:18px 20px;border-bottom:1px solid rgba(255,255,255,0.05)}
+.pbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.22);margin-bottom:13px}
+.pr{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12.5px;gap:8px}
+.pr:last-child{border:none}
+.pk{color:rgba(255,255,255,0.35);flex-shrink:0}
+.pv{font-weight:500;color:rgba(255,255,255,0.82);text-align:right;font-size:12px}
+.pv.g{color:var(--gold)}.pv.gr{color:#6ee7b7}.pv.dim{color:rgba(255,255,255,0.2);font-style:italic;font-weight:400;font-size:11px}
+
+/* Metric boxes */
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px}
+.mbox{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:3px;padding:11px 10px;text-align:center}
+.mv{font-family:'Libre Baskerville',serif;font-size:19px;font-weight:400;line-height:1;color:rgba(255,255,255,0.75)}
+.mv.gr{color:#6ee7b7}.mv.g{color:var(--gold)}.mv.r{color:#f87171}.mv.am{color:#fbbf24}
+.ml{font-size:9px;color:rgba(255,255,255,0.25);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+
+/* Lenders */
+.lrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.04);font-size:12px}
+.lrow:last-child{border:none}
+.ln{color:rgba(255,255,255,0.48)}.lr{color:#6ee7b7;font-weight:600;font-size:11.5px}
+
+/* Progress */
+.prog-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px}
+.prog-k{color:rgba(255,255,255,0.34)}.prog-v{font-size:13px;color:rgba(255,255,255,0.16)}
+.prog-v.done{color:#6ee7b7}
+.prog-bar{height:2px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:12px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width 0.5s}
+
+/* Term sheet button */
+.ts-btn{width:100%;padding:13px;border-radius:2px;background:var(--gold);color:white;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;border:none;cursor:pointer;letter-spacing:0.8px;text-transform:uppercase;margin-top:12px;transition:all 0.2s;display:none}
+.ts-btn:hover{background:var(--gold2)}
+.crm-ok{font-size:11px;margin-top:8px;padding:6px 10px;border-radius:2px;background:rgba(21,128,61,0.1);border:1px solid rgba(21,128,61,0.2);color:#6ee7b7;text-align:center;display:none}
+
+/* TERM SHEET OVERLAY */
+.ts-overlay{display:none;position:fixed;inset:0;background:rgba(4,8,18,0.96);z-index:100;overflow-y:auto;padding:32px 16px}
+.ts-overlay.show{display:block}
+.ts-doc{max-width:800px;margin:0 auto;background:white;border-radius:3px;overflow:hidden;font-family:'DM Sans',sans-serif}
+.ts-topbar{background:var(--navy);padding:13px 26px;display:flex;justify-content:space-between;align-items:center}
+.ts-topbar span{font-size:12px;color:rgba(255,255,255,0.4)}
+.ts-actions{display:flex;gap:8px}
+.ts-action{padding:7px 16px;border-radius:2px;font-size:11.5px;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.5px;text-transform:uppercase}
+.ts-action.primary{background:var(--gold);color:white}
+.ts-action.ghost{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.65)}
+.ts-content{padding:48px}
+.ts-header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:24px;border-bottom:3px solid var(--navy);margin-bottom:32px}
+.ts-logo{font-family:'Libre Baskerville',serif;font-size:22px;font-weight:700;color:var(--navy)}
+.ts-logo span{color:var(--gold)}
+.ts-tag{font-size:12px;color:var(--muted);margin-top:4px}
+.ts-ref{text-align:right;font-size:12px;color:var(--muted);line-height:1.8}
+.ts-ref strong{color:var(--text)}
+.ts-section{margin-bottom:24px}
+.ts-section-head{background:var(--navy);color:white;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:9px 16px}
+.ts-table{border:1px solid var(--border);border-top:none}
+.ts-tr{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;gap:16px}
+.ts-tr:last-child{border:none}
+.ts-k{color:var(--muted);font-size:12px;min-width:190px;flex-shrink:0}
+.ts-v{font-weight:600;color:var(--text);text-align:right}
+.ts-v.ok{color:var(--green)}.ts-v.warn{color:var(--amber)}.ts-v.bad{color:var(--red)}
+.ft-table{width:100%;border-collapse:collapse;border:1px solid var(--border);border-top:none;font-size:12.5px}
+.ft-table th{background:var(--off);font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:8px 14px;border-bottom:1px solid var(--border);text-align:right}
+.ft-table th:first-child{text-align:left}
+.ft-table td{padding:8px 14px;border-bottom:1px solid var(--cream);text-align:right;color:var(--text)}
+.ft-table td:first-child{text-align:left}
+.ft-table .grp td{background:var(--off);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--navy);padding:7px 14px}
+.ft-table .sub td{background:var(--cream);font-weight:600;border-top:1px solid var(--border)}
+.ft-table .tot td{background:var(--navy);color:white;font-weight:600;font-size:13px}
+.ts-disc{font-size:11px;color:var(--muted);line-height:1.65;padding:14px 16px;background:var(--off);border:1px solid var(--border);border-radius:2px;margin-top:20px}
+
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr}.panel{display:none}
+  .msgs{padding:20px}.input-area{padding:12px 20px 18px}
+  .addr-drop{left:20px;right:20px}
+  .ts-content{padding:24px}
+  .ts-k{min-width:130px}
+}
+@media print{.ts-topbar,.topbar,.panel{display:none!important}.ts-overlay{padding:0}.ts-doc{border-radius:0}}
+</style>
+</head>
+<body onload="loadGooglePlaces()">
+
+<!-- TERM SHEET OVERLAY -->
+<div class="ts-overlay" id="ts-overlay">
+  <div class="ts-doc">
+    <div class="ts-topbar">
+      <span>Originate.ai — Indicative Term Sheet</span>
+      <div class="ts-actions">
+        <button class="ts-action ghost" onclick="closeTS()">Close</button>
+        <button class="ts-action primary" onclick="window.print()">Print / Save PDF</button>
+      </div>
+    </div>
+    <div class="ts-content">
+      <div class="ts-header">
+        <div>
+          <div class="ts-logo">Originate<span>.ai</span></div>
+          <div class="ts-tag">Indicative Term Sheet — Subject to Formal Credit Approval</div>
+        </div>
+        <div class="ts-ref">
+          <div>Date: <strong id="ts-date">—</strong></div>
+          <div>Ref: <strong id="ts-ref">—</strong></div>
+          <div>Prepared for: <strong id="ts-for">—</strong></div>
+        </div>
+      </div>
+
+      <div class="ts-section">
+        <div class="ts-section-head">Borrower & Project Details</div>
+        <div class="ts-table">
+          <div class="ts-tr"><span class="ts-k">Borrower Name</span><span class="ts-v" id="ts-name">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Email</span><span class="ts-v" id="ts-email">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Phone</span><span class="ts-v" id="ts-phone">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Project Address</span><span class="ts-v" id="ts-address">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Development Type</span><span class="ts-v" id="ts-devtype">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Estimated GRV (inc. GST)</span><span class="ts-v" id="ts-grv">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Net Realization Value</span><span class="ts-v" id="ts-nrv">—</span></div>
+        </div>
+      </div>
+
+      <div class="ts-section">
+        <div class="ts-section-head">Indicative Facility Terms</div>
+        <div class="ts-table">
+          <div class="ts-tr"><span class="ts-k">Facility Limit</span><span class="ts-v" id="ts-facility">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Facility Type</span><span class="ts-v">Construction — Progressive Drawdown (S-Curve)</span></div>
+          <div class="ts-tr"><span class="ts-k">Loan Term</span><span class="ts-v" id="ts-term">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Interest Rate</span><span class="ts-v" id="ts-rate">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Line Fee</span><span class="ts-v" id="ts-linefee">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Application Fee</span><span class="ts-v" id="ts-appfee">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Interest Treatment</span><span class="ts-v">Capitalised monthly to facility balance</span></div>
+          <div class="ts-tr"><span class="ts-k">Repayment</span><span class="ts-v">Bullet — from sales settlement proceeds</span></div>
+        </div>
+      </div>
+
+      <div class="ts-section">
+        <div class="ts-section-head">Key Metrics & Covenants</div>
+        <div class="ts-table">
+          <div class="ts-tr"><span class="ts-k">LVR (on completion, net GST)</span><span class="ts-v" id="ts-lvr">—</span></div>
+          <div class="ts-tr"><span class="ts-k">LTC (on total dev. cost)</span><span class="ts-v" id="ts-ltc">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Equity Required</span><span class="ts-v" id="ts-equity">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Total Development Cost</span><span class="ts-v" id="ts-tdc">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Presales Coverage</span><span class="ts-v" id="ts-presales">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Profit on Cost</span><span class="ts-v" id="ts-poc">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Developer IRR (est.)</span><span class="ts-v" id="ts-irr">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Lenders Matched</span><span class="ts-v" id="ts-lenders">—</span></div>
+        </div>
+      </div>
+
+      <div class="ts-section">
+        <div class="ts-section-head">Indicative Funding Table</div>
+        <table class="ft-table">
+          <thead><tr><th style="text-align:left">Cost Item</th><th>Project Total</th><th>Developer</th><th>Bank</th></tr></thead>
+          <tbody id="ts-ft-body"></tbody>
+        </table>
+      </div>
+
+      <div class="ts-section">
+        <div class="ts-section-head">Indicative Conditions Precedent</div>
+        <div class="ts-table">
+          <div class="ts-tr"><span class="ts-k">Presales</span><span class="ts-v">Min. 100% of facility in unconditional presales prior to first drawdown</span></div>
+          <div class="ts-tr"><span class="ts-k">Valuation</span><span class="ts-v">Independent registered valuation acceptable to lender</span></div>
+          <div class="ts-tr"><span class="ts-k">QS Report</span><span class="ts-v">Quantity surveyor report confirming construction costs</span></div>
+          <div class="ts-tr"><span class="ts-k">Construction Contract</span><span class="ts-v">Executed fixed-price contract with licensed builder</span></div>
+          <div class="ts-tr"><span class="ts-k">Development Approval</span><span class="ts-v">DA issued, unconditional and not subject to appeal</span></div>
+        </div>
+      </div>
+
+      <div class="ts-disc"><strong>Important Notice:</strong> This indicative term sheet is prepared by Originate.ai for discussion purposes only and does not constitute an offer or commitment to provide finance. All terms are indicative and subject to formal credit approval, satisfactory due diligence, independent valuation, execution of facility documentation and satisfaction of all conditions precedent. Originate.ai is not a credit provider or Australian Credit Licence holder. Finance is arranged through licensed lenders. © 2025 Originate.ai Pty Ltd.</div>
+    </div>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <a class="tb-logo" href="index.html">Originate<span>.ai</span></a>
+  <div class="tb-badge">Development Finance</div>
+  <button class="tb-back" onclick="history.back()">← Back</button>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="layout">
+
+  <!-- CHAT COLUMN -->
+  <div class="chat">
+    <div class="msgs" id="msgs"></div>
+    <div class="input-area">
+      <div class="addr-drop" id="addr-drop"></div>
+      <div class="input-box">
+        <textarea id="ta" placeholder="Type your answer..." rows="1"
+          onkeydown="onKey(event)"
+          oninput="onInput(this)"></textarea>
+        <button class="send" id="send-btn" onclick="send()">↑</button>
+      </div>
+      <div class="hint">Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
+    </div>
+  </div>
+
+  <!-- SIDE PANEL -->
+  <div class="panel">
+    <div class="pb">
+      <div class="pbl">Borrower</div>
+      <div class="pr"><span class="pk">Name</span><span class="pv dim" id="p-name">Waiting...</span></div>
+      <div class="pr"><span class="pk">Email</span><span class="pv dim" id="p-email">Waiting...</span></div>
+      <div class="pr"><span class="pk">Phone</span><span class="pv dim" id="p-phone">Waiting...</span></div>
+      <div class="pr"><span class="pk">Address</span><span class="pv dim" id="p-address">Waiting...</span></div>
+    </div>
+    <div class="pb">
+      <div class="pbl">Project</div>
+      <div class="pr"><span class="pk">Units</span><span class="pv dim" id="p-units">—</span></div>
+      <div class="pr"><span class="pk">Avg Price</span><span class="pv dim" id="p-avgprice">—</span></div>
+      <div class="pr"><span class="pk">GRV</span><span class="pv dim" id="p-grv">—</span></div>
+      <div class="pr"><span class="pk">Land Cost</span><span class="pv dim" id="p-land">—</span></div>
+      <div class="pr"><span class="pk">Construction</span><span class="pv dim" id="p-const">—</span></div>
+      <div class="pr"><span class="pk">Other Costs</span><span class="pv dim" id="p-other">—</span></div>
+      <div class="pr"><span class="pk">Presales</span><span class="pv dim" id="p-presales">—</span></div>
+      <div class="pr"><span class="pk">Loan Term</span><span class="pv dim" id="p-term">—</span></div>
+    </div>
+    <div class="pb">
+      <div class="pbl">Live Metrics</div>
+      <div class="mg">
+        <div class="mbox"><div class="mv" id="m-lvr">—</div><div class="ml">LVR</div></div>
+        <div class="mbox"><div class="mv" id="m-ltc">—</div><div class="ml">LTC</div></div>
+        <div class="mbox"><div class="mv" id="m-poc">—</div><div class="ml">Profit/Cost</div></div>
+        <div class="mbox"><div class="mv" id="m-dc">—</div><div class="ml">Debt Cover</div></div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="pr"><span class="pk">Facility Limit</span><span class="pv g" id="p-facility">—</span></div>
+        <div class="pr"><span class="pk">Equity Required</span><span class="pv" id="p-equity">—</span></div>
+        <div class="pr"><span class="pk">Dev IRR</span><span class="pv gr" id="p-irr">—</span></div>
+      </div>
+    </div>
+    <div class="pb">
+      <div class="pbl">Lender Panel</div>
+      <div id="lender-list"><div style="font-size:12px;color:rgba(255,255,255,0.18);font-style:italic;padding:4px 0">Collecting deal details...</div></div>
+    </div>
+    <div class="pb">
+      <div class="pbl">Progress</div>
+      <div class="prog-row"><span class="prog-k">Contact details</span><span class="prog-v" id="pg1">○</span></div>
+      <div class="prog-row"><span class="prog-k">Site address</span><span class="prog-v" id="pg2">○</span></div>
+      <div class="prog-row"><span class="prog-k">Revenue (GRV)</span><span class="prog-v" id="pg3">○</span></div>
+      <div class="prog-row"><span class="prog-k">Land cost</span><span class="prog-v" id="pg4">○</span></div>
+      <div class="prog-row"><span class="prog-k">Construction cost</span><span class="prog-v" id="pg5">○</span></div>
+      <div class="prog-row"><span class="prog-k">Loan term</span><span class="prog-v" id="pg6">○</span></div>
+      <div class="prog-row"><span class="prog-k">Presales</span><span class="prog-v" id="pg7">○</span></div>
+      <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <button class="ts-btn" id="ts-btn" onclick="showTermSheet()">View Term Sheet →</button>
+      <div class="crm-ok" id="crm-ok">✓ Saved to CRM</div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ─────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────
+// Claude API key is in netlify/functions/claude.js (server-side only)
+var HS_URL = "https://originate-ai.netlify.app/.netlify/functions/hubspot";
+
+// ─────────────────────────────────────────────
+// S-CURVE TABLE (Book 2 — % time → % work)
+// ─────────────────────────────────────────────
+var SC = [
+  [0,0],[1,0.10],[2,0.25],[3,0.45],[4,0.80],[5,1.20],[6,1.70],[7,2.30],[8,3.00],[9,3.80],
+  [10,4.70],[12,7.00],[15,11.50],[18,16.80],[20,20.60],[25,30.20],[30,39.40],[35,47.70],
+  [40,55.20],[45,61.70],[50,67.30],[55,72.00],[60,75.80],[65,79.00],[70,81.60],[75,83.90],
+  [80,86.20],[85,88.80],[90,91.80],[95,95.20],[100,100]
+];
+function sCurve(t) {
+  if (t <= 0) return 0;
+  if (t >= 100) return 100;
+  var pt = Math.floor(t);
+  var lo = SC[0], hi = SC[SC.length-1];
+  for (var i = 0; i < SC.length-1; i++) {
+    if (SC[i][0] <= pt && SC[i+1][0] > pt) { lo = SC[i]; hi = SC[i+1]; break; }
+  }
+  return lo[1] + (hi[1]-lo[1]) * (pt-lo[0]) / (hi[0]-lo[0]);
+}
+
+// ─────────────────────────────────────────────
+// XIRR (Newton-Raphson, from Java XirrService)
+// ─────────────────────────────────────────────
+function xirr(flows) {
+  if (!flows || flows.length < 2) return 0;
+  var f0 = flows[0].month;
+  var f = flows.map(function(c) { return { a: c.amount, t: (c.month - f0) / 12 }; });
+  var r = 0.10;
+  for (var i = 0; i < 200; i++) {
+    var n = 0, d = 0;
+    for (var j = 0; j < f.length; j++) {
+      var x = Math.pow(1+r, f[j].t);
+      n += f[j].a / x;
+      if (f[j].t !== 0) d -= f[j].t * f[j].a / (x * (1+r));
+    }
+    if (Math.abs(d) < 1e-10) break;
+    var nr = r - n/d;
+    if (Math.abs(nr-r) < 1e-10) return nr;
+    r = nr;
+    if (r < -0.999) r = -0.5;
+  }
+  return r;
+}
+
+// ─────────────────────────────────────────────
+// FEASIBILITY ENGINE (Books 1, 2, 3)
+// ─────────────────────────────────────────────
+function runCalc(d) {
+  var units = d.units || 0;
+  var avgPrice = d.avgPrice || 0;
+  var cUnits = d.cUnits || 0;
+  var cAvgPrice = d.cAvgPrice || 0;
+  var landCost = d.landCost || 0;
+  var constCost = d.constCost || 0;
+  var otherCosts = d.otherCosts || 0;
+  var loanAmount = d.loanAmount || 0;
+  var loanTerm = d.loanTerm || 18;
+  var constTerm = d.constTerm || loanTerm;
+  var salesLag = d.salesLag || 2;
+  var presales = d.presales || 0;
+  var rate = d.rate || 0.065;
+  var lineFeeRate = d.lineFeeRate || 0.010;
+  var appFeeRate = d.appFeeRate || 0.005;
+  var commRate = d.commRate || 0.025;
+
+  // Book 1 — Revenue
+  var grvRes = units * avgPrice;
+  var grvCom = cUnits * cAvgPrice;
+  var grv = grvRes + grvCom;
+  // GST — Margin Scheme: -(Residential - (Residential/GRV * LandAtCost)) / 11
+  var gst = grv > 0 ? (grvRes - ((grvRes / grv) * landCost)) / 11 : 0;
+  var sellingCosts = grv * commRate;
+  var netSalesRev = grv - sellingCosts;
+  var nrv = netSalesRev - gst;
+
+  // Book 1 — Costs (pre-finance)
+  var totalPreFin = landCost + constCost + otherCosts;
+
+  // Book 3 — Facility (2-pass circular ref workaround)
+  // Facility = (bankBase + interest) / (1 - lineFeeRate/12 * loanTerm)
+  var bankPct = totalPreFin > 0 ? Math.max(0, (totalPreFin - landCost) / totalPreFin) : 0.65;
+  var bankBase = totalPreFin * bankPct;
+  var interestEst = bankBase * (rate / 12) * loanTerm * 0.60; // S-curve avg ~60%
+  var facDenom = 1 - (lineFeeRate / 12 * loanTerm);
+  var facEst = facDenom > 0.01 ? (bankBase + interestEst) / facDenom : bankBase + interestEst;
+
+  // Application fee
+  var appFee = facEst * appFeeRate;
+
+  // Final interest & line fee on facility
+  var interest = facEst * (rate / 12) * loanTerm * 0.60;
+  var lineFee = facEst * lineFeeRate * (loanTerm / 12);
+
+  // Apply facility limit constraints
+  var facility = facEst;
+  if (loanAmount > 0) facility = Math.min(facility, loanAmount);
+  // LVR cap 70%, LTC cap 75%
+  if (nrv > 0) facility = Math.min(facility, nrv * 0.70);
+
+  // Total Development Cost
+  var tdc = totalPreFin + interest + lineFee + appFee;
+
+  // Key metrics
+  var equity = Math.max(0, tdc - facility);
+  var profit = nrv - tdc;
+  var lvr = nrv > 0 ? facility / nrv : 0;
+  var ltc = tdc > 0 ? facility / tdc : 0;
+  var poc = tdc > 0 ? profit / tdc : 0;
+  var presalesNet = presales * (1 - commRate);
+  var debtCover = facility > 0 ? presalesNet / facility : 0;
+  var rlv = nrv - (tdc - landCost) * 1.20; // at 20% target margin
+
+  // IRR
+  var devIRR = equity > 0 && profit > 0
+    ? xirr([{ amount: -equity, month: 0 }, { amount: equity + profit, month: loanTerm }])
+    : 0;
+
+  return {
+    grv: grv, gst: gst, sellingCosts: sellingCosts, nrv: nrv,
+    landCost: landCost, constCost: constCost, otherCosts: otherCosts,
+    totalPreFin: totalPreFin, interest: interest, lineFee: lineFee, appFee: appFee,
+    tdc: tdc, facility: facility, equity: equity, profit: profit,
+    lvr: lvr, ltc: ltc, poc: poc, debtCover: debtCover, devIRR: devIRR, rlv: rlv,
+    rate: rate, lineFeeRate: lineFeeRate, appFeeRate: appFeeRate, loanTerm: loanTerm,
+    flags: { lvrOk: lvr <= 0.65, ltcOk: ltc <= 0.70, pocOk: poc >= 0.15, dcOk: debtCover >= 1.0 }
+  };
+}
+
+// Lender panel
+var PANEL = [
+  { name: "Major Bank",       maxLVR: 0.65, maxLTC: 0.70, minPOC: 0.18, rate: 7.50 },
+  { name: "Regional Bank",    maxLVR: 0.65, maxLTC: 0.72, minPOC: 0.15, rate: 8.50 },
+  { name: "Non-Bank A",       maxLVR: 0.68, maxLTC: 0.75, minPOC: 0.15, rate: 9.50 },
+  { name: "Non-Bank B",       maxLVR: 0.70, maxLTC: 0.75, minPOC: 0.12, rate: 10.50 },
+  { name: "Private Credit A", maxLVR: 0.72, maxLTC: 0.78, minPOC: 0.12, rate: 11.50 },
+  { name: "Private Credit B", maxLVR: 0.75, maxLTC: 0.80, minPOC: 0.10, rate: 12.50 },
+  { name: "Mezz Lender",      maxLVR: 0.80, maxLTC: 0.85, minPOC: 0.12, rate: 16.50 }
+];
+function matchLenders(lvr, ltc, poc) {
+  return PANEL.filter(function(l) { return lvr <= l.maxLVR && ltc <= l.maxLTC && poc >= l.minPOC; });
+}
+
+// Formatters
+function fd(v) {
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  return new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v);
+}
+function fp(v) { return (!v && v !== 0) || isNaN(v) ? "—" : (v * 100).toFixed(1) + "%"; }
+
+// ─────────────────────────────────────────────
+// GOOGLE PLACES
+// ─────────────────────────────────────────────
+var placesService = null;
+var expectingAddress = false;
+
+function onPlacesReady() {
+  placesService = new google.maps.places.AutocompleteService();
+}
+
+function getSuggestions(input) {
+  if (!placesService || input.length < 4) {
+    document.getElementById("addr-drop").style.display = "none";
+    return;
+  }
+  placesService.getPlacePredictions(
+    { input: input, componentRestrictions: { country: "au" }, types: ["geocode", "establishment"] },
+    function(predictions, status) {
+      var drop = document.getElementById("addr-drop");
+      if (status !== "OK" || !predictions || predictions.length === 0) {
+        drop.style.display = "none";
+        return;
+      }
+      drop.innerHTML = predictions.slice(0, 5).map(function(p) {
+        var main = p.structured_formatting.main_text || "";
+        var secondary = p.structured_formatting.secondary_text || "";
+        var full = p.description;
+        return "<div class=\"addr-item\" onclick=\"pickAddress('" + full.replace(/'/g, "\\'") + "')\">"
+          + "<span class=\"addr-main\">" + main + "</span>"
+          + "<span class=\"addr-sub\">" + secondary + "</span>"
+          + "</div>";
+      }).join("");
+      drop.style.display = "block";
+    }
+  );
+}
+
+function pickAddress(addr) {
+  document.getElementById("addr-drop").style.display = "none";
+  document.getElementById("ta").value = addr;
+  send();
+}
+
+// ─────────────────────────────────────────────
+// CHAT STATE
+// ─────────────────────────────────────────────
+var S = {
+  history: [],
+  data: {},
+  busy: false,
+  calcResult: null,
+  crmDone: false
+};
+
+// The system prompt — gives Claude all the feasibility logic so it knows what to ask
+function sysPrompt() {
+  return "You are a senior commercial real estate finance originator at Originate.ai, Australia's leading AI-powered lending platform. You are handling a DEVELOPMENT FINANCE enquiry.\n\n"
+    + "YOUR TASK: Collect all the inputs needed to run a full development feasibility, then confirm the results and offer the term sheet.\n\n"
+    + "DATA COLLECTED SO FAR:\n" + JSON.stringify(S.data, null, 2) + "\n\n"
+    + "REQUIRED INPUTS FOR THE FEASIBILITY MODEL (collect these in a natural conversation):\n"
+    + "1. Borrower contact: name, email, phone number\n"
+    + "2. Project address (Google Places autocomplete is active - tell them to start typing)\n"
+    + "3. Number of residential units\n"
+    + "4. Average sale price per unit (so we can calculate GRV = units x avg price)\n"
+    + "5. Any commercial component? (units and price)\n"
+    + "6. Land at cost (what they paid or are paying for the land)\n"
+    + "7. Construction contract value\n"
+    + "8. Construction term in months\n"
+    + "9. Total loan term in months (usually construction term + 2-3 months for sales settlement)\n"
+    + "10. Any unconditional presales? If yes, total value\n"
+    + "11. Other project costs: professional fees (architect, engineers, QS, PM), holding costs, marketing, contingency - ask for a combined total\n\n"
+    + "FEASIBILITY MODEL LOGIC (so you understand what we are calculating):\n"
+    + "- GRV = residential units x avg price + commercial units x commercial price\n"
+    + "- GST (margin scheme) = (GRV - land cost) / 11\n"
+    + "- Selling costs = GRV x 2.5%\n"
+    + "- Net Realization Value (NRV) = GRV - GST - selling costs\n"
+    + "- Total Dev Cost (TDC) = land + construction + other costs + capitalised interest + line fee + app fee\n"
+    + "- Facility = min(NRV x 70%, TDC x 75%, requested amount)\n"
+    + "- LVR = facility / NRV (lenders want max 65-70%)\n"
+    + "- LTC = facility / TDC (lenders want max 70-75%)\n"
+    + "- Profit on cost = (NRV - TDC) / TDC (lenders want min 18-20%)\n"
+    + "- Presales coverage = net presales / facility (lenders want min 100%)\n\n"
+    + "CONVERSATION RULES:\n"
+    + "- Start by asking for name, email and phone together in your first message\n"
+    + "- Then ask for the site address (tell them to start typing for autocomplete)\n"
+    + "- Then collect the project and cost inputs\n"
+    + "- ALWAYS confirm every number: say it back before moving on. Example: Perfect - construction contract of $2.4 million confirmed. Now, what is the total loan term?\n"
+    + "- ALWAYS disambiguate bare numbers. If they say 24 ask: is that 24 months or $24 million? If they say 2 ask: 2 units?\n"
+    + "- When you have enough data, acknowledge the feasibility is running live in the panel on the right\n"
+    + "- Flag issues proactively: LVR over 65%, profit on cost below 18%, zero presales\n"
+    + "- Maximum 2-3 sentences per response. Never bullet points. One question at a time.\n"
+    + "- Speak like a senior Australian finance professional - warm, precise, confident\n"
+    + "- When all data is collected, summarise every confirmed number in one paragraph and tell them to click View Term Sheet in the panel\n";
+}
+
+// ─────────────────────────────────────────────
+// CLAUDE API
+// ─────────────────────────────────────────────
+async function askClaude(userMsg) {
+  S.history.push({ role: "user", content: userMsg });
+  try {
+    // Route through Netlify function to avoid CORS block
+    var res = await fetch("https://originate-ai.netlify.app/.netlify/functions/claude", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        system: sysPrompt(),
+        messages: S.history
+      })
+    });
+    var json = await res.json();
+    var reply = (json.content && json.content[0] && json.content[0].text) || "Could you tell me a bit more about that?";
+    S.history.push({ role: "assistant", content: reply });
+    // Detect if next question is about address
+    var rl = reply.toLowerCase();
+    if (rl.includes("address") || rl.includes("type") && rl.includes("suggest")) {
+      expectingAddress = true;
+    } else if (rl.includes("unit") || rl.includes("price") || rl.includes("land") || rl.includes("construct") || rl.includes("name") || rl.includes("email")) {
+      expectingAddress = false;
+    }
+    return reply;
+  } catch(e) {
+    console.error("Claude error:", e);
+    return "I had a connection issue there — could you repeat that?";
+  }
+}
+
+// ─────────────────────────────────────────────
+// DATA EXTRACTION
+// ─────────────────────────────────────────────
+function extract(text) {
+  var tl = text.toLowerCase();
+
+  // Email
+  var em = text.match(/[\w.+-]+@[\w-]+\.[a-z]{2,}/i);
+  if (em && !S.data.email) S.data.email = em[0].toLowerCase();
+
+  // Phone — Australian formats
+  var ph = text.match(/(?:\+?61|0)[2-9]\d{8}|(?:\+?61|0)4\d{8}/);
+  if (ph && !S.data.phone) S.data.phone = ph[0];
+
+  // Name — simple heuristic: 2+ capitalised words not containing numbers
+  var nm = text.match(/^([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/);
+  if (!nm) nm = text.match(/(?:I.?m|my name is|name.?s?)\s+([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)/i);
+  if (nm && !S.data.name) S.data.name = nm[1].trim();
+
+  // Dollar millions
+  var mils = text.match(/\$?\s*(\d+(?:\.\d+)?)\s*(?:m(?:illion)?|mil)\b/gi);
+  if (mils) {
+    mils.forEach(function(m) {
+      var v = parseFloat(m.replace(/[^0-9.]/g, "")) * 1e6;
+      if (v < 10000) return;
+      if ((tl.includes("land") || tl.includes("purchase") || tl.includes("paid") || tl.includes("site cost")) && !S.data.landCost) {
+        S.data.landCost = v;
+      } else if ((tl.includes("construct") || tl.includes("build") || tl.includes("contract") || tl.includes("builder")) && !S.data.constCost) {
+        S.data.constCost = v;
+      } else if ((tl.includes("presale") || tl.includes("pre-sale") || tl.includes("pre sale") || tl.includes("contracts")) && S.data.presales === undefined) {
+        S.data.presales = v;
+      } else if ((tl.includes("other") || tl.includes("professional") || tl.includes("fee") || tl.includes("holding") || tl.includes("marketing")) && !S.data.otherCosts) {
+        S.data.otherCosts = v;
+      } else if ((tl.includes("average") || tl.includes("avg") || tl.includes("per unit") || tl.includes("each")) && !S.data.avgPrice) {
+        S.data.avgPrice = v;
+      } else if ((tl.includes("borrow") || tl.includes("loan") || tl.includes("facility") || tl.includes("need")) && !S.data.loanAmount) {
+        S.data.loanAmount = v;
+      } else if (!S.data.landCost && v > 500000 && v < 20e6) {
+        S.data.landCost = v;
+      }
+    });
+  }
+
+  // Raw $X,XXX,XXX
+  var dollars = text.match(/\$\s*([\d,]+(?:\.\d+)?)/g);
+  if (dollars) {
+    dollars.forEach(function(d) {
+      var v = parseFloat(d.replace(/[$,]/g, ""));
+      if (v > 100000 && !S.data.loanAmount) S.data.loanAmount = v;
+    });
+  }
+
+  // Units
+  var um = text.match(/(\d+)\s*(?:unit|apartment|townhouse|dwelling|lot|home|villa|residence)/i);
+  if (um && !S.data.units) S.data.units = parseInt(um[1]);
+
+  // Months
+  var mm = text.match(/(\d+)\s*(?:-\s*)?month/i);
+  if (mm) {
+    var mv = parseInt(mm[1]);
+    if (mv > 0 && mv <= 120) {
+      if ((tl.includes("construct") || tl.includes("build") || tl.includes("program")) && !S.data.constTerm) {
+        S.data.constTerm = mv;
+      } else if (!S.data.loanTerm) {
+        S.data.loanTerm = mv;
+      }
+    }
+  }
+
+  // Years to months
+  var ym = text.match(/(\d+)\s*year/i);
+  if (ym && !S.data.loanTerm) S.data.loanTerm = parseInt(ym[1]) * 12;
+
+  // Presales — none/zero
+  if (tl.match(/no presale|none|zero presale|no unconditional|no pre.?sale/) && S.data.presales === undefined) {
+    S.data.presales = 0;
+  }
+
+  // Address — contains suburb + state pattern
+  if (!S.data.address && text.length > 8) {
+    if (text.match(/\b(NSW|VIC|QLD|WA|SA|TAS|ACT|NT)\b/i) || text.includes(",")) {
+      S.data.address = text.trim();
+      expectingAddress = false;
+    }
+  }
+}
+
+// ─────────────────────────────────────────────
+// PANEL UPDATE
+// ─────────────────────────────────────────────
+function updatePanel() {
+  var d = S.data;
+
+  function set(id, val, cls) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (val) {
+      el.textContent = val;
+      el.className = "pv " + (cls || "");
+    } else {
+      el.textContent = "—";
+      el.className = "pv dim";
+    }
+  }
+
+  function tick(id) {
+    var el = document.getElementById(id);
+    if (el) { el.textContent = "✓"; el.className = "prog-v done"; }
+  }
+
+  // Contact
+  if (d.name) { set("p-name", d.name); }
+  if (d.email) { set("p-email", d.email); }
+  if (d.phone) { set("p-phone", d.phone); }
+  if (d.name && d.email && d.phone) tick("pg1");
+  else if (d.name || d.email) { var el = document.getElementById("pg1"); if(el) el.textContent = "~"; }
+
+  // Address
+  if (d.address) {
+    var short = d.address.length > 26 ? d.address.substring(0, 26) + "…" : d.address;
+    set("p-address", short);
+    tick("pg2");
+  }
+
+  // Project
+  if (d.units) set("p-units", d.units + " units");
+  if (d.avgPrice) set("p-avgprice", fd(d.avgPrice));
+  if (d.units && d.avgPrice) {
+    set("p-grv", fd(d.units * d.avgPrice), "gr");
+    tick("pg3");
+  }
+  if (d.landCost) { set("p-land", fd(d.landCost)); tick("pg4"); }
+  if (d.constCost) { set("p-const", fd(d.constCost)); tick("pg5"); }
+  if (d.loanTerm) { set("p-term", d.loanTerm + " months"); tick("pg6"); }
+  if (d.presales !== undefined) {
+    set("p-presales", d.presales > 0 ? fd(d.presales) : "None", d.presales > 0 ? "gr" : "");
+    tick("pg7");
+  }
+  if (d.otherCosts) set("p-other", fd(d.otherCosts));
+
+  // Progress bar
+  var keys = ["pg1","pg2","pg3","pg4","pg5","pg6","pg7"];
+  var done = keys.filter(function(id) {
+    var el = document.getElementById(id);
+    return el && el.textContent === "✓";
+  }).length;
+  document.getElementById("prog-fill").style.width = (done / keys.length * 100) + "%";
+
+  // Run calc if enough data
+  var canCalc = d.units && d.avgPrice && (d.landCost || d.constCost);
+  if (canCalc) {
+    try {
+      var r = runCalc({
+        units: d.units || 0,
+        avgPrice: d.avgPrice || 0,
+        cUnits: d.cUnits || 0,
+        cAvgPrice: d.cAvgPrice || 0,
+        landCost: d.landCost || 0,
+        constCost: d.constCost || 0,
+        otherCosts: d.otherCosts || (d.constCost || 0) * 0.15,
+        loanAmount: d.loanAmount || 0,
+        loanTerm: d.loanTerm || 18,
+        constTerm: d.constTerm || d.loanTerm || 18,
+        presales: d.presales || 0,
+        rate: 0.065, lineFeeRate: 0.010, appFeeRate: 0.005,
+        commRate: 0.025, salesLag: 2
+      });
+      S.calcResult = r;
+
+      // Metrics
+      function setBox(id, val, cls) {
+        var el = document.getElementById(id);
+        if (el) { el.textContent = val; el.className = "mv " + (cls || ""); }
+      }
+      setBox("m-lvr", fp(r.lvr), r.lvr <= 0.65 ? "gr" : r.lvr <= 0.70 ? "am" : "r");
+      setBox("m-ltc", fp(r.ltc), r.ltc <= 0.70 ? "gr" : r.ltc <= 0.75 ? "am" : "r");
+      setBox("m-poc", fp(r.poc), r.poc >= 0.20 ? "gr" : r.poc >= 0.15 ? "am" : "r");
+      setBox("m-dc", fp(r.debtCover), r.debtCover >= 1.0 ? "gr" : r.debtCover > 0 ? "am" : "r");
+      set("p-facility", fd(r.facility), "g");
+      set("p-equity", fd(r.equity));
+      set("p-irr", r.devIRR > 0 ? fp(r.devIRR) : "—", "gr");
+
+      // Lenders
+      var matched = matchLenders(r.lvr, r.ltc, r.poc);
+      var ll = document.getElementById("lender-list");
+      if (matched.length === 0) {
+        ll.innerHTML = "<div style=\"font-size:12px;color:#f87171;padding:4px 0\">Deal metrics exceed most panel criteria — speak to our team for structured solutions.</div>";
+      } else {
+        ll.innerHTML = matched.map(function(l) {
+          return "<div class=\"lrow\"><span class=\"ln\">" + l.name + "</span><span class=\"lr\">" + l.rate.toFixed(2) + "% p.a.</span></div>";
+        }).join("") + "<div style=\"font-size:11px;color:rgba(255,255,255,0.18);margin-top:7px;padding:3px 0\">" + matched.length + " of " + PANEL.length + " lenders matched</div>";
+      }
+    } catch(e) {
+      console.error("Calc error:", e);
+    }
+  }
+
+  // Show term sheet button when we have name + enough calc data
+  if (d.name && S.calcResult) {
+    document.getElementById("ts-btn").style.display = "block";
+  }
+
+  // Auto-sync to CRM when email + loan data collected
+  if (d.email && d.name && S.calcResult && !S.crmDone) {
+    S.crmDone = true;
+    syncCRM();
+  }
+}
+
+// ─────────────────────────────────────────────
+// CHAT UI
+// ─────────────────────────────────────────────
+function addMsg(role, text, chips) {
+  var msgs = document.getElementById("msgs");
+
+  // Remove typing indicator if exists
+  var ti = document.getElementById("typing-ind");
+  if (ti) ti.remove();
+
+  var wrap = document.createElement("div");
+  wrap.className = "msg " + role;
+
+  var av = "<div class=\"av " + (role === "ai" ? "o\">O" : "y\">You") + "</div>";
+
+  var chipsHtml = "";
+  if (chips && chips.length > 0) {
+    chipsHtml = "<div class=\"chips\">" + chips.map(function(c) {
+      return "<button class=\"chip\" onclick=\"sendChip('" + c.val.replace(/'/g, "\\'") + "')\">" + c.label + "</button>";
+    }).join("") + "</div>";
+  }
+
+  var bubble = "<div><div class=\"bbl\">" + text.replace(/\n/g, "<br>") + "</div>" + chipsHtml + "</div>";
+  wrap.innerHTML = av + bubble;
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function showTyping() {
+  var msgs = document.getElementById("msgs");
+  var old = document.getElementById("typing-ind");
+  if (old) old.remove();
+  var d = document.createElement("div");
+  d.id = "typing-ind";
+  d.className = "typing-row";
+  d.innerHTML = "<div class=\"av o\">O</div><div class=\"dots\"><span></span><span></span><span></span></div>";
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function sendChip(val) {
+  document.getElementById("addr-drop").style.display = "none";
+  processInput(val);
+}
+
+async function processInput(text) {
+  if (S.busy || !text.trim()) return;
+  S.busy = true;
+  document.getElementById("send-btn").disabled = true;
+  document.getElementById("addr-drop").style.display = "none";
+
+  addMsg("u", text);
+  extract(text);
+  updatePanel();
+  showTyping();
+
+  var reply = await askClaude(text);
+  addMsg("ai", reply);
+  updatePanel();
+
+  S.busy = false;
+  document.getElementById("send-btn").disabled = false;
+  document.getElementById("ta").focus();
+}
+
+function send() {
+  var ta = document.getElementById("ta");
+  var text = ta.value.trim();
+  if (!text || S.busy) return;
+  ta.value = "";
+  ta.style.height = "auto";
+  processInput(text);
+}
+
+function onKey(e) {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+  if (e.key === "Escape") document.getElementById("addr-drop").style.display = "none";
+}
+
+function onInput(el) {
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 96) + "px";
+  var val = el.value.trim();
+  if (expectingAddress && val.length >= 4) {
+    getSuggestions(val);
+  } else {
+    document.getElementById("addr-drop").style.display = "none";
+  }
+}
+
+// Close address drop on outside click
+document.addEventListener("click", function(e) {
+  if (!e.target.closest(".input-area")) {
+    document.getElementById("addr-drop").style.display = "none";
+  }
+});
+
+// ─────────────────────────────────────────────
+// HUBSPOT SYNC via Netlify function
+// ─────────────────────────────────────────────
+async function syncCRM() {
+  var d = S.data;
+  var r = S.calcResult;
+  try {
+    var res = await fetch(HS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: d.name || "",
+        email: d.email || "",
+        phone: d.phone || "",
+        loanType: "development",
+        loanAmount: d.loanAmount || (r ? r.facility : 0),
+        address: d.address || "",
+        loanTerm: d.loanTerm ? d.loanTerm + " months" : "",
+        lvr: r ? fp(r.lvr) : "",
+        ltc: r ? fp(r.ltc) : "",
+        poc: r ? fp(r.poc) : "",
+        facility: r ? fd(r.facility) : "",
+        notes: "Development Finance — AI chat enquiry"
+      })
+    });
+    var json = await res.json();
+    if (json.success) {
+      var ok = document.getElementById("crm-ok");
+      ok.style.display = "block";
+      setTimeout(function() { ok.style.display = "none"; }, 4000);
+    }
+  } catch(e) {
+    console.error("CRM sync error:", e);
+  }
+}
+
+// ─────────────────────────────────────────────
+// TERM SHEET
+// ─────────────────────────────────────────────
+function showTermSheet() {
+  var d = S.data;
+  var r = S.calcResult;
+  if (!r) return;
+
+  var today = new Date();
+  document.getElementById("ts-date").textContent = today.toLocaleDateString("en-AU", { day: "2-digit", month: "long", year: "numeric" });
+  document.getElementById("ts-ref").textContent = "OAI-" + today.getFullYear() + "-" + String(Math.floor(Math.random() * 900) + 100);
+  document.getElementById("ts-for").textContent = d.name || "—";
+  document.getElementById("ts-name").textContent = d.name || "—";
+  document.getElementById("ts-email").textContent = d.email || "—";
+  document.getElementById("ts-phone").textContent = d.phone || "—";
+  document.getElementById("ts-address").textContent = d.address || "—";
+  document.getElementById("ts-devtype").textContent = (d.units || "—") + " residential unit" + ((d.units || 0) !== 1 ? "s" : "");
+  document.getElementById("ts-grv").textContent = fd(r.grv);
+  document.getElementById("ts-nrv").textContent = fd(r.nrv);
+  document.getElementById("ts-facility").textContent = fd(r.facility);
+  document.getElementById("ts-term").textContent = r.loanTerm + " months";
+  document.getElementById("ts-rate").textContent = (r.rate * 100).toFixed(2) + "% p.a. (capitalised monthly)";
+  document.getElementById("ts-linefee").textContent = (r.lineFeeRate * 100).toFixed(2) + "% p.a.";
+  document.getElementById("ts-appfee").textContent = (r.appFeeRate * 100).toFixed(2) + "% = " + fd(r.appFee);
+  document.getElementById("ts-equity").textContent = fd(r.equity);
+  document.getElementById("ts-tdc").textContent = fd(r.tdc);
+
+  var lvrEl = document.getElementById("ts-lvr");
+  lvrEl.textContent = fp(r.lvr) + " " + (r.flags.lvrOk ? "✓" : "⚠");
+  lvrEl.className = "ts-v " + (r.flags.lvrOk ? "ok" : r.lvr <= 0.70 ? "warn" : "bad");
+
+  var ltcEl = document.getElementById("ts-ltc");
+  ltcEl.textContent = fp(r.ltc) + " " + (r.flags.ltcOk ? "✓" : "⚠");
+  ltcEl.className = "ts-v " + (r.flags.ltcOk ? "ok" : r.ltc <= 0.75 ? "warn" : "bad");
+
+  var pocEl = document.getElementById("ts-poc");
+  pocEl.textContent = fp(r.poc) + " " + (r.flags.pocOk ? "✓" : "⚠");
+  pocEl.className = "ts-v " + (r.flags.pocOk ? "ok" : r.poc >= 0.12 ? "warn" : "bad");
+
+  document.getElementById("ts-presales").textContent = d.presales > 0
+    ? fd(d.presales) + " gross / " + fp(r.debtCover) + " cover " + (r.flags.dcOk ? "✓" : "⚠")
+    : "No presales — required prior to first drawdown";
+
+  document.getElementById("ts-irr").textContent = r.devIRR > 0 ? fp(r.devIRR) : "—";
+
+  var matched = matchLenders(r.lvr, r.ltc, r.poc);
+  document.getElementById("ts-lenders").textContent = matched.length + " of " + PANEL.length + " lenders matched";
+
+  // Funding table
+  var devPct = r.equity / r.tdc;
+  var ftb = document.getElementById("ts-ft-body");
+  ftb.innerHTML =
+    "<tr class=\"grp\"><td colspan=\"4\">Land &amp; Acquisition</td></tr>" +
+    "<tr><td>Land at Cost</td><td>" + fd(r.landCost) + "</td><td>" + fd(r.landCost) + "</td><td>$0</td></tr>" +
+    "<tr class=\"grp\"><td colspan=\"4\">Construction &amp; Development</td></tr>" +
+    "<tr><td>Construction Contract</td><td>" + fd(r.constCost) + "</td><td>$0</td><td>" + fd(r.constCost) + "</td></tr>" +
+    "<tr><td>Other Project Costs</td><td>" + fd(r.otherCosts) + "</td><td>" + fd(r.otherCosts * 0.4) + "</td><td>" + fd(r.otherCosts * 0.6) + "</td></tr>" +
+    "<tr class=\"sub\"><td>Subtotal — Pre-Finance</td><td>" + fd(r.totalPreFin) + "</td><td>" + fd(r.equity) + "</td><td>" + fd(r.totalPreFin - r.equity) + "</td></tr>" +
+    "<tr class=\"grp\"><td colspan=\"4\">Finance Costs (Capitalised)</td></tr>" +
+    "<tr><td>Interest (S-Curve drawdown)</td><td>" + fd(r.interest) + "</td><td>$0</td><td>" + fd(r.interest) + "</td></tr>" +
+    "<tr><td>Line Fee (" + (r.lineFeeRate * 100).toFixed(1) + "% p.a.)</td><td>" + fd(r.lineFee) + "</td><td>$0</td><td>" + fd(r.lineFee) + "</td></tr>" +
+    "<tr><td>Application Fee</td><td>" + fd(r.appFee) + "</td><td>$0</td><td>" + fd(r.appFee) + "</td></tr>" +
+    "<tr class=\"tot\"><td>TOTAL DEVELOPMENT COSTS</td><td>" + fd(r.tdc) + "</td><td>" + fd(r.equity) + "</td><td>" + fd(r.facility) + "</td></tr>";
+
+  document.getElementById("ts-overlay").classList.add("show");
+}
+
+function closeTS() {
+  document.getElementById("ts-overlay").classList.remove("show");
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+window.addEventListener("DOMContentLoaded", function() {
+  expectingAddress = false;
+
+  // Show welcome immediately (no API call needed for opener)
+  setTimeout(function() {
+    addMsg("ai",
+      "Welcome to Originate.ai. I will guide you through your development finance application and generate a full indicative term sheet at the end — takes about 5 minutes." +
+      "<br><br>To get started, what is your full name, email address and best phone number?"
+    );
+  }, 400);
+});
+</script>
+</body>
+</html>
