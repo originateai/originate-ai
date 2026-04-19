@@ -112,6 +112,19 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 .doc-type-select select{padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:'DM Sans',sans-serif;color:var(--grey700)}
 .upload-progress{margin-top:8px;font-size:12px;color:var(--teal);display:none}
 
+/* Editable fields */
+.editable{cursor:pointer;padding:2px 6px;border-radius:4px;transition:all 0.15s;border:1px solid transparent}
+.editable:hover{background:var(--teal-bg);border-color:var(--teal-subtle)}
+.edit-hint{font-size:10px;color:var(--teal);font-weight:400;margin-left:8px;font-style:italic}
+.edit-input{padding:4px 8px;border:1px solid var(--teal);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);width:100%;outline:none;background:var(--teal-bg)}
+.edit-wrap{display:flex;gap:4px;align-items:center;flex:1}
+.edit-save{padding:4px 8px;border-radius:4px;background:var(--teal);color:white;border:none;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600}
+.edit-save:hover{background:var(--teal-dark)}
+.edit-cancel{padding:4px 8px;border-radius:4px;background:var(--grey100);color:var(--grey600);border:none;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif}
+.deal-notes{width:100%;min-height:80px;padding:10px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);resize:vertical}
+.deal-notes:focus{outline:none;border-color:var(--teal)}
+.save-flash{animation:flashGreen 1s ease}
+
 @media(max-width:768px){
   .container{padding:16px}
   .stats{grid-template-columns:repeat(2,1fr)}
@@ -254,6 +267,17 @@ function filterDeals(status, btn) {
 function showDetail(id) {
   var d = allDeals.find(function(deal){return deal.id === id});
   if (!d) return;
+  window._currentDealId = id;
+
+  function edt(label, dbField, val, type) {
+    var display = type === "dollar" ? fd(val) : (val || "—");
+    var inputType = type === "dollar" ? "number" : "text";
+    var rawVal = (val !== null && val !== undefined) ? val : "";
+    return '<div class="detail-row">'
+      + '<span class="detail-key">' + label + '</span>'
+      + '<span class="detail-val editable" onclick="makeEditable(this,\'' + dbField + '\',\'' + type + '\')" data-field="' + dbField + '" data-raw="' + rawVal + '">' + display + '</span>'
+      + '</div>';
+  }
 
   var html = '<div class="detail-title">' + (d.borrower_name || "Unnamed Deal") + '</div>'
     + '<div class="detail-address">' + (d.address || "No address") + '</div>'
@@ -265,30 +289,33 @@ function showDetail(id) {
       }).join("")
     + '</select></div>'
     + '<div class="detail-section">'
-    + '<div class="detail-section-head">Borrower</div>'
-    + '<div class="detail-row"><span class="detail-key">Name</span><span class="detail-val">' + (d.borrower_name||"—") + '</span></div>'
-    + '<div class="detail-row"><span class="detail-key">Email</span><span class="detail-val">' + (d.borrower_email||"—") + '</span></div>'
-    + '<div class="detail-row"><span class="detail-key">Phone</span><span class="detail-val">' + (d.borrower_phone||"—") + '</span></div>'
-    + '<div class="detail-row"><span class="detail-key">Type</span><span class="detail-val">' + (d.borrower_type||"—") + '</span></div>'
+    + '<div class="detail-section-head">Borrower <span class="edit-hint">click any value to edit</span></div>'
+    + edt("Name","borrower_name",d.borrower_name,"text")
+    + edt("Email","borrower_email",d.borrower_email,"text")
+    + edt("Phone","borrower_phone",d.borrower_phone,"text")
+    + edt("Type","borrower_type",d.borrower_type,"text")
     + '</div>'
     + '<div class="detail-section">'
     + '<div class="detail-section-head">Project</div>'
-    + '<div class="detail-row"><span class="detail-key">Category</span><span class="detail-val">' + (d.category||"—") + ' — ' + (d.sub_category||"") + '</span></div>'
-    + '<div class="detail-row"><span class="detail-key">Units</span><span class="detail-val">' + (d.units||"—") + '</span></div>'
-    + '<div class="detail-row"><span class="detail-key">Avg Price</span><span class="detail-val">' + fd(d.avg_price) + '</span></div>'
+    + edt("Category","category",d.category,"text")
+    + edt("Sub-type","sub_category",d.sub_category,"text")
+    + edt("Address","address",d.address,"text")
+    + edt("Units","units",d.units,"number")
+    + edt("Avg Price","avg_price",d.avg_price,"dollar")
     + '<div class="detail-row"><span class="detail-key">GRV</span><span class="detail-val">' + fd(d.grv) + '</span></div>'
-    + '<div class="detail-row"><span class="detail-key">DA Status</span><span class="detail-val">' + (d.da_status||"—") + '</span></div>'
+    + edt("DA Status","da_status",d.da_status,"text")
     + '</div>'
     + '<div class="detail-section">'
     + '<div class="detail-section-head">Costs</div>'
-    + '<div class="detail-row"><span class="detail-key">Land Cost</span><span class="detail-val">' + fd(d.land_cost) + '</span></div>'
-    + '<div class="detail-row"><span class="detail-key">Construction</span><span class="detail-val">' + fd(d.construction_cost) + '</span></div>'
-    + '<div class="detail-row"><span class="detail-key">Prof Fees</span><span class="detail-val">' + fd(d.prof_fees) + '</span></div>'
-    + '<div class="detail-row"><span class="detail-key">Marketing</span><span class="detail-val">' + fd(d.marketing_costs) + '</span></div>'
-    + '<div class="detail-row"><span class="detail-key">Contingency</span><span class="detail-val">' + fd(d.contingency) + '</span></div>'
+    + edt("Land Cost","land_cost",d.land_cost,"dollar")
+    + edt("Land Value","land_value",d.land_value,"dollar")
+    + edt("Construction","construction_cost",d.construction_cost,"dollar")
+    + edt("Prof Fees","prof_fees",d.prof_fees,"dollar")
+    + edt("Marketing","marketing_costs",d.marketing_costs,"dollar")
+    + edt("Contingency","contingency",d.contingency,"dollar")
     + '</div>'
     + '<div class="detail-section">'
-    + '<div class="detail-section-head">Feasibility</div>'
+    + '<div class="detail-section-head">Feasibility <span class="edit-hint">auto-calculated</span></div>'
     + '<div class="detail-row"><span class="detail-key">NRV</span><span class="detail-val">' + fd(d.calc_nrv) + '</span></div>'
     + '<div class="detail-row"><span class="detail-key">TDC</span><span class="detail-val">' + fd(d.calc_tdc) + '</span></div>'
     + '<div class="detail-row"><span class="detail-key">Facility</span><span class="detail-val teal">' + fd(d.calc_facility) + '</span></div>'
@@ -302,8 +329,14 @@ function showDetail(id) {
     + '</div>'
     + '<div class="detail-section">'
     + '<div class="detail-section-head">Timeline</div>'
-    + '<div class="detail-row"><span class="detail-key">Loan Term</span><span class="detail-val">' + (d.total_loan_term||"—") + ' months</span></div>'
+    + edt("Loan Term (months)","total_loan_term",d.total_loan_term,"number")
     + '<div class="detail-row"><span class="detail-key">Presales</span><span class="detail-val">' + (d.has_presales||"—") + (d.presales_value ? " — " + fd(d.presales_value) : "") + '</span></div>'
+    + edt("Presales Value","presales_value",d.presales_value,"dollar")
+    + '</div>'
+    + '<div class="detail-section">'
+    + '<div class="detail-section-head">Notes</div>'
+    + '<textarea id="deal-notes" class="deal-notes" placeholder="Add internal notes...">' + (d.notes || '') + '</textarea>'
+    + '<button class="doc-btn" style="margin-top:6px" onclick="saveNotes(\'' + d.id + '\')">Save Notes</button>'
     + '</div>'
     + '<div class="detail-section">'
     + '<div class="detail-section-head">Documents</div>'
@@ -353,6 +386,78 @@ async function updateStatus(dealId, newStatus) {
 async function doLogout() {
   await sb.auth.signOut();
   window.location.href = "login.html";
+}
+
+// ─────────────────────────────────────────────
+// INLINE EDITING
+// ─────────────────────────────────────────────
+function makeEditable(el, field, type) {
+  if (el.querySelector('.edit-input')) return; // already editing
+  var raw = el.getAttribute("data-raw") || "";
+  var row = el.closest(".detail-row");
+
+  el.innerHTML = '<div class="edit-wrap">'
+    + '<input class="edit-input" type="' + (type === "dollar" || type === "number" ? "number" : "text") + '" value="' + raw + '" onkeydown="if(event.key===\'Enter\')saveField(this,\'' + field + '\',\'' + type + '\')">'
+    + '<button class="edit-save" onclick="saveField(this.previousElementSibling,\'' + field + '\',\'' + type + '\')">✓</button>'
+    + '<button class="edit-cancel" onclick="cancelEdit(\'' + window._currentDealId + '\')">✗</button>'
+    + '</div>';
+
+  el.querySelector('.edit-input').focus();
+}
+
+async function saveField(input, field, type) {
+  var val = input.value.trim();
+  var dealId = window._currentDealId;
+
+  // Parse value
+  var parsed = val;
+  if (type === "dollar" || type === "number") {
+    parsed = val === "" ? null : parseFloat(val);
+  }
+
+  // Save to Supabase
+  var update = {};
+  update[field] = parsed;
+  var res = await sb.from("deals").update(update).eq("id", dealId);
+
+  if (res.error) {
+    alert("Save failed: " + res.error.message);
+    return;
+  }
+
+  // Update local data
+  var deal = allDeals.find(function(d){return d.id === dealId});
+  if (deal) deal[field] = parsed;
+
+  // Refresh table and re-render detail
+  renderStats(allDeals);
+  var filtered = currentFilter === "all" ? allDeals : allDeals.filter(function(d){return d.status===currentFilter});
+  renderTable(filtered);
+  showDetail(dealId);
+}
+
+function cancelEdit(dealId) {
+  showDetail(dealId);
+}
+
+async function saveNotes(dealId) {
+  var notes = document.getElementById("deal-notes").value;
+  var res = await sb.from("deals").update({notes: notes}).eq("id", dealId);
+
+  var deal = allDeals.find(function(d){return d.id === dealId});
+  if (deal) deal.notes = notes;
+
+  var btn = document.querySelector('.detail-section:last-of-type .doc-btn');
+  if (btn) {
+    btn.textContent = "✓ Saved";
+    btn.style.color = "var(--green)";
+    btn.style.borderColor = "var(--green)";
+    setTimeout(function() {
+      btn.textContent = "Save Notes";
+      btn.style.color = "";
+      btn.style.borderColor = "";
+    }, 2000);
+  }
 }
 
 // ─────────────────────────────────────────────
