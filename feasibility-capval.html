@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>getkredit.ai — Feasibility & Cap Valuation</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="config.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#0D9488;--teal-light:#14B8A6;--teal-dark:#0F766E;--teal-bg:#F0FDFA;--teal-subtle:#CCFBF1;
+  --white:#ffffff;--grey50:#f8fafc;--grey100:#f1f5f9;--grey200:#e2e8f0;
+  --grey500:#64748b;--grey600:#475569;--grey700:#334155;--grey800:#1e293b;--grey900:#0f172a;
+  --text:#0f172a;--muted:#64748b;--border:#e2e8f0;
+  --green:#059669;--red:#dc2626;--amber:#d97706;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50);min-height:100vh}
+
+/* NAV — matches portal.html */
+.nav{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:10}
+.nav-logo{font-family:'Source Serif 4',serif;font-size:21px;font-weight:700;color:var(--grey900);text-decoration:none}
+.nav-logo span{color:var(--teal)}
+.nav-right{display:flex;gap:12px;align-items:center}
+.nav-link{font-size:13px;color:var(--grey500);text-decoration:none;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);transition:all 0.15s;background:var(--white)}
+.nav-link:hover{border-color:var(--teal);color:var(--teal)}
+
+/* TABS */
+.tab-bar{background:var(--white);border-bottom:1px solid var(--border);display:flex;gap:0;padding:0 40px}
+.tab{padding:14px 20px;font-size:13px;font-weight:500;color:var(--grey500);cursor:pointer;border-bottom:2.5px solid transparent;transition:all 0.2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif}
+.tab:hover{color:var(--teal)}
+.tab.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:600}
+
+/* LAYOUT */
+.container{max-width:1100px;margin:0 auto;padding:28px 40px}
+
+/* MODE TOGGLE */
+.mode-toggle{display:flex;gap:8px;margin-bottom:24px}
+.mode-btn{padding:10px 20px;border-radius:var(--radius);border:1.5px solid var(--border);background:var(--white);color:var(--grey600);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+.mode-btn:hover{border-color:var(--teal);color:var(--teal)}
+.mode-btn.active{background:var(--teal-bg);border-color:var(--teal);color:var(--teal-dark);font-weight:600}
+
+/* SECTION */
+.section{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:16px;overflow:hidden}
+.section-head{padding:16px 22px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);display:flex;align-items:center;justify-content:space-between}
+.section-badge{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase}
+
+/* ROWS */
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px 22px;border-bottom:1px solid rgba(0,0,0,0.03);font-size:13px}
+.row:last-child{border-bottom:none}
+.row.indent{padding-left:40px}
+.row.subtotal{background:var(--grey50);font-weight:600;border-top:1px solid var(--border)}
+.row.total{background:var(--grey900);color:white;font-weight:600;font-size:14px;padding:14px 22px}
+.row-label{color:var(--grey600)}
+.row.subtotal .row-label,.row.total .row-label{color:inherit}
+.row-value{font-weight:500;font-variant-numeric:tabular-nums;color:var(--text)}
+.row-value.green{color:var(--green)}.row-value.red{color:var(--red)}.row-value.amber{color:var(--amber)}.row-value.teal{color:var(--teal)}
+
+/* EDITABLE INPUT */
+.edit-input{background:var(--grey50);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);text-align:right;width:140px;outline:none;font-variant-numeric:tabular-nums;transition:border-color 0.2s}
+.edit-input:focus{border-color:var(--teal);background:var(--white)}
+
+/* SUMMARY CARDS */
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.scard{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden}
+.scard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.scard.ok::before{background:var(--green)}.scard.warn::before{background:var(--amber)}.scard.bad::before{background:var(--red)}.scard.neutral::before{background:var(--teal)}
+.sc-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.sc-value{font-family:'Source Serif 4',serif;font-size:26px;font-weight:600;line-height:1;color:var(--text)}
+.sc-value.ok{color:var(--green)}.sc-value.warn{color:var(--amber)}.sc-value.bad{color:var(--red)}.sc-value.teal{color:var(--teal)}
+.sc-sub{font-size:11px;color:var(--muted);margin-top:5px}
+
+/* ADOPTED VALUE BANNER */
+.adopted-banner{background:var(--grey900);border-radius:var(--radius-lg);padding:24px 28px;color:white;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.ab-label{font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;opacity:0.5}
+.ab-value{font-family:'Source Serif 4',serif;font-size:32px;font-weight:700;margin-top:4px}
+.ab-yield{text-align:right}
+.ab-yield-val{font-size:22px;font-weight:600;color:var(--teal-light)}
+
+/* CASH FLOW */
+.cf-scroll{overflow-x:auto;margin-top:0}
+.cf-table{width:100%;border-collapse:collapse;font-size:12px;min-width:700px}
+.cf-table th{font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);padding:8px 8px;border-bottom:2px solid var(--border);text-align:right;background:var(--grey50);white-space:nowrap}
+.cf-table th:first-child{text-align:left;position:sticky;left:0;background:var(--grey50);z-index:1}
+.cf-table td{padding:6px 8px;border-bottom:1px solid rgba(0,0,0,0.03);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cf-table td:first-child{text-align:left;position:sticky;left:0;background:var(--white);z-index:1;font-size:11px;color:var(--muted)}
+.cf-table .cf-total td{background:var(--grey900);color:white;font-weight:600}
+.cf-table .cf-total td:first-child{background:var(--grey900);color:rgba(255,255,255,0.7)}
+
+/* SENSITIVITY TABLE */
+.sens-table{width:100%;border-collapse:collapse;font-size:12px}
+.sens-table th{font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);padding:8px 12px;border-bottom:2px solid var(--border);text-align:right;background:var(--grey50)}
+.sens-table td{padding:7px 12px;border-bottom:1px solid rgba(0,0,0,0.03);text-align:right;font-variant-numeric:tabular-nums}
+.sens-table tr.active{background:var(--teal-bg);font-weight:600}
+
+/* CHART BARS */
+.bar-chart{display:flex;align-items:flex-end;gap:3px;height:160px;padding-bottom:24px;position:relative}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:1}
+.bar-debt{background:linear-gradient(to top,var(--red),#ef4444);border-radius:3px 3px 0 0;transition:height 0.3s;min-width:4px}
+.bar-equity{background:linear-gradient(to top,var(--teal),var(--teal-light));border-radius:3px 3px 0 0;transition:height 0.3s;min-width:4px}
+.bar-label{font-size:9px;color:var(--muted);margin-top:4px}
+.bar-legend{display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:11px;color:var(--muted)}
+.bar-legend-dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
+
+/* CREDIT ASSESSMENT */
+.credit-box{border-radius:var(--radius-lg);padding:16px;text-align:center;margin-top:16px;font-weight:600;font-size:15px}
+.credit-box.ok{background:rgba(5,150,105,0.08);border:1.5px solid var(--green);color:var(--green)}
+.credit-box.warn{background:rgba(217,119,6,0.08);border:1.5px solid var(--amber);color:var(--amber)}
+.credit-box.bad{background:rgba(220,38,38,0.06);border:1.5px solid var(--red);color:var(--red)}
+
+/* HIDE/SHOW */
+.hidden{display:none!important}
+
+@media(max-width:768px){
+  .container{padding:20px}
+  .nav{padding:0 20px}
+  .tab-bar{padding:0 20px;overflow-x:auto}
+  .summary-grid{grid-template-columns:1fr 1fr}
+  .adopted-banner{flex-direction:column;gap:12px;text-align:center}
+  .ab-yield{text-align:center}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a class="nav-logo" href="index.html">get<span>kredit.ai</span></a>
+  <div class="nav-right">
+    <a class="nav-link" href="portal.html">My Deals</a>
+    <a class="nav-link" href="development-chat.html">+ New Deal</a>
+  </div>
+</nav>
+
+<div class="tab-bar">
+  <button class="tab active" data-tab="capval" onclick="switchTab('capval')">◈ Cap Valuation</button>
+  <button class="tab" data-tab="feasibility" onclick="switchTab('feasibility')">◆ Dev Feasibility</button>
+  <button class="tab" data-tab="cashflow" onclick="switchTab('cashflow')">◇ Cash Flow</button>
+  <button class="tab" data-tab="metrics" onclick="switchTab('metrics')">◉ Returns</button>
+</div>
+
+<div class="container">
+
+<!-- ═══════════════════════════════════════ -->
+<!-- TAB: CAP VALUATION                     -->
+<!-- ═══════════════════════════════════════ -->
+<div id="tab-capval">
+
+  <div class="mode-toggle">
+    <button class="mode-btn active" onclick="setMode('commercial')">Commercial — Investment</button>
+    <button class="mode-btn" onclick="setMode('resi')">Residential — Development</button>
+  </div>
+
+  <!-- INCOME -->
+  <div class="section" id="sec-income">
+    <div class="section-head">Income</div>
+    <div class="row">
+      <span class="row-label">Tenant</span>
+      <input class="edit-input" id="i-tenant" value="Viva Energy" style="width:200px;text-align:left" onchange="calc()">
+    </div>
+    <div class="row">
+      <span class="row-label">Gross Passing Income (p.a.)</span>
+      <input class="edit-input" id="i-income" type="number" value="492000" onchange="calc()">
+    </div>
+    <div class="row indent">
+      <span class="row-label">Vacancy Allowance</span>
+      <input class="edit-input" id="i-vacancy" type="number" value="3" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
+    </div>
+    <div class="row indent">
+      <span class="row-label">Less: Vacancy</span>
+      <span class="row-value red" id="o-vacancy">—</span>
+    </div>
+    <div class="row subtotal">
+      <span class="row-label">Effective Gross Income</span>
+      <span class="row-value teal" id="o-egi">—</span>
+    </div>
+  </div>
+
+  <!-- OUTGOINGS -->
+  <div class="section" id="sec-outgoings">
+    <div class="section-head">Outgoings</div>
+    <div class="row indent">
+      <span class="row-label">Council Rates</span>
+      <input class="edit-input" id="i-rates" type="number" value="18500" onchange="calc()">
+    </div>
+    <div class="row indent">
+      <span class="row-label">Insurance</span>
+      <input class="edit-input" id="i-insurance" type="number" value="12000" onchange="calc()">
+    </div>
+    <div class="row indent">
+      <span class="row-label">Land Tax</span>
+      <input class="edit-input" id="i-landtax" type="number" value="8500" onchange="calc()">
+    </div>
+    <div class="row indent">
+      <span class="row-label">Management Fee</span>
+      <input class="edit-input" id="i-mgmt" type="number" value="4" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
+    </div>
+    <div class="row indent">
+      <span class="row-label">Management Fee Amount</span>
+      <span class="row-value" id="o-mgmtamt">—</span>
+    </div>
+    <div class="row indent">
+      <span class="row-label">Other Outgoings</span>
+      <input class="edit-input" id="i-other" type="number" value="5000" onchange="calc()">
+    </div>
+    <div class="row subtotal">
+      <span class="row-label">Total Outgoings</span>
+      <span class="row-value red" id="o-outgoings">—</span>
+    </div>
+  </div>
+
+  <!-- CAPITALISATION -->
+  <div class="section" id="sec-caprate">
+    <div class="section-head">Capitalisation</div>
+    <div class="row subtotal">
+      <span class="row-label">Net Income</span>
+      <span class="row-value teal" id="o-netincome">—</span>
+    </div>
+    <div class="row">
+      <span class="row-label">Capitalisation Rate</span>
+      <input class="edit-input" id="i-caprate" type="number" value="6.0" step="0.25" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
+    </div>
+    <div class="row subtotal">
+      <span class="row-label">Capitalised Value</span>
+      <span class="row-value teal" id="o-capvalue" style="font-size:18px;font-weight:700">—</span>
+    </div>
+  </div>
+
+  <!-- BELOW THE LINE -->
+  <div class="section" id="sec-btl">
+    <div class="section-head" style="color:var(--red)">Below the Line Adjustments</div>
+    <div class="row indent">
+      <span class="row-label">Outstanding Lease Incentives</span>
+      <input class="edit-input" id="i-btl-incentives" type="number" value="0" onchange="calc()">
+    </div>
+    <div class="row indent">
+      <span class="row-label">Make-Good Provisions</span>
+      <input class="edit-input" id="i-btl-makegood" type="number" value="0" onchange="calc()">
+    </div>
+    <div class="row indent">
+      <span class="row-label">Capex / Leasing Costs</span>
+      <input class="edit-input" id="i-btl-capex" type="number" value="50000" onchange="calc()">
+    </div>
+    <div class="row indent">
+      <span class="row-label">Rental Shortfall / Surplus</span>
+      <input class="edit-input" id="i-btl-shortfall" type="number" value="0" onchange="calc()">
+    </div>
+    <div class="row indent">
+      <span class="row-label">Remediation Allowance</span>
+      <input class="edit-input" id="i-btl-remediation" type="number" value="0" onchange="calc()">
+    </div>
+    <div class="row subtotal">
+      <span class="row-label">Total BTL Adjustments</span>
+      <span class="row-value red" id="o-btl">—</span>
+    </div>
+  </div>
+
+  <!-- ADOPTED VALUE BANNER -->
+  <div class="adopted-banner" id="sec-adopted">
+    <div>
+      <div class="ab-label">Adopted Value</div>
+      <div class="ab-value" id="o-adopted">—</div>
+    </div>
+    <div class="ab-yield">
+      <div class="ab-label">Passing Yield</div>
+      <div class="ab-yield-val" id="o-yield">—</div>
+    </div>
+  </div>
+
+  <!-- RESI MODE (hidden by default) -->
+  <div class="section hidden" id="sec-resi">
+    <div class="section-head">Revenue (Residential)</div>
+    <div class="row">
+      <span class="row-label">Number of Units</span>
+      <input class="edit-input" id="i-units" type="number" value="2" onchange="calc()">
+    </div>
+    <div class="row">
+      <span class="row-label">Avg Price per Unit</span>
+      <input class="edit-input" id="i-avgprice" type="number" value="2750000" onchange="calc()">
+    </div>
+    <div class="row">
+      <span class="row-label">Presales</span>
+      <input class="edit-input" id="i-presales" type="number" value="0" onchange="calc()">
+    </div>
+    <div class="row subtotal">
+      <span class="row-label">GRV (Gross Realisable Value)</span>
+      <span class="row-value teal" id="o-grv" style="font-size:18px;font-weight:700">—</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- TAB: DEV FEASIBILITY                   -->
+<!-- ═══════════════════════════════════════ -->
+<div id="tab-feasibility" class="hidden">
+
+  <div class="section">
+    <div class="section-head">Land & Acquisition</div>
+    <div class="row">
+      <span class="row-label">Land Value</span>
+      <input class="edit-input" id="i-landval" type="number" value="1100000" onchange="calc()">
+    </div>
+    <div class="row indent">
+      <span class="row-label">Stamp Duty</span>
+      <input class="edit-input" id="i-stamp" type="number" value="45000" onchange="calc()">
+    </div>
+    <div class="row indent">
+      <span class="row-label">Legal Costs</span>
+      <input class="edit-input" id="i-legal" type="number" value="35000" onchange="calc()">
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">Construction & Hard Costs</div>
+    <div class="row">
+      <span class="row-label">Construction Cost</span>
+      <input class="edit-input" id="i-const" type="number" value="4345000" onchange="calc()">
+    </div>
+    <div class="row indent">
+      <span class="row-label">Professional Fees</span>
+      <input class="edit-input" id="i-proffees" type="number" value="6" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
+    </div>
+    <div class="row indent">
+      <span class="row-label">Prof Fees Amount</span>
+      <span class="row-value" id="o-proffees">—</span>
+    </div>
+    <div class="row indent">
+      <span class="row-label">Council Contributions</span>
+      <input class="edit-input" id="i-council" type="number" value="25000" onchange="calc()">
+    </div>
+    <div class="row indent">
+      <span class="row-label">Contingency</span>
+      <input class="edit-input" id="i-contingency" type="number" value="5" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
+    </div>
+    <div class="row indent">
+      <span class="row-label">Contingency Amount</span>
+      <span class="row-value" id="o-contingency">—</span>
+    </div>
+    <div class="row subtotal">
+      <span class="row-label">Total Hard Costs</span>
+      <span class="row-value" id="o-hardcosts">—</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">Finance</div>
+    <div class="row">
+      <span class="row-label">LVR</span>
+      <input class="edit-input" id="i-lvr" type="number" value="65" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
+    </div>
+    <div class="row">
+      <span class="row-label">Interest Rate (p.a.)</span>
+      <input class="edit-input" id="i-rate" type="number" value="8.5" step="0.25" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
+    </div>
+    <div class="row">
+      <span class="row-label">Line Fee</span>
+      <input class="edit-input" id="i-linefee" type="number" value="1.0" step="0.25" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
+    </div>
+    <div class="row">
+      <span class="row-label">Development Period</span>
+      <input class="edit-input" id="i-devmonths" type="number" value="12" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">mths</span>
+    </div>
+    <div class="row indent"><span class="row-label">Debt Facility</span><span class="row-value" id="o-facility">—</span></div>
+    <div class="row indent"><span class="row-label">Equity Required</span><span class="row-value" id="o-equity">—</span></div>
+    <div class="row indent"><span class="row-label">Line Fee Amount</span><span class="row-value" id="o-linefeeamt">—</span></div>
+    <div class="row indent"><span class="row-label">Interest Cost (est.)</span><span class="row-value" id="o-interest">—</span></div>
+    <div class="row subtotal">
+      <span class="row-label">Total Finance Costs</span>
+      <span class="row-value" id="o-financecosts">—</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">Summary</div>
+    <div class="row subtotal"><span class="row-label">Total Development Cost</span><span class="row-value" id="o-tdc">—</span></div>
+    <div class="row subtotal"><span class="row-label">Total Finance Costs</span><span class="row-value" id="o-tfc">—</span></div>
+    <div class="row total"><span class="row-label">Total Project Cost</span><span class="row-value" id="o-tpc">—</span></div>
+    <div class="row subtotal"><span class="row-label">GRV (Adopted Value)</span><span class="row-value teal" id="o-grv2" style="font-size:16px;font-weight:700">—</span></div>
+    <div class="row subtotal"><span class="row-label">Development Margin</span><span class="row-value" id="o-margin" style="font-size:16px;font-weight:700">—</span></div>
+    <div class="row subtotal"><span class="row-label">Margin on Cost</span><span class="row-value" id="o-marginpct" style="font-size:16px;font-weight:700">—</span></div>
+  </div>
+
+  <div id="credit-box" class="credit-box ok">—</div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- TAB: CASH FLOW                         -->
+<!-- ═══════════════════════════════════════ -->
+<div id="tab-cashflow" class="hidden">
+
+  <div class="summary-grid" id="cf-cards"></div>
+
+  <div class="section">
+    <div class="section-head">Cumulative Drawdown & Equity</div>
+    <div style="padding:20px 22px">
+      <div class="bar-chart" id="cf-bars"></div>
+      <div class="bar-legend">
+        <span><span class="bar-legend-dot" style="background:var(--teal)"></span>Equity</span>
+        <span><span class="bar-legend-dot" style="background:var(--red)"></span>Debt</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">Monthly Detail</div>
+    <div class="cf-scroll">
+      <table class="cf-table">
+        <thead id="cf-thead"></thead>
+        <tbody id="cf-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- TAB: RETURNS                           -->
+<!-- ═══════════════════════════════════════ -->
+<div id="tab-metrics" class="hidden">
+
+  <div class="summary-grid" id="ret-cards"></div>
+
+  <div class="section">
+    <div class="section-head">Cap Rate Sensitivity</div>
+    <div style="padding:0">
+      <table class="sens-table" id="sens-table">
+        <thead>
+          <tr><th style="text-align:left">Cap Rate</th><th>Cap Value</th><th>Dev Margin</th><th>Margin %</th></tr>
+        </thead>
+        <tbody id="sens-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+"use strict";
+
+var MODE = "commercial"; // "commercial" or "resi"
+
+function fd(v){
+  if(v===null||v===undefined||isNaN(v)) return "—";
+  return new Intl.NumberFormat("en-AU",{style:"currency",currency:"AUD",minimumFractionDigits:0,maximumFractionDigits:0}).format(v);
+}
+function fp(v,d){return(!v&&v!==0)||isNaN(v)?"—":(v*100).toFixed(d||2)+"%";}
+function n(id){return parseFloat(document.getElementById(id).value)||0;}
+
+// ── TAB SWITCHING ──
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+  document.querySelector('[data-tab="'+tab+'"]').classList.add('active');
+  ['capval','feasibility','cashflow','metrics'].forEach(function(t){
+    document.getElementById('tab-'+t).classList.toggle('hidden', t!==tab);
+  });
+}
+
+// ── MODE SWITCHING ──
+function setMode(mode){
+  MODE = mode;
+  document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('active')});
+  event.target.classList.add('active');
+  var commSections = ['sec-income','sec-outgoings','sec-caprate','sec-btl','sec-adopted'];
+  commSections.forEach(function(id){document.getElementById(id).classList.toggle('hidden', mode!=='commercial')});
+  document.getElementById('sec-resi').classList.toggle('hidden', mode!=='resi');
+  calc();
+}
+
+// ══════════════════════════════════════════
+// MAIN CALCULATION ENGINE
+// ══════════════════════════════════════════
+function calc(){
+  // ── CAP VAL (Commercial) ──
+  var grossIncome = n('i-income');
+  var vacancyPct = n('i-vacancy') / 100;
+  var vacancyAmt = grossIncome * vacancyPct;
+  var egi = grossIncome - vacancyAmt;
+
+  var rates = n('i-rates');
+  var insurance = n('i-insurance');
+  var landtax = n('i-landtax');
+  var mgmtPct = n('i-mgmt') / 100;
+  var mgmtAmt = egi * mgmtPct;
+  var otherOut = n('i-other');
+  var totalOutgoings = rates + insurance + landtax + mgmtAmt + otherOut;
+  var netIncome = egi - totalOutgoings;
+
+  var capRate = n('i-caprate') / 100;
+  var capValue = capRate > 0 ? netIncome / capRate : 0;
+
+  var btlIncentives = n('i-btl-incentives');
+  var btlMakegood = n('i-btl-makegood');
+  var btlCapex = n('i-btl-capex');
+  var btlShortfall = n('i-btl-shortfall');
+  var btlRemediation = n('i-btl-remediation');
+  var totalBTL = btlIncentives + btlMakegood + btlCapex + btlShortfall + btlRemediation;
+  var adoptedValue = capValue - totalBTL;
+  var passingYield = adoptedValue > 0 ? netIncome / adoptedValue : 0;
+
+  // Update cap val outputs
+  document.getElementById('o-vacancy').textContent = "-" + fd(vacancyAmt);
+  document.getElementById('o-egi').textContent = fd(egi);
+  document.getElementById('o-mgmtamt').textContent = fd(mgmtAmt);
+  document.getElementById('o-outgoings').textContent = "-" + fd(totalOutgoings);
+  document.getElementById('o-netincome').textContent = fd(netIncome);
+  document.getElementById('o-capvalue').textContent = fd(capValue);
+  document.getElementById('o-btl').textContent = "-" + fd(totalBTL);
+  document.getElementById('o-adopted').textContent = fd(adoptedValue);
+  document.getElementById('o-yield').textContent = fp(passingYield);
+
+  // ── RESI GRV ──
+  var units = n('i-units');
+  var avgPrice = n('i-avgprice');
+  var resiGRV = units * avgPrice;
+  document.getElementById('o-grv').textContent = fd(resiGRV);
+
+  // ── GRV for feasibility ──
+  var grv = MODE === 'commercial' ? adoptedValue : resiGRV;
+
+  // ── DEV FEASIBILITY ──
+  var landValue = n('i-landval');
+  var stamp = n('i-stamp');
+  var legal = n('i-legal');
+  var constCost = n('i-const');
+  var profFeesPct = n('i-proffees') / 100;
+  var profFeesAmt = constCost * profFeesPct;
+  var council = n('i-council');
+  var contPct = n('i-contingency') / 100;
+  var contAmt = constCost * contPct;
+  var totalHardCosts = constCost + profFeesAmt + contAmt + council;
+
+  var totalDevCost = landValue + stamp + legal + totalHardCosts;
+
+  var lvr = n('i-lvr') / 100;
+  var rate = n('i-rate') / 100;
+  var lineFeePct = n('i-linefee') / 100;
+  var devMonths = n('i-devmonths');
+
+  var facility = totalDevCost * lvr;
+  var equity = totalDevCost - facility;
+  var lineFeeAmt = facility * lineFeePct;
+  var avgDrawn = facility * 0.55;
+  var interestCost = avgDrawn * rate * (devMonths / 12);
+  var totalFinanceCosts = interestCost + lineFeeAmt;
+  var totalProjectCost = totalDevCost + totalFinanceCosts;
+  var devMargin = grv - totalProjectCost;
+  var marginPct = totalProjectCost > 0 ? devMargin / totalProjectCost : 0;
+
+  // Update feasibility outputs
+  document.getElementById('o-proffees').textContent = fd(profFeesAmt);
+  document.getElementById('o-contingency').textContent = fd(contAmt);
+  document.getElementById('o-hardcosts').textContent = fd(totalHardCosts);
+  document.getElementById('o-facility').textContent = fd(facility);
+  document.getElementById('o-equity').textContent = fd(equity);
+  document.getElementById('o-linefeeamt').textContent = fd(lineFeeAmt);
+  document.getElementById('o-interest').textContent = fd(interestCost);
+  document.getElementById('o-financecosts').textContent = fd(totalFinanceCosts);
+  document.getElementById('o-tdc').textContent = fd(totalDevCost);
+  document.getElementById('o-tfc').textContent = fd(totalFinanceCosts);
+  document.getElementById('o-tpc').textContent = fd(totalProjectCost);
+  document.getElementById('o-grv2').textContent = fd(grv);
+
+  var mEl = document.getElementById('o-margin');
+  mEl.textContent = fd(devMargin);
+  mEl.className = 'row-value ' + (devMargin >= 0 ? 'green' : 'red');
+
+  var mpEl = document.getElementById('o-marginpct');
+  mpEl.textContent = fp(marginPct);
+  mpEl.className = 'row-value ' + (marginPct >= 0.20 ? 'green' : marginPct >= 0.15 ? 'amber' : 'red');
+
+  // Credit box
+  var cb = document.getElementById('credit-box');
+  if(marginPct >= 0.20){cb.className='credit-box ok';cb.textContent='✓ Strong margin — bankable';}
+  else if(marginPct >= 0.15){cb.className='credit-box warn';cb.textContent='⚠ Marginal — lender dependent';}
+  else{cb.className='credit-box bad';cb.textContent='✗ Insufficient margin — requires restructure';}
+
+  // ── CASH FLOW ──
+  buildCashFlow(constCost, profFeesAmt, contAmt, landValue, stamp, legal, lvr, rate, devMonths, facility);
+
+  // ── RETURNS ──
+  buildReturns(grv, totalProjectCost, devMargin, marginPct, equity, facility, totalFinanceCosts, netIncome, passingYield, capRate, rate, interestCost);
+
+  // ── SENSITIVITY ──
+  buildSensitivity(netIncome, totalBTL, totalProjectCost, capRate);
+}
+
+// ══════════════════════════════════════════
+// CASH FLOW BUILDER
+// ══════════════════════════════════════════
+function buildCashFlow(constCost, profFees, contingency, land, stamp, legal, lvr, rate, months, facility){
+  // S-curve profile
+  var raw = [];
+  for(var i=0;i<months;i++){
+    var t = (i+0.5)/months;
+    raw.push(Math.pow(Math.sin(t*Math.PI/2),1.5));
+  }
+  var sum = raw.reduce(function(a,b){return a+b},0);
+  var profile = raw.map(function(r){return r/sum});
+
+  var rows = [];
+  var cumDebt = 0, cumEquity = 0, cumInterest = 0;
+  var monthlyRate = rate / 12;
+
+  // M0 — settlement
+  var landEquity = land + stamp + legal;
+  cumEquity = landEquity;
+  rows.push({month:0,label:'Settle',construction:0,drawdown:0,equity:landEquity,interest:0,cumDebt:0,cumEquity:landEquity});
+
+  for(var m=0;m<months;m++){
+    var pct = profile[m];
+    var mConst = constCost * pct;
+    var mProf = profFees * pct;
+    var mCont = contingency * pct;
+    var mTotal = mConst + mProf + mCont;
+    var draw = mTotal * lvr;
+    var eq = mTotal * (1 - lvr);
+    cumDebt += draw;
+    cumEquity += eq;
+    var interest = cumDebt * monthlyRate;
+    cumInterest += interest;
+    rows.push({month:m+1,label:'M'+(m+1),construction:mConst,drawdown:draw,equity:eq,interest:interest,cumDebt:cumDebt,cumEquity:cumEquity});
+  }
+
+  var peakDebt = Math.max.apply(null, rows.map(function(r){return r.cumDebt}));
+  var totalInterest = rows.reduce(function(s,r){return s+r.interest},0);
+  var totalEquity = rows[rows.length-1].cumEquity;
+
+  // Cards
+  document.getElementById('cf-cards').innerHTML =
+    '<div class="scard bad"><div class="sc-label">Peak Debt</div><div class="sc-value bad">'+fd(peakDebt)+'</div></div>'
+    +'<div class="scard warn"><div class="sc-label">Total Interest</div><div class="sc-value warn">'+fd(totalInterest)+'</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Total Equity</div><div class="sc-value teal">'+fd(totalEquity)+'</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Months</div><div class="sc-value">'+months+'</div></div>';
+
+  // Bar chart
+  var maxVal = peakDebt + totalEquity;
+  var barsHtml = '';
+  rows.forEach(function(r){
+    var dH = maxVal > 0 ? (r.cumDebt/maxVal)*140 : 0;
+    var eH = maxVal > 0 ? (r.cumEquity/maxVal)*140 : 0;
+    barsHtml += '<div class="bar-col">'
+      +'<div style="display:flex;flex-direction:column-reverse;height:140px;gap:1px;width:100%">'
+      +'<div class="bar-debt" style="height:'+dH+'px" title="Debt: '+fd(r.cumDebt)+'"></div>'
+      +'<div class="bar-equity" style="height:'+eH+'px" title="Equity: '+fd(r.cumEquity)+'"></div>'
+      +'</div>'
+      +'<span class="bar-label">'+r.label+'</span>'
+      +'</div>';
+  });
+  document.getElementById('cf-bars').innerHTML = barsHtml;
+
+  // Table
+  document.getElementById('cf-thead').innerHTML =
+    '<tr><th style="text-align:left">Period</th><th>Construction</th><th>Drawdown</th><th>Equity</th><th>Interest</th><th>Cum. Debt</th><th>Cum. Equity</th></tr>';
+
+  var tbody = '';
+  rows.forEach(function(r){
+    tbody += '<tr>'
+      +'<td style="font-weight:600;color:var(--grey700)">'+r.label+'</td>'
+      +'<td>'+fd(r.construction)+'</td>'
+      +'<td style="color:var(--red)">'+fd(r.drawdown)+'</td>'
+      +'<td style="color:var(--teal)">'+fd(r.equity)+'</td>'
+      +'<td style="color:var(--amber)">'+fd(r.interest)+'</td>'
+      +'<td style="color:var(--red);font-weight:600">'+fd(r.cumDebt)+'</td>'
+      +'<td style="color:var(--teal);font-weight:600">'+fd(r.cumEquity)+'</td>'
+      +'</tr>';
+  });
+  document.getElementById('cf-tbody').innerHTML = tbody;
+}
+
+// ══════════════════════════════════════════
+// RETURNS BUILDER
+// ══════════════════════════════════════════
+function buildReturns(grv, tpc, margin, marginPct, equity, facility, finCosts, netIncome, yield, capRate, rate, interest){
+  var roc = equity > 0 ? margin / equity : 0;
+  var dscr = facility > 0 && rate > 0 ? netIncome / (facility * rate) : 0;
+
+  var cards = [
+    {label:'Dev Margin', value:fd(margin), sub:fp(marginPct)+' on cost', cls:marginPct>=0.20?'ok':marginPct>=0.15?'warn':'bad'},
+    {label:'Return on Equity', value:fp(roc), sub:'on '+fd(equity)+' equity', cls:'neutral'},
+    {label:'GRV (Cap Val)', value:fd(grv), sub:'at '+fp(capRate)+' cap rate', cls:'neutral'},
+    {label:'Total Project Cost', value:fd(tpc), sub:'incl. '+fd(finCosts)+' finance', cls:'neutral'},
+    {label:'Peak Debt', value:fd(facility), sub:fp(n('i-lvr')/100)+' LVR', cls:'bad'},
+    {label:'Total Interest', value:fd(interest), sub:fp(rate)+' p.a.', cls:'warn'},
+    {label:'Net Income', value:fd(netIncome), sub:'yield '+fp(yield), cls:'ok'},
+    {label:'Debt Coverage', value:dscr>0?dscr.toFixed(2)+'x':'—', sub:'net income / annual interest', cls:dscr>=1.5?'ok':dscr>=1.2?'warn':'bad'}
+  ];
+
+  document.getElementById('ret-cards').innerHTML = cards.map(function(c){
+    return '<div class="scard '+c.cls+'">'
+      +'<div class="sc-label">'+c.label+'</div>'
+      +'<div class="sc-value '+c.cls+'">'+c.value+'</div>'
+      +'<div class="sc-sub">'+c.sub+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+// SENSITIVITY TABLE
+// ══════════════════════════════════════════
+function buildSensitivity(netIncome, totalBTL, totalProjectCost, currentCap){
+  var rates = [0.050, 0.055, 0.060, 0.065, 0.070, 0.075, 0.080];
+  var html = '';
+  rates.forEach(function(cr){
+    var cv = netIncome / cr - totalBTL;
+    var margin = cv - totalProjectCost;
+    var marginPct = totalProjectCost > 0 ? margin / totalProjectCost : 0;
+    var active = Math.abs(cr - currentCap) < 0.001;
+    html += '<tr'+(active?' class="active"':'')+'>'
+      +'<td style="text-align:left">'+(cr*100).toFixed(1)+'%'+(active?' ◄':'')+'</td>'
+      +'<td>'+fd(cv)+'</td>'
+      +'<td style="color:'+(margin>=0?'var(--green)':'var(--red)')+'">'+fd(margin)+'</td>'
+      +'<td style="color:'+(marginPct>=0.20?'var(--green)':marginPct>=0.15?'var(--amber)':'var(--red)')+'">'+fp(marginPct)+'</td>'
+      +'</tr>';
+  });
+  document.getElementById('sens-tbody').innerHTML = html;
+}
+
+// ── INIT ──
+window.addEventListener('load', function(){
+  calc();
+});
+</script>
+</body>
+</html>
