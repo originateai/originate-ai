@@ -123,6 +123,26 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 .edit-cancel{padding:4px 8px;border-radius:4px;background:var(--grey100);color:var(--grey600);border:none;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif}
 .deal-notes{width:100%;min-height:80px;padding:10px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);resize:vertical}
 .deal-notes:focus{outline:none;border-color:var(--teal)}
+
+/* Contact actions */
+.contact-actions{display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.contact-btn{padding:6px 14px;border-radius:var(--radius);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid var(--border);background:var(--white);color:var(--grey700);text-decoration:none;transition:all 0.15s;display:inline-flex;align-items:center;gap:4px}
+.contact-btn:hover{border-color:var(--teal);color:var(--teal)}
+.contact-btn.email{background:var(--teal-bg);color:var(--teal-dark);border-color:var(--teal-subtle)}
+.contact-btn.email:hover{background:var(--teal);color:white}
+.contact-btn.phone{background:rgba(5,150,105,0.06);color:var(--green);border-color:rgba(5,150,105,0.15)}
+.contact-btn.compose{background:var(--grey100);color:var(--grey600)}
+
+/* Compose panel */
+.compose-panel{margin-top:12px;padding:14px;border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--grey50)}
+.compose-to{font-size:12px;color:var(--grey500);margin-bottom:10px}
+.compose-to strong{color:var(--grey900)}
+.compose-template{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--grey700);margin-bottom:8px;background:var(--white)}
+.compose-subject{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);margin-bottom:8px}
+.compose-subject:focus{outline:none;border-color:var(--teal)}
+.compose-body{width:100%;padding:10px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);resize:vertical}
+.compose-body:focus{outline:none;border-color:var(--teal)}
+.compose-actions{display:flex;gap:8px;margin-top:10px}
 .save-flash{animation:flashGreen 1s ease}
 
 @media(max-width:768px){
@@ -294,6 +314,27 @@ function showDetail(id) {
     + edt("Email","borrower_email",d.borrower_email,"text")
     + edt("Phone","borrower_phone",d.borrower_phone,"text")
     + edt("Type","borrower_type",d.borrower_type,"text")
+    + '<div class="contact-actions">'
+    + (d.borrower_email ? '<button class="contact-btn email" onclick="emailBorrower(\'' + d.id + '\')">✉ Email</button>' : '')
+    + (d.borrower_phone ? '<a class="contact-btn phone" href="tel:' + (d.borrower_phone||'') + '">📞 Call</a>' : '')
+    + '<button class="contact-btn compose" onclick="toggleCompose(\'' + d.id + '\')">✍ Compose</button>'
+    + '</div>'
+    + '<div class="compose-panel" id="compose-' + d.id + '" style="display:none">'
+    + '<div class="compose-to">To: <strong>' + (d.borrower_email || '—') + '</strong></div>'
+    + '<select class="compose-template" id="template-' + d.id + '" onchange="applyTemplate(\'' + d.id + '\')">'
+    + '<option value="">Select template...</option>'
+    + '<option value="status_update">Status Update</option>'
+    + '<option value="docs_required">Documents Required</option>'
+    + '<option value="approval">Approval Notification</option>'
+    + '<option value="custom">Custom Message</option>'
+    + '</select>'
+    + '<input class="compose-subject" id="subject-' + d.id + '" placeholder="Subject">'
+    + '<textarea class="compose-body" id="body-' + d.id + '" placeholder="Type your message..." rows="6"></textarea>'
+    + '<div class="compose-actions">'
+    + '<button class="doc-btn" style="background:var(--teal);color:white;border-color:var(--teal)" onclick="sendEmail(\'' + d.id + '\')">Send Email</button>'
+    + '<button class="doc-btn" onclick="toggleCompose(\'' + d.id + '\')">Cancel</button>'
+    + '</div>'
+    + '</div>'
     + '</div>'
     + '<div class="detail-section">'
     + '<div class="detail-section-head">Project</div>'
@@ -458,6 +499,61 @@ async function saveNotes(dealId) {
       btn.style.borderColor = "";
     }, 2000);
   }
+}
+
+// ─────────────────────────────────────────────
+// EMAIL / CONTACT
+// ─────────────────────────────────────────────
+function emailBorrower(dealId) {
+  var d = allDeals.find(function(deal){return deal.id === dealId});
+  if (!d || !d.borrower_email) return;
+  var subject = "getkredit.ai — Your Development Finance Application";
+  var body = "Hi " + (d.borrower_name || "") + ",\n\n"
+    + "Thank you for your development finance application via getkredit.ai.\n\n"
+    + "Project: " + (d.address || "N/A") + "\n"
+    + "Category: " + (d.category || "") + " — " + (d.sub_category || "") + "\n"
+    + "Facility: " + fd(d.calc_facility) + "\n\n"
+    + "We will be in touch shortly with next steps.\n\n"
+    + "Kind regards,\ngetkredit.ai";
+  window.open("mailto:" + d.borrower_email + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body));
+}
+
+function toggleCompose(dealId) {
+  var panel = document.getElementById("compose-" + dealId);
+  if (panel) panel.style.display = panel.style.display === "none" ? "block" : "none";
+}
+
+function applyTemplate(dealId) {
+  var d = allDeals.find(function(deal){return deal.id === dealId});
+  if (!d) return;
+  var tmpl = document.getElementById("template-" + dealId).value;
+  var subEl = document.getElementById("subject-" + dealId);
+  var bodyEl = document.getElementById("body-" + dealId);
+  var name = d.borrower_name || "there";
+
+  if (tmpl === "status_update") {
+    subEl.value = "Update on your funding request — " + (d.address || "");
+    bodyEl.value = "Hi " + name + ",\n\nI wanted to give you a quick update on your development finance application.\n\nYour current status is: " + (d.status || "").replace(/_/g, " ") + ".\n\nWe're progressing well and will keep you informed of any developments. Please don't hesitate to reach out if you have any questions.\n\nKind regards,\ngetkredit.ai";
+  } else if (tmpl === "docs_required") {
+    subEl.value = "Documents required — " + (d.address || "");
+    bodyEl.value = "Hi " + name + ",\n\nTo progress your development finance application, we require the following documents:\n\n• Feasibility Report\n• Contract of Sale (Site Purchase)\n• Pre-Sale Contracts (if applicable)\n• Copy of Build/Civil Contract\n• Taxation Returns (last 2 years)\n• Current Valuation\n\nPlease upload these via your portal or reply to this email with the documents attached.\n\nKind regards,\ngetkredit.ai";
+  } else if (tmpl === "approval") {
+    subEl.value = "Great news — Funding approval for " + (d.address || "");
+    bodyEl.value = "Hi " + name + ",\n\nI'm pleased to confirm that your development finance application for " + (d.address || "the project") + " has received indicative approval.\n\nFacility: " + fd(d.calc_facility) + "\nLVR: " + fp(d.calc_lvr) + "\n\nThe next step is to finalise the funding documentation. We will be in touch shortly to discuss the conditions and timeline.\n\nCongratulations!\n\nKind regards,\ngetkredit.ai";
+  } else if (tmpl === "custom") {
+    subEl.value = "";
+    bodyEl.value = "Hi " + name + ",\n\n\n\nKind regards,\ngetkredit.ai";
+  }
+}
+
+function sendEmail(dealId) {
+  var d = allDeals.find(function(deal){return deal.id === dealId});
+  if (!d || !d.borrower_email) { alert("No borrower email."); return; }
+  var subject = document.getElementById("subject-" + dealId).value;
+  var body = document.getElementById("body-" + dealId).value;
+  if (!subject || !body) { alert("Please add a subject and message."); return; }
+  window.open("mailto:" + d.borrower_email + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(body));
+  toggleCompose(dealId);
 }
 
 // ─────────────────────────────────────────────
