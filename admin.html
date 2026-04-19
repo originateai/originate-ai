@@ -90,6 +90,28 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 
 .loading{text-align:center;padding:60px;color:var(--grey500);font-size:14px}
 
+/* Documents */
+.doc-list{margin-top:8px}
+.doc-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:6px;background:var(--grey50)}
+.doc-info{display:flex;align-items:center;gap:8px}
+.doc-icon{width:32px;height:32px;border-radius:6px;background:var(--teal-bg);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.doc-name{font-size:13px;font-weight:500;color:var(--grey900)}
+.doc-meta{font-size:11px;color:var(--grey500)}
+.doc-actions{display:flex;gap:6px}
+.doc-btn{padding:4px 10px;border-radius:4px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--white);color:var(--grey600);font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.doc-btn:hover{border-color:var(--teal);color:var(--teal)}
+.doc-btn.delete{color:var(--red)}
+.doc-btn.delete:hover{border-color:var(--red);background:rgba(220,38,38,0.04)}
+.doc-empty{font-size:12px;color:var(--grey500);padding:12px 0;font-style:italic}
+.doc-upload{margin-top:10px}
+.doc-upload-area{border:2px dashed var(--border);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all 0.2s}
+.doc-upload-area:hover{border-color:var(--teal);background:var(--teal-bg)}
+.doc-upload-text{font-size:13px;color:var(--grey500)}
+.doc-upload-text strong{color:var(--teal)}
+.doc-type-select{margin-top:8px;display:flex;gap:8px;align-items:center}
+.doc-type-select select{padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;font-family:'DM Sans',sans-serif;color:var(--grey700)}
+.upload-progress{margin-top:8px;font-size:12px;color:var(--teal);display:none}
+
 @media(max-width:768px){
   .container{padding:16px}
   .stats{grid-template-columns:repeat(2,1fr)}
@@ -282,10 +304,36 @@ function showDetail(id) {
     + '<div class="detail-section-head">Timeline</div>'
     + '<div class="detail-row"><span class="detail-key">Loan Term</span><span class="detail-val">' + (d.total_loan_term||"—") + ' months</span></div>'
     + '<div class="detail-row"><span class="detail-key">Presales</span><span class="detail-val">' + (d.has_presales||"—") + (d.presales_value ? " — " + fd(d.presales_value) : "") + '</span></div>'
+    + '</div>'
+    + '<div class="detail-section">'
+    + '<div class="detail-section-head">Documents</div>'
+    + '<div class="doc-list" id="doc-list-' + d.id + '"><div class="doc-empty">Loading documents...</div></div>'
+    + '<div class="doc-upload">'
+    + '<div class="doc-type-select">'
+    + '<select id="doc-type-' + d.id + '">'
+    + '<option value="feasibility_report">Feasibility Report</option>'
+    + '<option value="contract_of_sale">Contract of Sale</option>'
+    + '<option value="presale_contracts">Pre-Sale Contracts</option>'
+    + '<option value="prelease_contracts">Pre-Lease Contracts</option>'
+    + '<option value="build_contract">Build/Civil Contract</option>'
+    + '<option value="tax_returns">Taxation Returns</option>'
+    + '<option value="valuation">Valuation</option>'
+    + '<option value="other">Other</option>'
+    + '</select>'
+    + '</div>'
+    + '<div class="doc-upload-area" onclick="triggerUpload(\'' + d.id + '\')">'
+    + '<div class="doc-upload-text"><strong>Click to upload</strong> or drag and drop<br>PDF, DOC, XLS, JPG up to 10MB</div>'
+    + '</div>'
+    + '<input type="file" id="file-input-' + d.id + '" style="display:none" onchange="handleUpload(\'' + d.id + '\',this)" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">'
+    + '<div class="upload-progress" id="upload-prog-' + d.id + '">Uploading...</div>'
+    + '</div>'
     + '</div>';
 
   document.getElementById("detail-content").innerHTML = html;
   document.getElementById("detail-overlay").classList.add("show");
+
+  // Load documents for this deal
+  loadDocuments(d.id);
 }
 
 function closeDetail() {
@@ -305,6 +353,138 @@ async function updateStatus(dealId, newStatus) {
 async function doLogout() {
   await sb.auth.signOut();
   window.location.href = "login.html";
+}
+
+// ─────────────────────────────────────────────
+// DOCUMENTS
+// ─────────────────────────────────────────────
+var DOC_TYPE_LABELS = {
+  feasibility_report: "Feasibility Report",
+  contract_of_sale: "Contract of Sale",
+  presale_contracts: "Pre-Sale Contracts",
+  prelease_contracts: "Pre-Lease Contracts",
+  build_contract: "Build/Civil Contract",
+  tax_returns: "Tax Returns",
+  valuation: "Valuation",
+  other: "Other"
+};
+
+function docIcon(type) {
+  var icons = { feasibility_report:"FR", contract_of_sale:"CS", presale_contracts:"PS", prelease_contracts:"PL", build_contract:"BC", tax_returns:"TX", valuation:"VL", other:"OT" };
+  return icons[type] || "📄";
+}
+
+function formatFileSize(bytes) {
+  if (!bytes) return "";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1048576) return (bytes / 1024).toFixed(0) + " KB";
+  return (bytes / 1048576).toFixed(1) + " MB";
+}
+
+async function loadDocuments(dealId) {
+  var listEl = document.getElementById("doc-list-" + dealId);
+  if (!listEl) return;
+
+  var res = await sb.from("documents").select("*").eq("deal_id", dealId).order("uploaded_at", {ascending: false});
+  var docs = res.data || [];
+
+  if (docs.length === 0) {
+    listEl.innerHTML = '<div class="doc-empty">No documents uploaded yet</div>';
+    return;
+  }
+
+  listEl.innerHTML = docs.map(function(doc) {
+    var date = new Date(doc.uploaded_at).toLocaleDateString("en-AU", {day:"2-digit", month:"short"});
+    return '<div class="doc-item">'
+      + '<div class="doc-info">'
+      + '<div class="doc-icon">' + docIcon(doc.doc_type) + '</div>'
+      + '<div><div class="doc-name">' + (doc.file_name || "Document") + '</div>'
+      + '<div class="doc-meta">' + (DOC_TYPE_LABELS[doc.doc_type] || doc.doc_type) + ' · ' + formatFileSize(doc.file_size) + ' · ' + date + '</div></div>'
+      + '</div>'
+      + '<div class="doc-actions">'
+      + '<button class="doc-btn" onclick="downloadDoc(\'' + doc.id + '\',\'' + (doc.file_path || '').replace(/'/g,"\\'") + '\',\'' + (doc.file_name || '').replace(/'/g,"\\'") + '\')">View</button>'
+      + '<button class="doc-btn delete" onclick="deleteDoc(\'' + doc.id + '\',\'' + dealId + '\',\'' + (doc.file_path || '').replace(/'/g,"\\'") + '\')">Delete</button>'
+      + '</div></div>';
+  }).join("");
+}
+
+function triggerUpload(dealId) {
+  document.getElementById("file-input-" + dealId).click();
+}
+
+async function handleUpload(dealId, input) {
+  var file = input.files[0];
+  if (!file) return;
+
+  if (file.size > 10 * 1024 * 1024) {
+    alert("File too large — maximum 10MB.");
+    return;
+  }
+
+  var progEl = document.getElementById("upload-prog-" + dealId);
+  progEl.style.display = "block";
+  progEl.textContent = "Uploading " + file.name + "...";
+
+  var docType = document.getElementById("doc-type-" + dealId).value;
+  var filePath = "deals/" + dealId + "/" + Date.now() + "_" + file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+
+  // Upload to Supabase Storage
+  var uploadRes = await sb.storage.from("documents").upload(filePath, file, {
+    cacheControl: "3600",
+    upsert: false
+  });
+
+  if (uploadRes.error) {
+    progEl.textContent = "Upload failed: " + uploadRes.error.message;
+    progEl.style.color = "var(--red)";
+    setTimeout(function() { progEl.style.display = "none"; progEl.style.color = "var(--teal)"; }, 3000);
+    input.value = "";
+    return;
+  }
+
+  // Save document record
+  var docRecord = {
+    deal_id: dealId,
+    doc_type: docType,
+    file_name: file.name,
+    file_path: filePath,
+    file_size: file.size
+  };
+
+  var insertRes = await sb.from("documents").insert(docRecord);
+  if (insertRes.error) {
+    progEl.textContent = "Record save failed: " + insertRes.error.message;
+    progEl.style.color = "var(--red)";
+  } else {
+    progEl.textContent = "✓ Uploaded successfully";
+    progEl.style.color = "var(--green)";
+    loadDocuments(dealId);
+  }
+
+  setTimeout(function() { progEl.style.display = "none"; progEl.style.color = "var(--teal)"; }, 2000);
+  input.value = "";
+}
+
+async function downloadDoc(docId, filePath, fileName) {
+  var res = await sb.storage.from("documents").createSignedUrl(filePath, 60);
+  if (res.data && res.data.signedUrl) {
+    window.open(res.data.signedUrl, "_blank");
+  } else {
+    alert("Could not generate download link.");
+  }
+}
+
+async function deleteDoc(docId, dealId, filePath) {
+  if (!confirm("Delete this document?")) return;
+
+  // Delete from storage
+  await sb.storage.from("documents").remove([filePath]);
+
+  // Delete record
+  await sb.from("documents").delete().eq("id", docId);
+
+  // Reload list
+  loadDocuments(dealId);
 }
 
 async function init() {
