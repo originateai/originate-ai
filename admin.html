@@ -307,7 +307,11 @@ function showDetail(id) {
     + ['draft','feasibility_complete','submitted','under_review','approved','declined','settled','withdrawn'].map(function(s) {
         return '<option value="' + s + '"' + (d.status===s?' selected':'') + '>' + s.replace(/_/g,' ') + '</option>';
       }).join("")
-    + '</select></div>'
+    + '</select>'
+    + (d.released_to_lenders
+      ? '<div style="margin-top:8px;font-size:12px;color:var(--green)">✓ Released to lenders ' + (d.released_at ? new Date(d.released_at).toLocaleDateString("en-AU") : '') + '</div>'
+      : '<button class="ld-btn primary" style="margin-top:10px;width:100%" onclick="releaseDeal(\'' + d.id + '\')">🚀 Release to Lenders</button>')
+    + '</div>'
     + '<div class="detail-section">'
     + '<div class="detail-section-head">Borrower <span class="edit-hint">click any value to edit</span></div>'
     + edt("Name","borrower_name",d.borrower_name,"text")
@@ -401,14 +405,53 @@ function showDetail(id) {
     + '<input type="file" id="file-input-' + d.id + '" style="display:none" onchange="handleUpload(\'' + d.id + '\',this)" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">'
     + '<div class="upload-progress" id="upload-prog-' + d.id + '">Uploading...</div>'
     + '</div>'
+    + '</div>'
+    + '<div class="detail-section">'
+    + '<div class="detail-section-head">Lender Responses</div>'
+    + '<div id="lender-responses-' + d.id + '"><div style="font-size:12px;color:var(--grey500);font-style:italic">Loading...</div></div>'
     + '</div>';
 
   document.getElementById("detail-content").innerHTML = html;
   document.getElementById("detail-overlay").classList.add("show");
 
-  // Load documents for this deal
+  // Load documents and lender responses for this deal
   loadDocuments(d.id);
+  loadLenderResponses(d.id);
 }
+
+async function loadLenderResponses(dealId) {
+  var el = document.getElementById("lender-responses-" + dealId);
+  if (!el) return;
+
+  var res = await sb.from("lender_responses").select("*, lenders(name,type)").eq("deal_id", dealId).order("responded_at", {ascending: false});
+  var responses = res.data || [];
+
+  if (responses.length === 0) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--grey500);font-style:italic">No lender responses yet' + (allDeals.find(function(d){return d.id===dealId && !d.released_to_lenders}) ? ' — release the deal first' : '') + '</div>';
+    return;
+  }
+
+  el.innerHTML = responses.map(function(r) {
+    var lName = r.lenders ? r.lenders.name : "Unknown Lender";
+    var lType = r.lenders ? r.lenders.type : "";
+    if (r.response_type === "passed") {
+      return '<div class="doc-item" style="opacity:0.5"><div class="doc-info"><div class="doc-icon" style="background:var(--grey100);color:var(--grey500)">✗</div><div><div class="doc-name">' + lName + '</div><div class="doc-meta">Passed</div></div></div></div>';
+    }
+    return '<div class="doc-item" style="border-color:var(--teal-subtle);background:var(--teal-bg)">'
+      + '<div style="flex:1">'
+      + '<div style="display:flex;justify-content:space-between;align-items:center">'
+      + '<div class="doc-name" style="color:var(--teal-dark)">' + lName + '</div>'
+      + '<span style="font-size:10px;color:var(--grey500)">' + lType + '</span>'
+      + '</div>'
+      + '<div style="display:flex;gap:16px;margin-top:6px;font-size:12px;color:var(--grey700)">'
+      + '<span><strong>Rate:</strong> ' + (r.offered_rate ? (r.offered_rate*100).toFixed(2)+"%" : "—") + '</span>'
+      + '<span><strong>LVR:</strong> ' + (r.offered_lvr ? (r.offered_lvr*100).toFixed(0)+"%" : "—") + '</span>'
+      + '<span><strong>Facility:</strong> ' + fd(r.offered_facility) + '</span>'
+      + '<span><strong>Term:</strong> ' + (r.offered_term_months || "—") + 'm</span>'
+      + '</div>'
+      + (r.conditions ? '<div style="font-size:11px;color:var(--grey500);margin-top:4px"><em>' + r.conditions + '</em></div>' : '')
+      + '</div></div>';
+  }).join("");
 
 function closeDetail() {
   document.getElementById("detail-overlay").classList.remove("show");
@@ -478,6 +521,26 @@ async function saveField(input, field, type) {
 }
 
 function cancelEdit(dealId) {
+  showDetail(dealId);
+}
+
+async function releaseDeal(dealId) {
+  if (!confirm("Release this deal to matched lenders? They will be able to see the deal summary and submit their terms.")) return;
+  await sb.from("deals").update({
+    released_to_lenders: true,
+    released_at: new Date().toISOString(),
+    status: "submitted"
+  }).eq("id", dealId);
+
+  var deal = allDeals.find(function(d){return d.id === dealId});
+  if (deal) {
+    deal.released_to_lenders = true;
+    deal.released_at = new Date().toISOString();
+    deal.status = "submitted";
+  }
+  renderStats(allDeals);
+  var filtered = currentFilter === "all" ? allDeals : allDeals.filter(function(d){return d.status===currentFilter});
+  renderTable(filtered);
   showDetail(dealId);
 }
 
