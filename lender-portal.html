@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>getkredit.ai — Lender Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>if(typeof supabase==='undefined'){document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"><\/scr'+'ipt>')}</script>
+<script src="config.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#0D9488;--teal-light:#14B8A6;--teal-dark:#0F766E;--teal-bg:#F0FDFA;--teal-subtle:#CCFBF1;
+  --white:#ffffff;--grey50:#f8fafc;--grey100:#f1f5f9;--grey200:#e2e8f0;
+  --grey500:#64748b;--grey600:#475569;--grey700:#334155;--grey800:#1e293b;--grey900:#0f172a;
+  --text:#0f172a;--muted:#64748b;--border:#e2e8f0;
+  --green:#059669;--red:#dc2626;--amber:#d97706;--blue:#2563EB;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50);min-height:100vh}
+
+.nav{height:64px;background:var(--grey900);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:10}
+.nav-logo{font-family:'Source Serif 4',serif;font-size:21px;font-weight:700;color:white;text-decoration:none}
+.nav-logo span{color:var(--teal-light)}
+.nav-badge{padding:4px 10px;border-radius:4px;background:var(--teal);color:white;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-left:12px}
+.nav-right{display:flex;gap:12px;align-items:center}
+.nav-link{font-size:13px;color:rgba(255,255,255,0.6);text-decoration:none;padding:7px 14px;border-radius:var(--radius);transition:all 0.15s}
+.nav-link:hover{color:white;background:rgba(255,255,255,0.08)}
+.nav-link.active{color:white;background:rgba(255,255,255,0.12)}
+
+.container{max-width:1200px;margin:0 auto;padding:28px 40px}
+.page-title{font-family:'Source Serif 4',serif;font-size:28px;font-weight:700;color:var(--grey900);margin-bottom:4px}
+.page-sub{font-size:14px;color:var(--grey500);margin-bottom:28px}
+
+/* Tabs */
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:28px}
+.tab{padding:10px 20px;font-size:14px;font-weight:500;color:var(--grey500);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all 0.2s}
+.tab.active{color:var(--teal);border-bottom-color:var(--teal)}
+.tab:hover{color:var(--teal)}
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* Deal cards */
+.deal-cards{display:grid;gap:16px}
+.lender-deal{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;transition:all 0.2s}
+.lender-deal:hover{box-shadow:0 4px 16px rgba(0,0,0,0.04)}
+.ld-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.ld-title{font-size:16px;font-weight:600;color:var(--grey900)}
+.ld-sub{font-size:13px;color:var(--grey500);margin-top:2px}
+.ld-badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600}
+.ld-new{background:var(--teal-bg);color:var(--teal-dark)}
+.ld-responded{background:rgba(5,150,105,0.08);color:var(--green)}
+.ld-passed{background:var(--grey100);color:var(--grey500)}
+
+.ld-metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:16px}
+.ld-metric{text-align:center;padding:10px;background:var(--grey50);border-radius:var(--radius)}
+.ld-mv{font-size:16px;font-weight:600;color:var(--grey900)}
+.ld-mv.teal{color:var(--teal)}
+.ld-mv.green{color:var(--green)}
+.ld-mv.amber{color:var(--amber)}
+.ld-mv.red{color:var(--red)}
+.ld-ml{font-size:10px;color:var(--grey500);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px}
+
+.ld-details{font-size:13px;color:var(--grey600);margin-bottom:16px;line-height:1.6}
+
+.ld-actions{display:flex;gap:8px;padding-top:14px;border-top:1px solid var(--border)}
+.ld-btn{padding:8px 18px;border-radius:var(--radius);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;border:1px solid var(--border);background:var(--white);color:var(--grey700);transition:all 0.15s}
+.ld-btn:hover{border-color:var(--teal);color:var(--teal)}
+.ld-btn.primary{background:var(--teal);color:white;border-color:var(--teal)}
+.ld-btn.primary:hover{background:var(--teal-dark)}
+.ld-btn.pass{color:var(--grey500)}
+.ld-btn.pass:hover{color:var(--red);border-color:var(--red)}
+
+/* Response form */
+.response-form{margin-top:16px;padding:20px;border:1px solid var(--teal-subtle);border-radius:var(--radius-lg);background:var(--teal-bg);display:none}
+.response-form.show{display:block}
+.rf-title{font-size:14px;font-weight:600;color:var(--teal-dark);margin-bottom:14px}
+.rf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.rf-group{margin-bottom:0}
+.rf-label{font-size:11px;font-weight:500;color:var(--grey600);margin-bottom:4px;display:block}
+.rf-input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--white)}
+.rf-input:focus{outline:none;border-color:var(--teal)}
+.rf-full{grid-column:1/-1}
+.rf-actions{display:flex;gap:8px;margin-top:14px;grid-column:1/-1}
+
+/* Alert settings */
+.alert-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px}
+.alert-title{font-size:16px;font-weight:600;color:var(--grey900);margin-bottom:16px}
+.alert-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.alert-group{margin-bottom:0}
+.alert-label{font-size:12px;font-weight:500;color:var(--grey600);margin-bottom:6px;display:block}
+.alert-input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px}
+.alert-input:focus{outline:none;border-color:var(--teal)}
+.alert-checks{display:flex;flex-wrap:wrap;gap:8px}
+.alert-check{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--grey700)}
+.alert-check input{accent-color:var(--teal)}
+.alert-save{margin-top:20px}
+
+/* Onboard */
+.onboard-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:32px;max-width:600px}
+.onboard-title{font-family:'Source Serif 4',serif;font-size:22px;font-weight:700;color:var(--grey900);margin-bottom:8px}
+.onboard-sub{font-size:14px;color:var(--grey500);margin-bottom:24px}
+.onboard-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.onboard-full{grid-column:1/-1}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--grey500)}
+.empty-state h3{font-size:18px;color:var(--grey700);margin-bottom:8px}
+.loading{text-align:center;padding:60px;color:var(--grey500);font-size:14px}
+
+@media(max-width:768px){
+  .container{padding:16px}
+  .ld-metrics{grid-template-columns:repeat(3,1fr)}
+  .rf-grid,.alert-grid,.onboard-grid{grid-template-columns:1fr}
+  .nav{padding:0 16px}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div style="display:flex;align-items:center">
+    <a class="nav-logo" href="index.html">get<span>kredit.ai</span></a>
+    <span class="nav-badge">Lender</span>
+  </div>
+  <div class="nav-right">
+    <a class="nav-link active" href="#" onclick="showTab('deals')">Deal Flow</a>
+    <a class="nav-link" href="#" onclick="showTab('alerts')">Alert Settings</a>
+    <a class="nav-link" href="#" onclick="showTab('profile')">Profile</a>
+    <a class="nav-link" href="#" onclick="doLogout()">Sign Out</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-title" id="lender-name">Lender Portal</div>
+  <div class="page-sub">Review matched deals and submit your indicative terms</div>
+
+  <!-- DEALS TAB -->
+  <div class="tab-content active" id="tab-deals">
+    <div id="deals-loading" class="loading">Loading matched deals...</div>
+    <div id="deals-list" class="deal-cards" style="display:none"></div>
+    <div id="deals-empty" class="empty-state" style="display:none">
+      <h3>No deals available yet</h3>
+      <p>When deals matching your criteria are released, they'll appear here.</p>
+    </div>
+  </div>
+
+  <!-- ALERTS TAB -->
+  <div class="tab-content" id="tab-alerts">
+    <div class="alert-card">
+      <div class="alert-title">Deal Alert Preferences</div>
+      <p style="font-size:13px;color:var(--grey500);margin-bottom:20px">Configure which deals you want to be notified about. You'll receive an email when a matching deal is released.</p>
+      <div class="alert-grid">
+        <div class="alert-group">
+          <label class="alert-label">Alert Email</label>
+          <input class="alert-input" id="alert-email" type="email" placeholder="alerts@yourcompany.com">
+        </div>
+        <div class="alert-group">
+          <label class="alert-label">Notifications</label>
+          <select class="alert-input" id="alert-on">
+            <option value="true">Email me on each match</option>
+            <option value="false">No notifications</option>
+          </select>
+        </div>
+        <div class="alert-group">
+          <label class="alert-label">Min Deal Size ($)</label>
+          <input class="alert-input" id="alert-min-size" type="number" placeholder="1000000">
+        </div>
+        <div class="alert-group">
+          <label class="alert-label">Max Deal Size ($)</label>
+          <input class="alert-input" id="alert-max-size" type="number" placeholder="50000000">
+        </div>
+        <div class="alert-group">
+          <label class="alert-label">Max LVR (%)</label>
+          <input class="alert-input" id="alert-max-lvr" type="number" placeholder="70" step="1">
+        </div>
+        <div class="alert-group">
+          <label class="alert-label">Min Profit on Cost (%)</label>
+          <input class="alert-input" id="alert-min-poc" type="number" placeholder="15" step="1">
+        </div>
+        <div class="alert-group" style="grid-column:1/-1">
+          <label class="alert-label">Asset Types</label>
+          <div class="alert-checks" id="alert-assets">
+            <label class="alert-check"><input type="checkbox" value="Residential" checked> Residential</label>
+            <label class="alert-check"><input type="checkbox" value="Commercial" checked> Commercial</label>
+            <label class="alert-check"><input type="checkbox" value="Land Subdivision"> Land Subdivision</label>
+            <label class="alert-check"><input type="checkbox" value="Other"> Other</label>
+          </div>
+        </div>
+        <div class="alert-group" style="grid-column:1/-1">
+          <label class="alert-label">States</label>
+          <div class="alert-checks" id="alert-states">
+            <label class="alert-check"><input type="checkbox" value="NSW" checked> NSW</label>
+            <label class="alert-check"><input type="checkbox" value="VIC" checked> VIC</label>
+            <label class="alert-check"><input type="checkbox" value="QLD" checked> QLD</label>
+            <label class="alert-check"><input type="checkbox" value="SA"> SA</label>
+            <label class="alert-check"><input type="checkbox" value="WA"> WA</label>
+            <label class="alert-check"><input type="checkbox" value="NT"> NT</label>
+            <label class="alert-check"><input type="checkbox" value="TAS"> TAS</label>
+            <label class="alert-check"><input type="checkbox" value="ACT"> ACT</label>
+          </div>
+        </div>
+        <div class="alert-group" style="grid-column:1/-1">
+          <label class="alert-check"><input type="checkbox" id="alert-metro"> Metropolitan only</label>
+        </div>
+      </div>
+      <div class="alert-save">
+        <button class="ld-btn primary" onclick="saveAlerts()">Save Preferences</button>
+        <span id="alert-saved" style="font-size:12px;color:var(--green);margin-left:12px;display:none">✓ Saved</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROFILE TAB -->
+  <div class="tab-content" id="tab-profile">
+    <div class="onboard-card">
+      <div class="onboard-title">Lender Profile</div>
+      <div class="onboard-sub">Update your organisation's details and lending criteria</div>
+      <div class="onboard-grid">
+        <div class="alert-group">
+          <label class="alert-label">Organisation Name</label>
+          <input class="alert-input" id="prof-name" placeholder="Your Company Pty Ltd">
+        </div>
+        <div class="alert-group">
+          <label class="alert-label">Lender Type</label>
+          <select class="alert-input" id="prof-type">
+            <option value="Non-Bank">Non-Bank</option>
+            <option value="Private Credit">Private Credit</option>
+            <option value="Major Bank">Major Bank</option>
+            <option value="Regional Bank">Regional Bank</option>
+            <option value="Mezzanine">Mezzanine</option>
+            <option value="Family Office">Family Office</option>
+          </select>
+        </div>
+        <div class="alert-group">
+          <label class="alert-label">Contact Name</label>
+          <input class="alert-input" id="prof-contact" placeholder="Jane Smith">
+        </div>
+        <div class="alert-group">
+          <label class="alert-label">Contact Email</label>
+          <input class="alert-input" id="prof-email" placeholder="jane@company.com">
+        </div>
+        <div class="alert-group">
+          <label class="alert-label">Contact Phone</label>
+          <input class="alert-input" id="prof-phone" placeholder="04xx xxx xxx">
+        </div>
+        <div class="alert-group">
+          <label class="alert-label">Facility Range</label>
+          <div style="display:flex;gap:8px">
+            <input class="alert-input" id="prof-min" type="number" placeholder="Min ($)">
+            <input class="alert-input" id="prof-max" type="number" placeholder="Max ($)">
+          </div>
+        </div>
+        <div class="onboard-full">
+          <button class="ld-btn primary" onclick="saveProfile()">Save Profile</button>
+          <span id="prof-saved" style="font-size:12px;color:var(--green);margin-left:12px;display:none">✓ Saved</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var SUPABASE_URL = SUPABASE_CONFIG.url;
+var SUPABASE_KEY = SUPABASE_CONFIG.key;
+var sb = (typeof supabase !== 'undefined' && supabase.createClient) ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+var currentLenderId = null;
+var matchedDeals = [];
+
+function fd(v) {
+  if (!v && v !== 0) return "—";
+  return new Intl.NumberFormat("en-AU",{style:"currency",currency:"AUD",minimumFractionDigits:0,maximumFractionDigits:0}).format(v);
+}
+function fp(v) { return (!v && v !== 0) ? "—" : (v * 100).toFixed(1) + "%"; }
+
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active')});
+  document.querySelectorAll('.nav-link').forEach(function(l){l.classList.remove('active')});
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function colorClass(field, val) {
+  if (!val) return "";
+  if (field === "lvr") return val <= 0.65 ? "green" : val <= 0.70 ? "amber" : "red";
+  if (field === "poc") return val >= 0.20 ? "green" : val >= 0.15 ? "amber" : "red";
+  return "";
+}
+
+function renderDeals(deals) {
+  document.getElementById("deals-loading").style.display = "none";
+  if (!deals || deals.length === 0) {
+    document.getElementById("deals-empty").style.display = "block";
+    return;
+  }
+  var list = document.getElementById("deals-list");
+  list.style.display = "grid";
+
+  list.innerHTML = deals.map(function(d) {
+    var existing = d._response;
+    var badge = existing ? (existing.response_type === "passed" ? '<span class="ld-badge ld-passed">Passed</span>' : '<span class="ld-badge ld-responded">Responded</span>') : '<span class="ld-badge ld-new">New</span>';
+    var date = new Date(d.released_at || d.created_at).toLocaleDateString("en-AU",{day:"2-digit",month:"short",year:"numeric"});
+
+    // Blind summary — no borrower details
+    var location = d.address ? d.address.split(",").slice(-2).join(",").trim() : "Undisclosed";
+
+    return '<div class="lender-deal" id="deal-card-' + d.id + '">'
+      + '<div class="ld-header">'
+      + '<div><div class="ld-title">' + (d.category || "Development") + ' — ' + (d.sub_category || "") + '</div>'
+      + '<div class="ld-sub">' + location + ' · ' + date + '</div></div>'
+      + badge
+      + '</div>'
+      + '<div class="ld-metrics">'
+      + '<div class="ld-metric"><div class="ld-mv">' + fd(d.grv) + '</div><div class="ld-ml">GRV</div></div>'
+      + '<div class="ld-metric"><div class="ld-mv teal">' + fd(d.calc_facility) + '</div><div class="ld-ml">Facility</div></div>'
+      + '<div class="ld-metric"><div class="ld-mv ' + colorClass("lvr",d.calc_lvr) + '">' + fp(d.calc_lvr) + '</div><div class="ld-ml">LVR</div></div>'
+      + '<div class="ld-metric"><div class="ld-mv ' + colorClass("poc",d.calc_poc) + '">' + fp(d.calc_poc) + '</div><div class="ld-ml">POC</div></div>'
+      + '<div class="ld-metric"><div class="ld-mv">' + (d.units || "—") + '</div><div class="ld-ml">Units</div></div>'
+      + '</div>'
+      + '<div class="ld-details">'
+      + '<strong>DA:</strong> ' + (d.da_status || "N/A") + ' · '
+      + '<strong>Term:</strong> ' + (d.total_loan_term || "—") + ' months · '
+      + '<strong>Presales:</strong> ' + (d.has_presales || "N/A") + (d.presales_value ? " (" + fd(d.presales_value) + ")" : "")
+      + '</div>'
+      + (existing && existing.response_type !== "passed" ?
+        '<div style="padding:12px;background:var(--teal-bg);border-radius:var(--radius);margin-bottom:12px;font-size:13px">'
+        + '<strong style="color:var(--teal-dark)">Your Response:</strong> '
+        + 'Rate ' + (existing.offered_rate ? (existing.offered_rate*100).toFixed(2)+"%" : "—") + ' · '
+        + 'LVR ' + (existing.offered_lvr ? (existing.offered_lvr*100).toFixed(0)+"%" : "—") + ' · '
+        + 'Facility ' + fd(existing.offered_facility)
+        + '</div>' : '')
+      + '<div class="ld-actions">'
+      + (existing ? '' : '<button class="ld-btn primary" onclick="showResponseForm(\'' + d.id + '\')">Submit Terms</button>')
+      + (existing ? '' : '<button class="ld-btn pass" onclick="passDeal(\'' + d.id + '\')">Pass</button>')
+      + (existing ? '<button class="ld-btn" onclick="showResponseForm(\'' + d.id + '\')">Update Response</button>' : '')
+      + '</div>'
+      + '<div class="response-form" id="rf-' + d.id + '">'
+      + '<div class="rf-title">Submit Your Indicative Terms</div>'
+      + '<div class="rf-grid">'
+      + '<div class="rf-group"><label class="rf-label">Interest Rate (%)</label><input class="rf-input" id="rf-rate-' + d.id + '" type="number" step="0.01" placeholder="8.50" value="' + (existing && existing.offered_rate ? (existing.offered_rate*100).toFixed(2) : '') + '"></div>'
+      + '<div class="rf-group"><label class="rf-label">Max LVR (%)</label><input class="rf-input" id="rf-lvr-' + d.id + '" type="number" step="1" placeholder="65" value="' + (existing && existing.offered_lvr ? (existing.offered_lvr*100).toFixed(0) : '') + '"></div>'
+      + '<div class="rf-group"><label class="rf-label">Facility Amount ($)</label><input class="rf-input" id="rf-fac-' + d.id + '" type="number" placeholder="5000000" value="' + (existing && existing.offered_facility ? existing.offered_facility : '') + '"></div>'
+      + '<div class="rf-group"><label class="rf-label">Term (months)</label><input class="rf-input" id="rf-term-' + d.id + '" type="number" placeholder="18" value="' + (existing && existing.offered_term_months ? existing.offered_term_months : '') + '"></div>'
+      + '<div class="rf-group"><label class="rf-label">Line Fee (%)</label><input class="rf-input" id="rf-line-' + d.id + '" type="number" step="0.01" placeholder="1.50" value="' + (existing && existing.offered_line_fee ? (existing.offered_line_fee*100).toFixed(2) : '') + '"></div>'
+      + '<div class="rf-group"><label class="rf-label">App Fee (%)</label><input class="rf-input" id="rf-app-' + d.id + '" type="number" step="0.01" placeholder="1.00" value="' + (existing && existing.offered_app_fee ? (existing.offered_app_fee*100).toFixed(2) : '') + '"></div>'
+      + '<div class="rf-group rf-full"><label class="rf-label">Conditions / Notes</label><textarea class="rf-input" id="rf-cond-' + d.id + '" rows="3" placeholder="Any conditions, requirements, or notes...">' + (existing && existing.conditions ? existing.conditions : '') + '</textarea></div>'
+      + '<div class="rf-group rf-full"><label class="rf-label">Upload Term Sheet (optional)</label><input type="file" id="rf-file-' + d.id + '" accept=".pdf,.doc,.docx"></div>'
+      + '<div class="rf-actions">'
+      + '<button class="ld-btn primary" onclick="submitResponse(\'' + d.id + '\')">Submit</button>'
+      + '<button class="ld-btn" onclick="hideResponseForm(\'' + d.id + '\')">Cancel</button>'
+      + '</div>'
+      + '</div></div>'
+      + '</div>';
+  }).join("");
+}
+
+function showResponseForm(dealId) {
+  var form = document.getElementById("rf-" + dealId);
+  if (form) form.classList.toggle("show");
+}
+function hideResponseForm(dealId) {
+  var form = document.getElementById("rf-" + dealId);
+  if (form) form.classList.remove("show");
+}
+
+async function submitResponse(dealId) {
+  var rate = parseFloat(document.getElementById("rf-rate-" + dealId).value) || null;
+  var lvr = parseFloat(document.getElementById("rf-lvr-" + dealId).value) || null;
+  var fac = parseFloat(document.getElementById("rf-fac-" + dealId).value) || null;
+  var term = parseInt(document.getElementById("rf-term-" + dealId).value) || null;
+  var line = parseFloat(document.getElementById("rf-line-" + dealId).value) || null;
+  var app = parseFloat(document.getElementById("rf-app-" + dealId).value) || null;
+  var cond = document.getElementById("rf-cond-" + dealId).value;
+
+  if (!rate && !fac) { alert("Please enter at least a rate or facility amount."); return; }
+
+  var response = {
+    deal_id: dealId,
+    lender_id: currentLenderId,
+    response_type: "indicative_terms",
+    offered_rate: rate ? rate / 100 : null,
+    offered_lvr: lvr ? lvr / 100 : null,
+    offered_facility: fac,
+    offered_term_months: term,
+    offered_line_fee: line ? line / 100 : null,
+    offered_app_fee: app ? app / 100 : null,
+    conditions: cond
+  };
+
+  // Check for existing response
+  var existing = await sb.from("lender_responses").select("id").eq("deal_id", dealId).eq("lender_id", currentLenderId).limit(1);
+  if (existing.data && existing.data.length > 0) {
+    await sb.from("lender_responses").update(response).eq("id", existing.data[0].id);
+  } else {
+    await sb.from("lender_responses").insert(response);
+  }
+
+  // Handle file upload
+  var fileInput = document.getElementById("rf-file-" + dealId);
+  if (fileInput.files.length > 0) {
+    var file = fileInput.files[0];
+    var path = "lender-responses/" + currentLenderId + "/" + dealId + "/" + file.name;
+    await sb.storage.from("documents").upload(path, file, { upsert: true });
+    // Update response with file path
+    var upd = await sb.from("lender_responses").select("id").eq("deal_id", dealId).eq("lender_id", currentLenderId).limit(1);
+    if (upd.data && upd.data.length > 0) {
+      await sb.from("lender_responses").update({ uploaded_file_path: path, uploaded_file_name: file.name }).eq("id", upd.data[0].id);
+    }
+  }
+
+  alert("Terms submitted successfully. The broker will review and be in touch.");
+  loadDeals();
+}
+
+async function passDeal(dealId) {
+  if (!confirm("Pass on this deal? You can change your mind later.")) return;
+  var response = {
+    deal_id: dealId,
+    lender_id: currentLenderId,
+    response_type: "passed"
+  };
+  await sb.from("lender_responses").insert(response);
+  loadDeals();
+}
+
+async function saveAlerts() {
+  var assets = [];
+  document.querySelectorAll("#alert-assets input:checked").forEach(function(cb){assets.push(cb.value)});
+  var states = [];
+  document.querySelectorAll("#alert-states input:checked").forEach(function(cb){states.push(cb.value)});
+
+  var prefs = {
+    lender_id: currentLenderId,
+    alert_email: document.getElementById("alert-email").value,
+    alert_on_match: document.getElementById("alert-on").value === "true",
+    min_deal_size: parseFloat(document.getElementById("alert-min-size").value) || null,
+    max_deal_size: parseFloat(document.getElementById("alert-max-size").value) || null,
+    asset_types: assets,
+    states: states,
+    metro_only: document.getElementById("alert-metro").checked,
+    max_lvr: parseFloat(document.getElementById("alert-max-lvr").value) ? parseFloat(document.getElementById("alert-max-lvr").value)/100 : null,
+    min_poc: parseFloat(document.getElementById("alert-min-poc").value) ? parseFloat(document.getElementById("alert-min-poc").value)/100 : null
+  };
+
+  var existing = await sb.from("lender_alerts").select("id").eq("lender_id", currentLenderId).limit(1);
+  if (existing.data && existing.data.length > 0) {
+    await sb.from("lender_alerts").update(prefs).eq("id", existing.data[0].id);
+  } else {
+    await sb.from("lender_alerts").insert(prefs);
+  }
+
+  document.getElementById("alert-saved").style.display = "inline";
+  setTimeout(function(){document.getElementById("alert-saved").style.display="none"},2000);
+}
+
+async function saveProfile() {
+  var updates = {
+    name: document.getElementById("prof-name").value,
+    type: document.getElementById("prof-type").value,
+    contact_name: document.getElementById("prof-contact").value,
+    contact_email: document.getElementById("prof-email").value,
+    contact_phone: document.getElementById("prof-phone").value,
+    facility_min: parseFloat(document.getElementById("prof-min").value) || null,
+    facility_max: parseFloat(document.getElementById("prof-max").value) || null
+  };
+  await sb.from("lenders").update(updates).eq("id", currentLenderId);
+  document.getElementById("prof-saved").style.display = "inline";
+  setTimeout(function(){document.getElementById("prof-saved").style.display="none"},2000);
+}
+
+async function loadDeals() {
+  // Get released deals
+  var res = await sb.from("deals").select("*").eq("released_to_lenders", true).order("released_at", {ascending: false});
+  var deals = res.data || [];
+
+  // Get this lender's responses
+  if (currentLenderId) {
+    var respRes = await sb.from("lender_responses").select("*").eq("lender_id", currentLenderId);
+    var responses = respRes.data || [];
+    deals.forEach(function(d) {
+      d._response = responses.find(function(r){return r.deal_id === d.id}) || null;
+    });
+  }
+
+  matchedDeals = deals;
+  renderDeals(deals);
+}
+
+async function loadProfile() {
+  if (!currentLenderId) return;
+  var res = await sb.from("lenders").select("*").eq("id", currentLenderId).single();
+  if (res.data) {
+    var l = res.data;
+    document.getElementById("lender-name").textContent = l.name || "Lender Portal";
+    document.getElementById("prof-name").value = l.name || "";
+    document.getElementById("prof-type").value = l.type || "Non-Bank";
+    document.getElementById("prof-contact").value = l.contact_name || "";
+    document.getElementById("prof-email").value = l.contact_email || "";
+    document.getElementById("prof-phone").value = l.contact_phone || "";
+    document.getElementById("prof-min").value = l.facility_min || "";
+    document.getElementById("prof-max").value = l.facility_max || "";
+  }
+}
+
+async function loadAlerts() {
+  if (!currentLenderId) return;
+  var res = await sb.from("lender_alerts").select("*").eq("lender_id", currentLenderId).limit(1);
+  if (res.data && res.data.length > 0) {
+    var a = res.data[0];
+    document.getElementById("alert-email").value = a.alert_email || "";
+    document.getElementById("alert-on").value = a.alert_on_match ? "true" : "false";
+    document.getElementById("alert-min-size").value = a.min_deal_size || "";
+    document.getElementById("alert-max-size").value = a.max_deal_size || "";
+    document.getElementById("alert-max-lvr").value = a.max_lvr ? (a.max_lvr * 100) : "";
+    document.getElementById("alert-min-poc").value = a.min_poc ? (a.min_poc * 100) : "";
+    document.getElementById("alert-metro").checked = a.metro_only || false;
+    if (a.asset_types) {
+      document.querySelectorAll("#alert-assets input").forEach(function(cb){cb.checked = a.asset_types.indexOf(cb.value) >= 0});
+    }
+    if (a.states) {
+      document.querySelectorAll("#alert-states input").forEach(function(cb){cb.checked = a.states.indexOf(cb.value) >= 0});
+    }
+  }
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  window.location.href = "login.html";
+}
+
+async function init() {
+  // Auth check — lender only
+  var session = await sb.auth.getSession();
+  if (!session.data.session) {
+    window.location.href = "login.html";
+    return;
+  }
+  var user = session.data.session.user;
+  var role = user.user_metadata && user.user_metadata.role;
+
+  if (role === 'admin' || role === 'broker') {
+    window.location.href = "admin.html";
+    return;
+  }
+  if (role === 'borrower' || (!role && role !== 'lender')) {
+    window.location.href = "portal.html";
+    return;
+  }
+
+  // Look up lender by user link, or by email match
+  var linkRes = await sb.from("lender_users").select("lender_id").eq("user_id", user.id).limit(1);
+  if (linkRes.data && linkRes.data.length > 0) {
+    currentLenderId = linkRes.data[0].lender_id;
+  } else {
+    // Try matching by email
+    var emailRes = await sb.from("lenders").select("id").eq("contact_email", user.email).limit(1);
+    if (emailRes.data && emailRes.data.length > 0) {
+      currentLenderId = emailRes.data[0].id;
+      // Auto-link for future
+      await sb.from("lender_users").insert({ user_id: user.id, lender_id: currentLenderId, role: "admin" });
+    } else {
+      // New lender — create a lender record
+      var newLender = await sb.from("lenders").insert({
+        name: user.user_metadata.full_name || user.email,
+        contact_email: user.email,
+        contact_name: user.user_metadata.full_name || "",
+        status: "Onboarding",
+        type: "Non-Bank"
+      }).select();
+      if (newLender.data && newLender.data.length > 0) {
+        currentLenderId = newLender.data[0].id;
+        await sb.from("lender_users").insert({ user_id: user.id, lender_id: currentLenderId, role: "admin" });
+      }
+    }
+  }
+
+  await loadDeals();
+  await loadProfile();
+  await loadAlerts();
+}
+init();
+</script>
+</body>
+</html>
