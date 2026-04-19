@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>getkredit.ai — Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/supabase/2.39.3/supabase.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#0D9488;--teal-light:#14B8A6;--teal-dark:#0F766E;--teal-bg:#F0FDFA;--teal-subtle:#CCFBF1;
+  --white:#ffffff;--grey50:#f8fafc;--grey100:#f1f5f9;--grey200:#e2e8f0;
+  --grey500:#64748b;--grey600:#475569;--grey700:#334155;--grey800:#1e293b;--grey900:#0f172a;
+  --text:#0f172a;--muted:#64748b;--border:#e2e8f0;
+  --green:#059669;--red:#dc2626;--amber:#d97706;--blue:#2563EB;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50);min-height:100vh}
+
+.nav{height:64px;background:var(--grey900);border-bottom:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:10}
+.nav-logo{font-family:'Source Serif 4',serif;font-size:21px;font-weight:700;color:white;text-decoration:none}
+.nav-logo span{color:var(--teal-light)}
+.nav-badge{padding:4px 10px;border-radius:4px;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-left:12px}
+.nav-right{display:flex;gap:12px;align-items:center}
+.nav-link{font-size:13px;color:rgba(255,255,255,0.6);text-decoration:none;padding:7px 14px;border-radius:var(--radius);transition:all 0.15s}
+.nav-link:hover{color:white;background:rgba(255,255,255,0.08)}
+.nav-link.active{color:white;background:rgba(255,255,255,0.12)}
+
+.container{max-width:1400px;margin:0 auto;padding:28px 40px}
+
+/* Stats bar */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px}
+.stat{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;text-align:center}
+.stat-val{font-size:28px;font-weight:700;color:var(--grey900);font-family:'Source Serif 4',serif}
+.stat-val.teal{color:var(--teal)}
+.stat-val.green{color:var(--green)}
+.stat-val.amber{color:var(--amber)}
+.stat-val.blue{color:var(--blue)}
+.stat-label{font-size:11px;color:var(--grey500);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+
+/* Filters */
+.filters{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.filter-btn{padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:var(--white);color:var(--grey600);font-size:12px;font-weight:500;cursor:pointer;transition:all 0.15s;font-family:'DM Sans',sans-serif}
+.filter-btn:hover{border-color:var(--teal);color:var(--teal)}
+.filter-btn.active{background:var(--teal);color:white;border-color:var(--teal)}
+
+/* Table */
+.table-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.deals-table{width:100%;border-collapse:collapse}
+.deals-table th{background:var(--grey100);padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--grey600);text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border)}
+.deals-table th.num{text-align:right}
+.deals-table td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;color:var(--grey700)}
+.deals-table td.num{text-align:right;font-weight:500;font-family:'DM Sans',sans-serif}
+.deals-table tr:last-child td{border-bottom:none}
+.deals-table tr:hover{background:var(--grey50)}
+.deals-table tr{cursor:pointer}
+
+.td-name{font-weight:600;color:var(--grey900)}
+.td-address{font-size:12px;color:var(--grey500);margin-top:1px}
+.td-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.b-draft{background:var(--grey100);color:var(--grey600)}
+.b-feasibility{background:var(--teal-bg);color:var(--teal-dark)}
+.b-submitted{background:rgba(37,99,235,0.08);color:var(--blue)}
+.b-review{background:rgba(217,119,6,0.08);color:var(--amber)}
+.b-approved{background:rgba(5,150,105,0.08);color:var(--green)}
+.b-declined{background:rgba(220,38,38,0.06);color:var(--red)}
+
+/* Detail panel */
+.detail-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.5);z-index:50}
+.detail-overlay.show{display:flex;justify-content:flex-end}
+.detail-panel{width:560px;background:var(--white);height:100%;overflow-y:auto;box-shadow:-8px 0 32px rgba(0,0,0,0.1);padding:28px}
+.detail-close{background:none;border:none;font-size:24px;cursor:pointer;color:var(--grey500);float:right;padding:4px}
+.detail-close:hover{color:var(--grey900)}
+.detail-title{font-family:'Source Serif 4',serif;font-size:22px;font-weight:700;color:var(--grey900);margin-bottom:4px}
+.detail-address{font-size:14px;color:var(--grey500);margin-bottom:20px}
+.detail-section{margin-bottom:24px}
+.detail-section-head{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey500);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.detail-row{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+.detail-key{color:var(--grey500)}
+.detail-val{font-weight:500;color:var(--grey900)}
+.detail-val.teal{color:var(--teal)}
+.detail-val.green{color:var(--green)}
+.detail-val.amber{color:var(--amber)}
+.detail-val.red{color:var(--red)}
+
+.status-select{padding:6px 12px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--grey700);cursor:pointer;background:var(--white)}
+.status-select:focus{outline:none;border-color:var(--teal)}
+
+.loading{text-align:center;padding:60px;color:var(--grey500);font-size:14px}
+
+@media(max-width:768px){
+  .container{padding:16px}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .detail-panel{width:100%}
+  .nav{padding:0 16px}
+  .deals-table{font-size:12px}
+  .deals-table th,.deals-table td{padding:8px 10px}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div style="display:flex;align-items:center">
+    <a class="nav-logo" href="index.html">get<span>kredit.ai</span></a>
+    <span class="nav-badge">Admin</span>
+  </div>
+  <div class="nav-right">
+    <a class="nav-link active" href="admin.html">Deals</a>
+    <a class="nav-link" href="#">Lenders</a>
+    <a class="nav-link" href="#" onclick="doLogout()">Sign Out</a>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- Stats -->
+  <div class="stats" id="stats">
+    <div class="stat"><div class="stat-val" id="s-total">—</div><div class="stat-label">Total Deals</div></div>
+    <div class="stat"><div class="stat-val teal" id="s-facility">—</div><div class="stat-label">Total Facility</div></div>
+    <div class="stat"><div class="stat-val blue" id="s-submitted">—</div><div class="stat-label">Submitted</div></div>
+    <div class="stat"><div class="stat-val amber" id="s-review">—</div><div class="stat-label">Under Review</div></div>
+    <div class="stat"><div class="stat-val green" id="s-approved">—</div><div class="stat-label">Approved</div></div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <button class="filter-btn active" onclick="filterDeals('all',this)">All</button>
+    <button class="filter-btn" onclick="filterDeals('feasibility_complete',this)">Feasibility</button>
+    <button class="filter-btn" onclick="filterDeals('submitted',this)">Submitted</button>
+    <button class="filter-btn" onclick="filterDeals('under_review',this)">Under Review</button>
+    <button class="filter-btn" onclick="filterDeals('approved',this)">Approved</button>
+    <button class="filter-btn" onclick="filterDeals('declined',this)">Declined</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <div id="loading" class="loading">Loading deals...</div>
+    <table class="deals-table" id="deals-table" style="display:none">
+      <thead>
+        <tr>
+          <th>Borrower</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th class="num">GRV</th>
+          <th class="num">Facility</th>
+          <th class="num">LVR</th>
+          <th class="num">POC</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody id="deals-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Detail Panel -->
+<div class="detail-overlay" id="detail-overlay" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-panel">
+    <button class="detail-close" onclick="closeDetail()">×</button>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<script>
+var SUPABASE_URL = "https://hvksgccijlopabnvdkyo.supabase.co";
+var SUPABASE_KEY = "sb_publishable_VWIW0F7EGwkiqSymCFV_5w_2JHV7mkr";
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+var allDeals = [];
+var currentFilter = "all";
+
+function fd(v) {
+  if (!v && v !== 0) return "—";
+  return new Intl.NumberFormat("en-AU",{style:"currency",currency:"AUD",minimumFractionDigits:0,maximumFractionDigits:0}).format(v);
+}
+function fp(v) { return (!v && v !== 0) ? "—" : (v * 100).toFixed(1) + "%"; }
+
+function statusBadge(status) {
+  var map = {
+    draft:["Draft","b-draft"], feasibility_complete:["Feasibility","b-feasibility"],
+    submitted:["Submitted","b-submitted"], under_review:["Under Review","b-review"],
+    approved:["Approved","b-approved"], declined:["Declined","b-declined"],
+    settled:["Settled","b-approved"], withdrawn:["Withdrawn","b-draft"]
+  };
+  var m = map[status] || ["Unknown","b-draft"];
+  return '<span class="td-badge ' + m[1] + '">' + m[0] + '</span>';
+}
+
+function colorClass(field, val) {
+  if (!val) return "";
+  if (field === "lvr") return val <= 0.65 ? "green" : val <= 0.70 ? "amber" : "red";
+  if (field === "poc") return val >= 0.20 ? "green" : val >= 0.15 ? "amber" : "red";
+  return "";
+}
+
+function renderTable(deals) {
+  var tbody = document.getElementById("deals-tbody");
+  tbody.innerHTML = deals.map(function(d) {
+    var date = new Date(d.created_at).toLocaleDateString("en-AU",{day:"2-digit",month:"short"});
+    return '<tr onclick="showDetail(\'' + d.id + '\')">'
+      + '<td><div class="td-name">' + (d.borrower_name || "—") + '</div><div class="td-address">' + (d.address || "").substring(0,40) + '</div></td>'
+      + '<td><span class="td-badge b-feasibility">' + (d.sub_category || d.category || "—") + '</span></td>'
+      + '<td>' + statusBadge(d.status) + '</td>'
+      + '<td class="num">' + fd(d.grv) + '</td>'
+      + '<td class="num" style="font-weight:600;color:var(--teal)">' + fd(d.calc_facility) + '</td>'
+      + '<td class="num"><span class="detail-val ' + colorClass("lvr",d.calc_lvr) + '">' + fp(d.calc_lvr) + '</span></td>'
+      + '<td class="num"><span class="detail-val ' + colorClass("poc",d.calc_poc) + '">' + fp(d.calc_poc) + '</span></td>'
+      + '<td>' + date + '</td>'
+      + '</tr>';
+  }).join("");
+}
+
+function renderStats(deals) {
+  document.getElementById("s-total").textContent = deals.length;
+  var totalFac = deals.reduce(function(s,d) { return s + (d.calc_facility || 0); }, 0);
+  document.getElementById("s-facility").textContent = fd(totalFac);
+  document.getElementById("s-submitted").textContent = deals.filter(function(d){return d.status==="submitted"}).length;
+  document.getElementById("s-review").textContent = deals.filter(function(d){return d.status==="under_review"}).length;
+  document.getElementById("s-approved").textContent = deals.filter(function(d){return d.status==="approved"}).length;
+}
+
+function filterDeals(status, btn) {
+  currentFilter = status;
+  document.querySelectorAll(".filter-btn").forEach(function(b){b.classList.remove("active")});
+  btn.classList.add("active");
+  var filtered = status === "all" ? allDeals : allDeals.filter(function(d){return d.status===status});
+  renderTable(filtered);
+}
+
+function showDetail(id) {
+  var d = allDeals.find(function(deal){return deal.id === id});
+  if (!d) return;
+
+  var html = '<div class="detail-title">' + (d.borrower_name || "Unnamed Deal") + '</div>'
+    + '<div class="detail-address">' + (d.address || "No address") + '</div>'
+    + '<div class="detail-section">'
+    + '<div class="detail-section-head">Status</div>'
+    + '<select class="status-select" onchange="updateStatus(\'' + d.id + '\',this.value)">'
+    + ['draft','feasibility_complete','submitted','under_review','approved','declined','settled','withdrawn'].map(function(s) {
+        return '<option value="' + s + '"' + (d.status===s?' selected':'') + '>' + s.replace(/_/g,' ') + '</option>';
+      }).join("")
+    + '</select></div>'
+    + '<div class="detail-section">'
+    + '<div class="detail-section-head">Borrower</div>'
+    + '<div class="detail-row"><span class="detail-key">Name</span><span class="detail-val">' + (d.borrower_name||"—") + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Email</span><span class="detail-val">' + (d.borrower_email||"—") + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Phone</span><span class="detail-val">' + (d.borrower_phone||"—") + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Type</span><span class="detail-val">' + (d.borrower_type||"—") + '</span></div>'
+    + '</div>'
+    + '<div class="detail-section">'
+    + '<div class="detail-section-head">Project</div>'
+    + '<div class="detail-row"><span class="detail-key">Category</span><span class="detail-val">' + (d.category||"—") + ' — ' + (d.sub_category||"") + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Units</span><span class="detail-val">' + (d.units||"—") + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Avg Price</span><span class="detail-val">' + fd(d.avg_price) + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">GRV</span><span class="detail-val">' + fd(d.grv) + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">DA Status</span><span class="detail-val">' + (d.da_status||"—") + '</span></div>'
+    + '</div>'
+    + '<div class="detail-section">'
+    + '<div class="detail-section-head">Costs</div>'
+    + '<div class="detail-row"><span class="detail-key">Land Cost</span><span class="detail-val">' + fd(d.land_cost) + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Construction</span><span class="detail-val">' + fd(d.construction_cost) + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Prof Fees</span><span class="detail-val">' + fd(d.prof_fees) + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Marketing</span><span class="detail-val">' + fd(d.marketing_costs) + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Contingency</span><span class="detail-val">' + fd(d.contingency) + '</span></div>'
+    + '</div>'
+    + '<div class="detail-section">'
+    + '<div class="detail-section-head">Feasibility</div>'
+    + '<div class="detail-row"><span class="detail-key">NRV</span><span class="detail-val">' + fd(d.calc_nrv) + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">TDC</span><span class="detail-val">' + fd(d.calc_tdc) + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Facility</span><span class="detail-val teal">' + fd(d.calc_facility) + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Equity</span><span class="detail-val">' + fd(d.calc_equity) + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">LVR</span><span class="detail-val ' + colorClass("lvr",d.calc_lvr) + '">' + fp(d.calc_lvr) + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">LTC</span><span class="detail-val">' + fp(d.calc_ltc) + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Profit on Cost</span><span class="detail-val ' + colorClass("poc",d.calc_poc) + '">' + fp(d.calc_poc) + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Debt Cover</span><span class="detail-val">' + fp(d.calc_debt_cover) + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Dev IRR</span><span class="detail-val green">' + fp(d.calc_irr) + '</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Lenders Matched</span><span class="detail-val">' + (d.calc_lenders_matched||"—") + '</span></div>'
+    + '</div>'
+    + '<div class="detail-section">'
+    + '<div class="detail-section-head">Timeline</div>'
+    + '<div class="detail-row"><span class="detail-key">Loan Term</span><span class="detail-val">' + (d.total_loan_term||"—") + ' months</span></div>'
+    + '<div class="detail-row"><span class="detail-key">Presales</span><span class="detail-val">' + (d.has_presales||"—") + (d.presales_value ? " — " + fd(d.presales_value) : "") + '</span></div>'
+    + '</div>';
+
+  document.getElementById("detail-content").innerHTML = html;
+  document.getElementById("detail-overlay").classList.add("show");
+}
+
+function closeDetail() {
+  document.getElementById("detail-overlay").classList.remove("show");
+}
+
+async function updateStatus(dealId, newStatus) {
+  await sb.from("deals").update({status: newStatus}).eq("id", dealId);
+  // Update local data
+  var deal = allDeals.find(function(d){return d.id === dealId});
+  if (deal) deal.status = newStatus;
+  renderStats(allDeals);
+  var filtered = currentFilter === "all" ? allDeals : allDeals.filter(function(d){return d.status===currentFilter});
+  renderTable(filtered);
+}
+
+async function doLogout() {
+  await sb.auth.signOut();
+  window.location.href = "login.html";
+}
+
+async function init() {
+  // Load all deals
+  var res = await sb.from("deals").select("*").order("created_at",{ascending:false});
+  allDeals = res.data || [];
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("deals-table").style.display = "table";
+  renderStats(allDeals);
+  renderTable(allDeals);
+}
+init();
+</script>
+</body>
+</html>
