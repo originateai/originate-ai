@@ -1,0 +1,2072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>getkredit.ai — Development Finance</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script>
+function loadGooglePlaces() {
+  var s = document.createElement('script');
+  s.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyB4idPsz29ElJRW1kU7EPrwV9W2Cdey6rg&libraries=places&callback=onPlacesReady';
+  s.async = true; s.defer = true;
+  document.head.appendChild(s);
+}
+</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#0D9488;--teal-light:#14B8A6;--teal-dark:#0F766E;--teal-bg:#F0FDFA;--teal-subtle:#CCFBF1;
+  --white:#ffffff;--off:#f9fafb;--grey50:#f8fafc;--grey100:#f1f5f9;--grey200:#e2e8f0;
+  --grey500:#64748b;--grey600:#475569;--grey700:#334155;--grey800:#1e293b;--grey900:#0f172a;
+  --text:#0f172a;--muted:#64748b;--faint:#cbd5e1;--border:#e2e8f0;
+  --green:#059669;--red:#dc2626;--amber:#d97706;
+}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--white);color:var(--text);overflow:hidden}
+
+.topbar{height:58px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 32px;flex-shrink:0;position:relative;z-index:10}
+.tb-logo{font-family:'Libre Baskerville',serif;font-size:19px;font-weight:700;color:var(--grey900);display:flex;align-items:baseline;gap:1px;cursor:pointer;text-decoration:none}
+.tb-logo span{color:var(--teal)}
+.tb-badge{padding:5px 13px;border-radius:20px;background:var(--teal-bg);border:1px solid var(--teal-subtle);color:var(--teal-dark);font-size:10.5px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase}
+.tb-back{font-size:12px;color:var(--grey500);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;letter-spacing:0.3px;transition:color 0.2s;padding:0}
+.tb-back:hover{color:var(--teal)}
+
+.layout{display:grid;grid-template-columns:1fr 340px;height:calc(100vh - 58px)}
+
+.chat{display:flex;flex-direction:column;height:100%;border-right:1px solid var(--border);overflow:hidden;background:var(--grey50)}
+.msgs{flex:1;overflow-y:auto;padding:28px 36px;display:flex;flex-direction:column;gap:16px;scroll-behavior:smooth}
+.msgs::-webkit-scrollbar{width:3px}
+.msgs::-webkit-scrollbar-thumb{background:var(--grey200);border-radius:2px}
+
+.msg{display:flex;gap:11px;animation:fadein 0.22s ease}
+.msg.u{flex-direction:row-reverse;align-self:flex-end;max-width:75%}
+@keyframes fadein{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.av{width:31px;height:31px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:3px;font-weight:700;font-size:12px}
+.av.o{background:var(--teal);color:white;font-family:'Libre Baskerville',serif;font-size:13px}
+.av.y{background:var(--grey200);border:1px solid var(--grey200);color:var(--grey600);font-size:10px}
+.bbl{padding:12px 16px;border-radius:12px;font-size:14px;line-height:1.7}
+.msg.ai .bbl{background:var(--white);border:1px solid var(--border);color:var(--text);border-top-left-radius:3px}
+.msg.u .bbl{background:var(--teal);color:white;border-top-right-radius:3px;font-weight:500}
+.bbl b,.bbl strong{color:var(--teal-dark);font-weight:600}
+
+/* Inline tables in chat */
+.chat-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.chat-table th{background:var(--grey100);color:var(--grey700);font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.chat-table th.num{text-align:right}
+.chat-table td{padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text)}
+.chat-table td.num{text-align:right;font-weight:500}
+.chat-table tr:last-child td{border-bottom:none}
+.chat-table tr.total-row td{background:var(--grey100);font-weight:600;border-top:2px solid var(--border)}
+.chat-table input,.chat-table select{width:100%;padding:5px 7px;border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:12px;background:var(--white);color:var(--text)}
+.chat-table input:focus,.chat-table select:focus{outline:none;border-color:var(--teal)}
+.chat-table input.num-input{text-align:right;width:100px}
+.chat-table select{width:140px}
+.tbl-actions{display:flex;gap:8px;margin-top:8px}
+.tbl-btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;border:none}
+.tbl-btn.add{background:var(--grey100);color:var(--grey700);border:1px solid var(--border)}
+.tbl-btn.add:hover{background:var(--teal-bg);color:var(--teal);border-color:var(--teal-subtle)}
+.tbl-btn.save{background:var(--teal);color:white}
+.tbl-btn.save:hover{background:var(--teal-dark)}
+
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{padding:7px 13px;border-radius:6px;border:1px solid var(--border);background:var(--white);color:var(--grey700);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.16s;font-weight:500}
+.chip:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-bg)}
+.chip.selected{border-color:var(--teal);color:var(--teal);background:var(--teal-bg);pointer-events:none}
+.chips.disabled .chip{pointer-events:none;opacity:0.35}
+
+/* AI Doc Upload */
+.doc-upload-zone{margin-top:12px;border:2px dashed var(--border);border-radius:10px;padding:28px 20px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--white)}
+.doc-upload-zone:hover,.doc-upload-zone.dragover{border-color:var(--teal);background:var(--teal-bg)}
+.doc-upload-zone .upload-icon{font-size:28px;margin-bottom:8px;opacity:0.5}
+.doc-upload-zone .upload-label{font-size:13px;color:var(--grey600);line-height:1.6}
+.doc-upload-zone .upload-label strong{color:var(--teal)}
+.doc-upload-zone .upload-hint{font-size:11px;color:var(--grey500);margin-top:6px}
+.doc-upload-list{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.doc-upload-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--grey50);border:1px solid var(--border);border-radius:8px;font-size:12px}
+.doc-upload-item .doc-file-icon{width:28px;height:28px;border-radius:6px;background:var(--teal-bg);color:var(--teal);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.doc-upload-item .doc-file-name{flex:1;font-weight:500;color:var(--grey800);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.doc-upload-item .doc-file-status{font-size:11px;color:var(--grey500)}
+.doc-upload-item .doc-file-status.success{color:var(--green)}
+.doc-upload-item .doc-file-status.error{color:var(--red)}
+.doc-upload-item .doc-file-status.reading{color:var(--teal);animation:pulse 1.5s infinite}
+.doc-upload-item .doc-remove{background:none;border:none;color:var(--grey500);cursor:pointer;font-size:16px;padding:0 4px;line-height:1}
+.doc-upload-item .doc-remove:hover{color:var(--red)}
+.doc-analyse-btn{margin-top:10px;padding:10px 20px;background:var(--teal);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;width:100%}
+.doc-analyse-btn:hover{background:var(--teal-dark)}
+.doc-analyse-btn:disabled{opacity:0.5;cursor:default}
+.doc-ai-result{margin-top:12px;padding:14px;background:var(--teal-bg);border:1px solid var(--teal-subtle);border-radius:8px}
+.doc-ai-result .result-title{font-size:12px;font-weight:600;color:var(--teal-dark);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.doc-ai-result .result-summary{font-size:13px;color:var(--grey700);line-height:1.6}
+.doc-ai-result .result-fields{margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.doc-ai-result .rf{font-size:11px;padding:4px 8px;background:var(--white);border-radius:4px;display:flex;justify-content:space-between}
+.doc-ai-result .rf-k{color:var(--grey500)}
+.doc-ai-result .rf-v{color:var(--grey900);font-weight:600}
+.doc-ai-flags{margin-top:8px;font-size:11px;color:var(--amber);line-height:1.5}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+
+.typing-row{display:flex;gap:11px;align-items:flex-start}
+.dots{display:flex;gap:4px;align-items:center;padding:12px 16px;background:var(--white);border:1px solid var(--border);border-radius:12px;border-top-left-radius:3px}
+.dots span{width:5px;height:5px;border-radius:50%;background:var(--grey300);animation:bounce 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.2s}
+.dots span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+.input-area{padding:14px 36px 20px;border-top:1px solid var(--border);background:var(--white);flex-shrink:0;position:relative}
+.addr-drop{position:absolute;bottom:100%;left:36px;right:36px;background:var(--white);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:none;z-index:20;box-shadow:0 -8px 24px rgba(0,0,0,0.08)}
+.addr-item{padding:11px 15px;cursor:pointer;font-size:13.5px;color:var(--grey700);border-bottom:1px solid var(--border);transition:background 0.14s;display:flex;flex-direction:column;gap:2px}
+.addr-item:last-child{border:none}
+.addr-item:hover{background:var(--teal-bg)}
+.addr-main{font-weight:500;color:var(--grey900)}
+.addr-sub{font-size:11.5px;color:var(--grey500)}
+.input-box{display:flex;gap:9px;align-items:flex-end;background:var(--grey50);border:1px solid var(--border);border-radius:8px;padding:10px 13px;transition:border-color 0.2s}
+.input-box:focus-within{border-color:var(--teal)}
+#ta{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;resize:none;min-height:22px;max-height:96px}
+#ta::placeholder{color:var(--grey500)}
+.send{width:33px;height:33px;border-radius:6px;background:var(--teal);border:none;cursor:pointer;color:white;font-size:18px;font-weight:700;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.18s}
+.send:hover{background:var(--teal-dark);transform:scale(1.05)}
+.send:disabled{opacity:0.4;cursor:default;transform:none}
+.hint{margin-top:6px;font-size:11px;color:var(--grey500);text-align:center}
+
+.panel{background:var(--white);overflow-y:auto;display:flex;flex-direction:column}
+.panel::-webkit-scrollbar{width:3px}
+.panel::-webkit-scrollbar-thumb{background:var(--grey200)}
+.pb{padding:18px 20px;border-bottom:1px solid var(--border)}
+.pbl{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--grey500);margin-bottom:13px}
+.pr{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--border);font-size:12.5px;gap:8px}
+.pr:last-child{border:none}
+.pk{color:var(--grey500);flex-shrink:0}
+.pv{font-weight:500;color:var(--grey900);text-align:right;font-size:12px}
+.pv.g{color:var(--teal)}.pv.gr{color:var(--green)}.pv.dim{color:var(--grey500);font-style:italic;font-weight:400;font-size:11px}
+.pr.clickable{cursor:pointer;transition:background 0.15s;border-radius:6px;margin:0 -4px;padding:6px 4px}
+.pr.clickable:hover{background:var(--teal-bg)}
+.pr.editing{background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.2);border-radius:6px;margin:0 -4px;padding:5px 4px}
+.pr.editing .pv{color:var(--red)}
+.pv.error{color:var(--red);font-weight:600}
+
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px}
+.mbox{background:var(--grey50);border:1px solid var(--border);border-radius:8px;padding:11px 10px;text-align:center}
+.mv{font-family:'Libre Baskerville',serif;font-size:19px;font-weight:400;line-height:1;color:var(--grey900)}
+.mv.gr{color:var(--green)}.mv.g{color:var(--teal)}.mv.r{color:var(--red)}.mv.am{color:var(--amber)}
+.ml{font-size:9px;color:var(--grey500);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-top:4px}
+
+.lrow{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+.lrow:last-child{border:none}
+.ln{color:var(--grey600)}.lr{color:var(--green);font-weight:600;font-size:11.5px}
+
+.prog-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px}
+.prog-k{color:var(--grey500)}.prog-v{font-size:13px;color:var(--grey300)}
+.prog-v.done{color:var(--green)}
+.prog-bar{height:2px;background:var(--grey200);border-radius:2px;margin-top:12px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--teal-light));transition:width 0.5s}
+
+.ts-btn{width:100%;padding:13px;border-radius:8px;background:var(--teal);color:white;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;border:none;cursor:pointer;letter-spacing:0.8px;text-transform:uppercase;margin-top:12px;transition:all 0.2s;display:none}
+.ts-btn:hover{background:var(--teal-dark)}
+.crm-ok{font-size:11px;margin-top:8px;padding:6px 10px;border-radius:6px;background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.2);color:var(--green);text-align:center;display:none}
+
+/* TERM SHEET OVERLAY */
+.ts-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,0.92);z-index:100;overflow-y:auto;padding:32px 16px}
+.ts-overlay.show{display:block}
+.ts-doc{max-width:800px;margin:0 auto;background:white;border-radius:12px;overflow:hidden;font-family:'DM Sans',sans-serif}
+.ts-topbar{background:var(--grey900);padding:13px 26px;display:flex;justify-content:space-between;align-items:center}
+.ts-topbar span{font-size:12px;color:rgba(255,255,255,0.4)}
+.ts-actions{display:flex;gap:8px}
+.ts-action{padding:7px 16px;border-radius:6px;font-size:11.5px;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.5px;text-transform:uppercase}
+.ts-action.primary{background:var(--teal);color:white}
+.ts-action.ghost{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.65)}
+.ts-content{padding:48px}
+.ts-header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:24px;border-bottom:3px solid var(--grey900);margin-bottom:32px}
+.ts-logo{font-family:'Libre Baskerville',serif;font-size:22px;font-weight:700;color:var(--grey900)}
+.ts-logo span{color:var(--teal)}
+.ts-tag{font-size:12px;color:var(--muted);margin-top:4px}
+.ts-ref{text-align:right;font-size:12px;color:var(--muted);line-height:1.8}
+.ts-ref strong{color:var(--text)}
+.ts-section{margin-bottom:24px}
+.ts-section-head{background:var(--grey900);color:white;font-size:9.5px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:9px 16px;border-radius:4px 4px 0 0}
+.ts-table{border:1px solid var(--border);border-top:none}
+.ts-tr{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px;gap:16px}
+.ts-tr:last-child{border:none}
+.ts-k{color:var(--muted);font-size:12px;min-width:190px;flex-shrink:0}
+.ts-v{font-weight:600;color:var(--text);text-align:right}
+.ts-v.ok{color:var(--green)}.ts-v.warn{color:var(--amber)}.ts-v.bad{color:var(--red)}
+.ft-table{width:100%;border-collapse:collapse;border:1px solid var(--border);border-top:none;font-size:12.5px}
+.ft-table th{background:var(--off);font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:8px 14px;border-bottom:1px solid var(--border);text-align:right}
+.ft-table th:first-child{text-align:left}
+.ft-table td{padding:8px 14px;border-bottom:1px solid var(--cream);text-align:right;color:var(--text)}
+.ft-table td:first-child{text-align:left}
+.ft-table .grp td{background:var(--off);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--grey900);padding:7px 14px}
+.ft-table .sub td{background:var(--cream);font-weight:600;border-top:1px solid var(--border)}
+.ft-table .tot td{background:var(--grey900);color:white;font-weight:600;font-size:13px}
+.ts-disc{font-size:11px;color:var(--muted);line-height:1.65;padding:14px 16px;background:var(--off);border:1px solid var(--border);border-radius:2px;margin-top:20px}
+
+@media(max-width:768px){
+  .layout{grid-template-columns:1fr}.panel{display:none}
+  .msgs{padding:20px}.input-area{padding:12px 20px 18px}
+  .addr-drop{left:20px;right:20px}
+  .ts-content{padding:24px}
+  .ts-k{min-width:130px}
+}
+@media print{.ts-topbar,.topbar,.panel{display:none!important}.ts-overlay{padding:0}.ts-doc{border-radius:0}}
+</style>
+</head>
+<body onload="loadGooglePlaces()">
+
+<!-- TERM SHEET OVERLAY -->
+<div class="ts-overlay" id="ts-overlay">
+  <div class="ts-doc">
+    <div class="ts-topbar">
+      <span>getkredit.ai — Indicative Term Sheet</span>
+      <div class="ts-actions">
+        <button class="ts-action ghost" onclick="closeTS()">Close</button>
+        <button class="ts-action primary" onclick="window.print()">Print / Save PDF</button>
+      </div>
+    </div>
+    <div class="ts-content">
+      <div class="ts-header">
+        <div>
+          <div class="ts-logo">get<span>kredit.ai</span></div>
+          <div class="ts-tag">Indicative Term Sheet — Subject to Formal Credit Approval</div>
+        </div>
+        <div class="ts-ref">
+          <div>Date: <strong id="ts-date">—</strong></div>
+          <div>Ref: <strong id="ts-ref">—</strong></div>
+          <div>Prepared for: <strong id="ts-for">—</strong></div>
+        </div>
+      </div>
+
+      <div class="ts-section">
+        <div class="ts-section-head">Borrower & Project Details</div>
+        <div id="ts-map" style="display:none;margin-bottom:14px;border-radius:8px;overflow:hidden;border:1px solid var(--border)">
+          <iframe id="ts-map-iframe" width="100%" height="200" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <div class="ts-table">
+          <div class="ts-tr"><span class="ts-k">Borrower Name</span><span class="ts-v" id="ts-name">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Email</span><span class="ts-v" id="ts-email">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Phone</span><span class="ts-v" id="ts-phone">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Project Address</span><span class="ts-v" id="ts-address">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Development Type</span><span class="ts-v" id="ts-devtype">—</span></div>
+          <div class="ts-tr"><span class="ts-k">DA Status</span><span class="ts-v" id="ts-da">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Estimated GRV (inc. GST)</span><span class="ts-v" id="ts-grv">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Net Realization Value</span><span class="ts-v" id="ts-nrv">—</span></div>
+        </div>
+      </div>
+
+      <div class="ts-section">
+        <div class="ts-section-head">Indicative Facility Terms</div>
+        <div class="ts-table">
+          <div class="ts-tr"><span class="ts-k">Facility Limit</span><span class="ts-v" id="ts-facility">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Facility Type</span><span class="ts-v">Construction — Progressive Drawdown (S-Curve)</span></div>
+          <div class="ts-tr"><span class="ts-k">Loan Term</span><span class="ts-v" id="ts-term">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Interest Rate</span><span class="ts-v" id="ts-rate">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Line Fee</span><span class="ts-v" id="ts-linefee">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Application Fee</span><span class="ts-v" id="ts-appfee">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Interest Treatment</span><span class="ts-v">Capitalised monthly to facility balance</span></div>
+          <div class="ts-tr"><span class="ts-k">Repayment</span><span class="ts-v">Bullet — from sales settlement proceeds</span></div>
+        </div>
+      </div>
+
+      <div class="ts-section">
+        <div class="ts-section-head">Key Metrics & Covenants</div>
+        <div class="ts-table">
+          <div class="ts-tr"><span class="ts-k">LVR (on completion, net GST)</span><span class="ts-v" id="ts-lvr">—</span></div>
+          <div class="ts-tr"><span class="ts-k">LTC (on total dev. cost)</span><span class="ts-v" id="ts-ltc">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Equity Required</span><span class="ts-v" id="ts-equity">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Total Development Cost</span><span class="ts-v" id="ts-tdc">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Presales Coverage</span><span class="ts-v" id="ts-presales">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Profit on Cost</span><span class="ts-v" id="ts-poc">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Developer IRR (est.)</span><span class="ts-v" id="ts-irr">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Lenders Matched</span><span class="ts-v" id="ts-lenders">—</span></div>
+        </div>
+      </div>
+
+      <div class="ts-section">
+        <div class="ts-section-head">Indicative Funding Table</div>
+        <table class="ft-table">
+          <thead><tr><th style="text-align:left">Cost Item</th><th>Project Total</th><th>Developer</th><th>Bank</th></tr></thead>
+          <tbody id="ts-ft-body"></tbody>
+        </table>
+      </div>
+
+      <div class="ts-section">
+        <div class="ts-section-head">Project Timeline</div>
+        <div class="ts-table">
+          <div class="ts-tr"><span class="ts-k">Land Settlement</span><span class="ts-v" id="ts-settle">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Pre-Construction Lead Time</span><span class="ts-v" id="ts-precon">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Construction Period</span><span class="ts-v" id="ts-constperiod">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Sales / Settlement Period</span><span class="ts-v" id="ts-salesperiod">—</span></div>
+          <div class="ts-tr"><span class="ts-k">Total Loan Term</span><span class="ts-v" id="ts-totalterm">—</span></div>
+        </div>
+      </div>
+
+      <div class="ts-section">
+        <div class="ts-section-head">Indicative Conditions Precedent</div>
+        <div class="ts-table">
+          <div class="ts-tr"><span class="ts-k">Presales</span><span class="ts-v">Min. 100% of facility in unconditional presales prior to first drawdown</span></div>
+          <div class="ts-tr"><span class="ts-k">Valuation</span><span class="ts-v">Independent registered valuation acceptable to lender</span></div>
+          <div class="ts-tr"><span class="ts-k">QS Report</span><span class="ts-v">Quantity surveyor report confirming construction costs</span></div>
+          <div class="ts-tr"><span class="ts-k">Construction Contract</span><span class="ts-v">Executed fixed-price contract with licensed builder</span></div>
+          <div class="ts-tr"><span class="ts-k">Development Approval</span><span class="ts-v">DA issued, unconditional and not subject to appeal</span></div>
+        </div>
+      </div>
+
+      <div class="ts-disc"><strong>Important Notice:</strong> This indicative term sheet is prepared by getkredit.ai for discussion purposes only and does not constitute an offer or commitment to provide finance. All terms are indicative and subject to formal credit approval, satisfactory due diligence, independent valuation, execution of facility documentation and satisfaction of all conditions precedent. getkredit.ai is not a credit provider or Australian Credit Licence holder. Finance is arranged through licensed lenders. © 2025 getkredit.ai Pty Ltd.</div>
+    </div>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <a class="tb-logo" href="index.html">get<span>kredit.ai</span></a>
+  <div class="tb-badge">Development Finance</div>
+  <button class="tb-back" onclick="history.back()">← Back</button>
+</div>
+
+<!-- MAIN LAYOUT -->
+<div class="layout">
+  <div class="chat">
+    <div class="msgs" id="msgs"></div>
+    <div class="input-area">
+      <div class="addr-drop" id="addr-drop"></div>
+      <div class="input-box">
+        <textarea id="ta" placeholder="Type your answer..." rows="1"
+          onkeydown="onKey(event)"
+          oninput="onInput(this)"></textarea>
+        <button class="send" id="send-btn" onclick="send()">↑</button>
+      </div>
+      <div class="hint">Enter to send &nbsp;·&nbsp; Shift+Enter for new line</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="pb">
+      <div class="pbl">Borrower</div>
+      <div class="pr"><span class="pk">Name</span><span class="pv dim" id="p-name">Waiting...</span></div>
+      <div class="pr"><span class="pk">Email</span><span class="pv dim" id="p-email">Waiting...</span></div>
+      <div class="pr"><span class="pk">Phone</span><span class="pv dim" id="p-phone">Waiting...</span></div>
+      <div class="pr"><span class="pk">Address</span><span class="pv dim" id="p-address">Waiting...</span></div>
+      <div id="panel-map" style="display:none;margin:8px 0;border-radius:8px;overflow:hidden;border:1px solid var(--border)"><iframe id="map-iframe" width="100%" height="180" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+      <div class="pr"><span class="pk">DA Status</span><span class="pv dim" id="p-da">—</span></div>
+    </div>
+    <div class="pb">
+      <div class="pbl">Project</div>
+      <div class="pr"><span class="pk">Type</span><span class="pv dim" id="p-type">—</span></div>
+      <div class="pr"><span class="pk">Units</span><span class="pv dim" id="p-units">—</span></div>
+      <div class="pr"><span class="pk">Avg Price</span><span class="pv dim" id="p-avgprice">—</span></div>
+      <div class="pr"><span class="pk">GRV</span><span class="pv dim" id="p-grv">—</span></div>
+      <div class="pr"><span class="pk">Land (Paid)</span><span class="pv dim" id="p-land">—</span></div>
+      <div class="pr"><span class="pk">Land (Value)</span><span class="pv dim" id="p-landval">—</span></div>
+      <div class="pr"><span class="pk">Existing Debt</span><span class="pv dim" id="p-debt">—</span></div>
+      <div class="pr"><span class="pk">Construction</span><span class="pv dim" id="p-const">—</span></div>
+      <div class="pr"><span class="pk">Prof. Fees</span><span class="pv dim" id="p-proffees">—</span></div>
+      <div class="pr"><span class="pk">Holding</span><span class="pv dim" id="p-holding">—</span></div>
+      <div class="pr"><span class="pk">Marketing</span><span class="pv dim" id="p-marketing">—</span></div>
+      <div class="pr"><span class="pk">Contingency</span><span class="pv dim" id="p-contingency">—</span></div>
+      <div class="pr"><span class="pk">Presales</span><span class="pv dim" id="p-presales">—</span></div>
+      <div class="pr"><span class="pk">Loan Term</span><span class="pv dim" id="p-term">—</span></div>
+    </div>
+    <div class="pb">
+      <div class="pbl">Live Metrics</div>
+      <div class="mg">
+        <div class="mbox"><div class="mv" id="m-lvr">—</div><div class="ml">LVR</div></div>
+        <div class="mbox"><div class="mv" id="m-ltc">—</div><div class="ml">LTC</div></div>
+        <div class="mbox"><div class="mv" id="m-poc">—</div><div class="ml">Profit/Cost</div></div>
+        <div class="mbox"><div class="mv" id="m-dc">—</div><div class="ml">Debt Cover</div></div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="pr"><span class="pk">Facility Limit</span><span class="pv g" id="p-facility">—</span></div>
+        <div class="pr"><span class="pk">Equity Required</span><span class="pv" id="p-equity">—</span></div>
+        <div class="pr"><span class="pk">Dev IRR</span><span class="pv gr" id="p-irr">—</span></div>
+      </div>
+    </div>
+    <div class="pb">
+      <div class="pbl">Lender Panel</div>
+      <div id="lender-list"><div style="font-size:12px;color:var(--grey500);font-style:italic;padding:4px 0">Collecting deal details...</div></div>
+    </div>
+    <div class="pb">
+      <div class="pbl">Progress</div>
+      <div class="prog-row"><span class="prog-k">Development type</span><span class="prog-v" id="pg0">○</span></div>
+      <div class="prog-row"><span class="prog-k">Contact details</span><span class="prog-v" id="pg1">○</span></div>
+      <div class="prog-row"><span class="prog-k">Site address</span><span class="prog-v" id="pg2">○</span></div>
+      <div class="prog-row"><span class="prog-k">DA status</span><span class="prog-v" id="pg2b">○</span></div>
+      <div class="prog-row"><span class="prog-k">Revenue (GRV)</span><span class="prog-v" id="pg3">○</span></div>
+      <div class="prog-row"><span class="prog-k">Land details</span><span class="prog-v" id="pg4">○</span></div>
+      <div class="prog-row"><span class="prog-k">Construction</span><span class="prog-v" id="pg5">○</span></div>
+      <div class="prog-row"><span class="prog-k">Timeline</span><span class="prog-v" id="pg6">○</span></div>
+      <div class="prog-row"><span class="prog-k">Project costs</span><span class="prog-v" id="pg7">○</span></div>
+      <div class="prog-row"><span class="prog-k">Funding</span><span class="prog-v" id="pg8">○</span></div>
+      <div class="prog-row"><span class="prog-k">Presales</span><span class="prog-v" id="pg9">○</span></div>
+      <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      <button class="ts-btn" id="ts-btn" onclick="showTermSheet()">View Term Sheet →</button>
+      <div class="crm-ok" id="crm-ok">✓ Saved to CRM</div>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ─────────────────────────────────────────────
+// CONFIG
+// ─────────────────────────────────────────────
+var API_URL = "/.netlify/functions/claude";
+var HS_URL = "/.netlify/functions/hubspot";
+var SB_URL = "/.netlify/functions/supabase";
+
+// ─────────────────────────────────────────────
+// WORKFLOW STEPS
+// ─────────────────────────────────────────────
+var STEPS = [
+  // ══════════════════════════════════════════
+  // ENTRY — AI Fast-Track or Manual
+  // ══════════════════════════════════════════
+  { id: "entryChoice", msg: "Welcome to <strong>getkredit.ai</strong> — Australia's AI-powered development finance platform.<br><br>Want to fast-track your application? Upload a <strong>valuation</strong>, <strong>financial statements</strong>, or <strong>QS report</strong> and our AI will pre-fill your Funding Request automatically.<br><br>Or answer a few guided questions — takes about 5 minutes.",
+    chips: ["✨ Upload docs & fast-track","Enter manually"], field: "entryChoice", docUploadStep: true },
+
+  // ══════════════════════════════════════════
+  // CATEGORY & SUB-CATEGORY
+  // ══════════════════════════════════════════
+  { id: "category", msg: "What type of development are you planning?",
+    chips: ["Residential","Commercial","Land Subdivision","Other"], field: "category" },
+  { id: "subtype", msg: null, chips: null, field: "subtype", dynamic: true },
+
+  // ══════════════════════════════════════════
+  // SCREEN 1 — Tell us about your loan
+  // ══════════════════════════════════════════
+  { id: "address", msg: "Great. First, what's the site address? Start typing and suggestions will appear.", field: "address", addressMode: true },
+  { id: "loanAmount", msg: "How much are you looking to borrow?", field: "loanAmount" },
+  { id: "loanTerm", msg: "What loan term are you looking for?",
+    chips: ["12 months","18 months","24 months","36 months"], field: "loanTerm" },
+
+  // ══════════════════════════════════════════
+  // SCREEN 2 — Tell us about yourself
+  // ══════════════════════════════════════════
+  { id: "borrowerType", msg: "What type of borrowing entity?",
+    chips: ["Individual","Company","Trust","SMSF"], field: "borrowerType" },
+  { id: "name", msg: "What's your full name?", field: "name" },
+  { id: "email", msg: null, field: "email", dynamic: true },
+  { id: "phone", msg: "And your best phone number?", field: "phone" },
+  { id: "employmentType", msg: "What's your employment type?",
+    chips: ["PAYG","Self Employed"], field: "employmentType" },
+  { id: "occupation", msg: "What's your occupation?", field: "occupation" },
+  { id: "income", msg: null, field: "income", dynamic: true },
+  { id: "devExperience", msg: "Do you have any previous development experience?",
+    chips: ["Yes","No — first project"], field: "devExperience" },
+  { id: "personalGuarantee", msg: "Are you happy to provide a personal guarantee?",
+    chips: ["Yes","No"], field: "personalGuarantee" },
+  { id: "cleanCredit", msg: "Do you have a clean credit record?",
+    chips: ["Yes","No"], field: "cleanCredit" },
+
+  // ══════════════════════════════════════════
+  // SCREEN 3 — Project timeline detail
+  // ══════════════════════════════════════════
+  { id: "settleDays", msg: "Now let's talk about your project's timeline. When do you want to settle on the land?",
+    chips: ["Already settled","1 month","2 months","3 months"], field: "settleDays" },
+  { id: "preConst", msg: "How long after settlement before construction starts?",
+    chips: ["Immediately","1 month","2 months","3 months"], field: "preConst" },
+  { id: "constTerm", msg: "How long is the construction program?",
+    chips: ["12 months","15 months","18 months","24 months"], field: "constTerm" },
+  { id: "salesPeriod", msg: "How many months after construction should we allow for sales and settlement?",
+    chips: ["2 months","3 months","4 months","6 months"], field: "salesPeriod" },
+
+  // ══════════════════════════════════════════
+  // SCREEN 4 — Revenue
+  // ══════════════════════════════════════════
+  { id: "units", msg: null, field: "units", dynamic: true },
+  { id: "avgPrice", msg: null, field: "avgPrice", dynamic: true },
+  { id: "useAdvancedGRV", msg: "Would you like to do a detailed unit-by-unit breakdown of your project revenue? This gives a more accurate feasibility.",
+    chips: ["Yes — detailed breakdown","No — keep it simple"], field: "useAdvancedGRV" },
+  { id: "advancedGRVTable", msg: null, field: "unitRows", tableType: "grv", conditional: true },
+
+  // ══════════════════════════════════════════
+  // SCREEN 4.2/4.3 — Presales
+  // ══════════════════════════════════════════
+  { id: "hasPresales", msg: "Do you have any unconditional presales in place?",
+    chips: ["Yes","No presales yet"], field: "hasPresales" },
+  { id: "presalesValue", msg: "What's the total value of your unconditional presales?", field: "presalesValue", conditional: true },
+
+  // ══════════════════════════════════════════
+  // SCREEN 5 — Site details
+  // ══════════════════════════════════════════
+  { id: "landCost", msg: "Now let's talk about the site. How much did you pay for the property — or what's the contract price?", field: "landCost" },
+  { id: "settlementDate", msg: "When did you settle, or when will you settle on the property?",
+    chips: ["Already settled","Within 1 month","Within 3 months","Within 6 months"], field: "settlementDate" },
+  { id: "hasDA", msg: "Have you achieved Development Approval?",
+    chips: ["Yes — DA approved","No — not yet","CDC (Complying Development)"], field: "hasDA" },
+  { id: "daValue", msg: "What is the expected DA value?", field: "daValue", conditional: true },
+  { id: "landValue", msg: "And what's the land worth today — do you have a recent valuation or estimate?", field: "landValue" },
+  { id: "existingDebt", msg: "Is there any existing debt on the land — mortgage or other finance?",
+    chips: ["Yes","No existing debt"], field: "existingDebt" },
+  { id: "debtAmount", msg: "What's the current balance owing?", field: "debtAmount", conditional: true },
+
+  // ══════════════════════════════════════════
+  // SCREEN 6 — Project costs (as interactive table)
+  // ══════════════════════════════════════════
+  { id: "costTable", msg: null, field: "costData", tableType: "costs" },
+
+  // ══════════════════════════════════════════
+  // SCREEN 7 — Feasibility output (auto)
+  // ══════════════════════════════════════════
+  // This is handled by updatePanel — no step needed, metrics show live
+
+  // ══════════════════════════════════════════
+  // SCREEN 8 — Project description + owner builder
+  // ══════════════════════════════════════════
+  { id: "ownerBuilder", msg: "Are you an owner builder — i.e. no licensed builder contract?",
+    chips: ["Yes — owner builder","No — licensed builder"], field: "ownerBuilder" },
+  { id: "landArea", msg: "What is the total land area of the site in square metres?", field: "landArea" },
+
+  // ══════════════════════════════════════════
+  // DOCUMENT CHECKLIST
+  // ══════════════════════════════════════════
+  { id: "docsAvailable", msg: "Last step — please confirm which documents you can provide:<br><br>• Feasibility Report<br>• Contract of Sale (Site Purchase)<br>• Pre-Sale Contracts<br>• Copy of Build/Civil Contract<br>• Taxation Returns<br><br>Can you provide these?",
+    chips: ["Yes — all available","Some available","Not yet — still preparing"], field: "docsAvailable" },
+
+  // ══════════════════════════════════════════
+  // CONFIRM — Claude summary
+  // ══════════════════════════════════════════
+  { id: "confirm", msg: null, field: null, useClaude: true }
+];
+
+// ─────────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────────
+var S = {
+  step: 0,
+  data: {},
+  history: [],
+  busy: false,
+  calcResult: null,
+  crmDone: false,
+  addressMode: false
+};
+
+// ─────────────────────────────────────────────
+// FEASIBILITY ENGINE
+// ─────────────────────────────────────────────
+function runCalc(d) {
+  function num(v) { return typeof v === "number" ? v : parseFloat(v) || 0; }
+  var units = num(d.units);
+  var avgPrice = num(d.avgPrice);
+  var landCost = num(d.costLand) || num(d.landCost);
+  var constCost = num(d.costBuildContract);
+  var civilCost = num(d.costCivilContract);
+  var profFees = num(d.costProfFees);
+  var councilContribs = num(d.costCouncil);
+  var projectMgmt = num(d.costProjectMgmt);
+  var marketingCosts = num(d.costMarketing);
+  var contingency = num(d.costContingency);
+  var gstFacility = num(d.costGST);
+  var acquisitionCosts = num(d.costAcquisition);
+  var otherCosts = num(d.costOther);
+  var allProjectCosts = constCost + civilCost + profFees + councilContribs + projectMgmt + marketingCosts + contingency + gstFacility + otherCosts;
+  var loanAmount = num(d.loanAmount);
+  var loanTerm = num(d.totalLoanTerm) || num(d.loanTerm) || 18;
+  var constTerm = num(d.constTerm) || loanTerm;
+  var presales = num(d.presalesValue);
+  var existingDebt = num(d.debtAmount);
+  var rate = 0.065;
+  var lineFeeRate = 0.010;
+  var appFeeRate = 0.005;
+  var commRate = 0.025;
+
+  var grv = units * avgPrice;
+  var gst = grv > 0 ? (grv - landCost) / 11 : 0;
+  var sellingCosts = grv * commRate;
+  var netSalesRev = grv - sellingCosts;
+  var nrv = netSalesRev - gst;
+
+  var totalLandAcq = landCost + acquisitionCosts;
+  var totalPreFin = totalLandAcq + allProjectCosts;
+
+  var bankPct = totalPreFin > 0 ? Math.max(0, (totalPreFin - landCost) / totalPreFin) : 0.65;
+  var bankBase = totalPreFin * bankPct;
+  var interestEst = bankBase * (rate / 12) * loanTerm * 0.60;
+  var facDenom = 1 - (lineFeeRate / 12 * loanTerm);
+  var facEst = facDenom > 0.01 ? (bankBase + interestEst) / facDenom : bankBase + interestEst;
+
+  var appFee = facEst * appFeeRate;
+  var interest = facEst * (rate / 12) * loanTerm * 0.60;
+  var lineFee = facEst * lineFeeRate * (loanTerm / 12);
+
+  var facility = facEst;
+  if (loanAmount > 0) facility = Math.min(facility, loanAmount);
+  if (nrv > 0) facility = Math.min(facility, nrv * 0.70);
+
+  var tdc = totalPreFin + interest + lineFee + appFee;
+  var equity = Math.max(0, tdc - facility);
+  var profit = nrv - tdc;
+  var lvr = nrv > 0 ? facility / nrv : 0;
+  var ltc = tdc > 0 ? facility / tdc : 0;
+  var poc = tdc > 0 ? profit / tdc : 0;
+  var presalesNet = presales * (1 - commRate);
+  var debtCover = facility > 0 ? presalesNet / facility : 0;
+
+  function xirr(flows) {
+    if (!flows || flows.length < 2) return 0;
+    var f0 = flows[0].month;
+    var f = flows.map(function(c) { return { a: c.amount, t: (c.month - f0) / 12 }; });
+    var r = 0.10;
+    for (var i = 0; i < 200; i++) {
+      var n = 0, dd = 0;
+      for (var j = 0; j < f.length; j++) {
+        var x = Math.pow(1+r, f[j].t);
+        n += f[j].a / x;
+        if (f[j].t !== 0) dd -= f[j].t * f[j].a / (x * (1+r));
+      }
+      if (Math.abs(dd) < 1e-10) break;
+      var nr = r - n/dd;
+      if (Math.abs(nr-r) < 1e-10) return nr;
+      r = nr;
+      if (r < -0.999) r = -0.5;
+    }
+    return r;
+  }
+
+  var devIRR = equity > 0 && profit > 0
+    ? xirr([{ amount: -equity, month: 0 }, { amount: equity + profit, month: loanTerm }])
+    : 0;
+
+  return {
+    grv: grv, gst: gst, sellingCosts: sellingCosts, nrv: nrv,
+    landCost: landCost, constCost: constCost, civilCost: civilCost,
+    profFees: profFees, councilContribs: councilContribs, projectMgmt: projectMgmt,
+    marketingCosts: marketingCosts, contingency: contingency, gstFacility: gstFacility,
+    acquisitionCosts: acquisitionCosts, otherCosts: otherCosts,
+    totalLandAcq: totalLandAcq, allProjectCosts: allProjectCosts,
+    totalPreFin: totalPreFin, interest: interest, lineFee: lineFee, appFee: appFee,
+    tdc: tdc, facility: facility, equity: equity, profit: profit, existingDebt: existingDebt,
+    lvr: lvr, ltc: ltc, poc: poc, debtCover: debtCover, devIRR: devIRR,
+    rate: rate, lineFeeRate: lineFeeRate, appFeeRate: appFeeRate, loanTerm: loanTerm,
+    flags: { lvrOk: lvr <= 0.65, ltcOk: ltc <= 0.70, pocOk: poc >= 0.15, dcOk: debtCover >= 1.0 }
+  };
+}
+
+// Lender panel
+var PANEL = [
+  { name: "Major Bank",       maxLVR: 0.65, maxLTC: 0.70, minPOC: 0.18, rate: 7.50 },
+  { name: "Regional Bank",    maxLVR: 0.65, maxLTC: 0.72, minPOC: 0.15, rate: 8.50 },
+  { name: "Non-Bank A",       maxLVR: 0.68, maxLTC: 0.75, minPOC: 0.15, rate: 9.50 },
+  { name: "Non-Bank B",       maxLVR: 0.70, maxLTC: 0.75, minPOC: 0.12, rate: 10.50 },
+  { name: "Private Credit A", maxLVR: 0.72, maxLTC: 0.78, minPOC: 0.12, rate: 11.50 },
+  { name: "Private Credit B", maxLVR: 0.75, maxLTC: 0.80, minPOC: 0.10, rate: 12.50 },
+  { name: "Mezz Lender",      maxLVR: 0.80, maxLTC: 0.85, minPOC: 0.12, rate: 16.50 }
+];
+function matchLenders(lvr, ltc, poc) {
+  return PANEL.filter(function(l) { return lvr <= l.maxLVR && ltc <= l.maxLTC && poc >= l.minPOC; });
+}
+
+function fd(v) {
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  return new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD", minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(v);
+}
+function fp(v) { return (!v && v !== 0) || isNaN(v) ? "—" : (v * 100).toFixed(1) + "%"; }
+
+// ─────────────────────────────────────────────
+// GOOGLE PLACES
+// ─────────────────────────────────────────────
+var placesService = null;
+
+function onPlacesReady() {
+  placesService = new google.maps.places.AutocompleteService();
+}
+
+function getSuggestions(input) {
+  if (!placesService || input.length < 4) {
+    document.getElementById("addr-drop").style.display = "none";
+    return;
+  }
+  placesService.getPlacePredictions(
+    { input: input, componentRestrictions: { country: "au" }, types: ["geocode", "establishment"] },
+    function(predictions, status) {
+      var drop = document.getElementById("addr-drop");
+      if (status !== "OK" || !predictions || predictions.length === 0) {
+        drop.style.display = "none";
+        return;
+      }
+      drop.innerHTML = predictions.slice(0, 5).map(function(p) {
+        var main = p.structured_formatting.main_text || "";
+        var secondary = p.structured_formatting.secondary_text || "";
+        var full = p.description;
+        return '<div class="addr-item" onclick="pickAddress(\'' + full.replace(/'/g, "\\'") + '\')">'
+          + '<span class="addr-main">' + main + '</span>'
+          + '<span class="addr-sub">' + secondary + '</span>'
+          + '</div>';
+      }).join("");
+      drop.style.display = "block";
+    }
+  );
+}
+
+function pickAddress(addr) {
+  document.getElementById("addr-drop").style.display = "none";
+  document.getElementById("ta").value = "";
+  handleStepInput(addr);
+}
+
+// ─────────────────────────────────────────────
+// PARSE HELPERS
+// ─────────────────────────────────────────────
+function parseDollars(text) {
+  // Percentage — e.g. "5%" or "10%" — converted later using constCost
+  var pct = text.match(/^[\s]*(\d+(?:\.\d+)?)\s*%[\s]*$/);
+  if (pct) return { pct: parseFloat(pct[1]) };
+  // $2.4m, $2.4 million, 2.4m, $500,000, $500000
+  var m = text.match(/\$?\s*(\d+(?:\.\d+)?)\s*(?:m(?:illion)?|mil)\b/i);
+  if (m) return parseFloat(m[1]) * 1e6;
+  // $k shorthand — $500k, 500k
+  var k = text.match(/\$?\s*(\d+(?:\.\d+)?)\s*k\b/i);
+  if (k) return parseFloat(k[1]) * 1e3;
+  var d = text.match(/\$\s*([\d,]+(?:\.\d+)?)/);
+  if (d) return parseFloat(d[1].replace(/,/g, ""));
+  // plain number — any size
+  var n = text.match(/^[\s]*(\d[\d,]*(?:\.\d+)?)[\s]*$/);
+  if (n) {
+    var v = parseFloat(n[1].replace(/,/g, ""));
+    if (v > 0) return v;
+  }
+  return null;
+}
+
+function parseMonths(text) {
+  var m = text.match(/(\d+)\s*month/i);
+  if (m) return parseInt(m[1]);
+  if (/immediately/i.test(text)) return 0;
+  if (/already\s*settled/i.test(text)) return 0;
+  var n = text.match(/^(\d+)$/);
+  if (n) return parseInt(n[1]);
+  return null;
+}
+
+function parseUnits(text) {
+  var m = text.match(/(\d+)/);
+  return m ? parseInt(m[1]) : null;
+}
+
+// ─────────────────────────────────────────────
+// TABLE BUILDERS
+// ─────────────────────────────────────────────
+var GRV_TYPES = [
+  "Studio / 0 Car","Studio / 1 Car","1 Bed / 1 Bath / 0 Car","1 Bed / 1 Bath / 1 Car",
+  "2 Bed / 1 Bath / 0 Car","2 Bed / 1 Bath / 1 Car","2 Bed / 2 Bath / 1 Car","2 Bed / 2 Bath / 2 Car",
+  "3 Bed / 2 Bath / 2 Car","3 Bed / 2 Bath / 3 Car","Penthouse","Vacant / Residual Land"
+];
+var GRV_SIZES = ["0-30 sqm","30-50 sqm","51-75 sqm","76-100 sqm","101-120 sqm","120+ sqm"];
+
+function buildGRVTable() {
+  var typeOpts = GRV_TYPES.map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join("");
+  var sizeOpts = GRV_SIZES.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join("");
+
+  var html = '<div style="margin-top:8px;font-size:13px;color:var(--grey700);font-weight:500;margin-bottom:6px">Residential Properties — Unit-by-Unit Breakdown</div>'
+    + '<table class="chat-table" id="grv-table">'
+    + '<thead><tr><th>Type</th><th>Size</th><th class="num">Number</th><th class="num">Avg Value ($)</th><th class="num">Total</th></tr></thead>'
+    + '<tbody id="grv-tbody">'
+    + buildGRVRow(0)
+    + '</tbody>'
+    + '<tfoot><tr class="total-row"><td colspan="2">Totals</td><td class="num" id="grv-t-units">0</td><td class="num">—</td><td class="num" id="grv-t-value">$0</td></tr></tfoot>'
+    + '</table>'
+    + '<div class="tbl-actions">'
+    + '<button class="tbl-btn add" onclick="addGRVRow()">+ Add row</button>'
+    + '<button class="tbl-btn save" onclick="saveGRVTable()">Save & continue</button>'
+    + '</div>';
+  return html;
+}
+
+function buildGRVRow(idx) {
+  var typeOpts = '<option value="">Select type...</option>' + GRV_TYPES.map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join("");
+  var sizeOpts = '<option value="">Size...</option>' + GRV_SIZES.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join("");
+  return '<tr>'
+    + '<td><select onchange="calcGRVRow(this)">' + typeOpts + '</select></td>'
+    + '<td><select>' + sizeOpts + '</select></td>'
+    + '<td><input type="number" class="num-input" placeholder="0" onchange="calcGRVRow(this)" min="0"></td>'
+    + '<td><input type="number" class="num-input" placeholder="$0" onchange="calcGRVRow(this)" min="0"></td>'
+    + '<td class="num grv-row-total">$0</td>'
+    + '</tr>';
+}
+
+function addGRVRow() {
+  var tbody = document.getElementById("grv-tbody");
+  var idx = tbody.rows.length;
+  tbody.insertAdjacentHTML("beforeend", buildGRVRow(idx));
+}
+
+function calcGRVRow(el) {
+  var row = el.closest("tr");
+  var inputs = row.querySelectorAll("input[type=number]");
+  var num = parseFloat(inputs[0].value) || 0;
+  var avg = parseFloat(inputs[1].value) || 0;
+  var total = num * avg;
+  row.querySelector(".grv-row-total").textContent = fd(total);
+  // Update totals
+  var tbody = document.getElementById("grv-tbody");
+  var totalUnits = 0, totalValue = 0;
+  for (var i = 0; i < tbody.rows.length; i++) {
+    var inp = tbody.rows[i].querySelectorAll("input[type=number]");
+    var n = parseFloat(inp[0].value) || 0;
+    var v = parseFloat(inp[1].value) || 0;
+    totalUnits += n;
+    totalValue += n * v;
+  }
+  document.getElementById("grv-t-units").textContent = totalUnits;
+  document.getElementById("grv-t-value").textContent = fd(totalValue);
+}
+
+function saveGRVTable() {
+  var tbody = document.getElementById("grv-tbody");
+  var rows = [];
+  var totalUnits = 0, totalValue = 0;
+  for (var i = 0; i < tbody.rows.length; i++) {
+    var sel = tbody.rows[i].querySelectorAll("select");
+    var inp = tbody.rows[i].querySelectorAll("input[type=number]");
+    var type = sel[0].value;
+    var size = sel[1].value;
+    var num = parseFloat(inp[0].value) || 0;
+    var avg = parseFloat(inp[1].value) || 0;
+    if (num > 0 && avg > 0) {
+      rows.push({ type: type, size: size, number: num, avgValue: avg, total: num * avg });
+      totalUnits += num;
+      totalValue += num * avg;
+    }
+  }
+  if (rows.length === 0) {
+    addMsg("ai", "Please add at least one row with a number of units and average value.");
+    return;
+  }
+  S.data.unitRows = rows;
+  S.data.units = totalUnits;
+  S.data.avgPrice = totalValue / totalUnits;
+  addMsg("u", totalUnits + " units — GRV " + fd(totalValue));
+  S.step++;
+  updatePanel();
+  S.busy = false;
+  document.getElementById("send-btn").disabled = false;
+  setTimeout(function() {
+    addMsg("ai", "Got it — " + totalUnits + " units with a total GRV of " + fd(totalValue) + ".");
+    setTimeout(function() { showStep(); }, 400);
+  }, 300);
+}
+
+// ── COST TABLE ──
+var COST_ITEMS_LAND = [
+  { key: "costLand", label: "Land", prefill: "landCost" },
+  { key: "costAcquisition", label: "Acquisition Costs" }
+];
+var COST_ITEMS_PROJECT = [
+  { key: "costBuildContract", label: "Build Contract (Ex GST)" },
+  { key: "costCivilContract", label: "Civil Contract (Ex GST)" },
+  { key: "costContingency", label: "Contingency" },
+  { key: "costProfFees", label: "Professional Fees" },
+  { key: "costCouncil", label: "Council Contributions" },
+  { key: "costProjectMgmt", label: "Project Management" },
+  { key: "costMarketing", label: "Marketing" },
+  { key: "costGST", label: "GST Facility" },
+  { key: "costOther", label: "Other" }
+];
+
+function buildCostTable() {
+  var landPrefill = S.data.landCost || 0;
+
+  function costRow(item, prefillVal) {
+    var val = prefillVal || '';
+    return '<tr>'
+      + '<td>' + item.label + '</td>'
+      + '<td><input type="number" class="num-input" data-key="' + item.key + '" value="' + val + '" placeholder="$0" onchange="calcCostTable()" min="0"></td>'
+      + '<td><input type="number" class="num-input" data-eq="' + item.key + '" placeholder="$0" onchange="calcCostTable()" min="0"></td>'
+      + '<td class="num cost-fin" data-fin="' + item.key + '">$0</td>'
+      + '</tr>';
+  }
+
+  var html = '<div style="margin-top:8px;font-size:13px;color:var(--grey700);font-weight:500;margin-bottom:6px">Project Costs — all figures exclusive of GST</div>'
+    + '<table class="chat-table" id="cost-table">'
+    + '<thead><tr><th>Cost Type</th><th class="num">Cost ($)</th><th class="num">Equity ($)</th><th class="num">Finance Req.</th></tr></thead>'
+    + '<tbody>'
+    + '<tr class="total-row"><td colspan="4" style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--grey600)">Land & Acquisition</td></tr>'
+    + COST_ITEMS_LAND.map(function(item) { return costRow(item, item.prefill ? landPrefill : ''); }).join("")
+    + '<tr class="total-row"><td>Subtotal</td><td class="num" id="ct-land-total">$0</td><td class="num" id="ct-land-eq">$0</td><td class="num" id="ct-land-fin">$0</td></tr>'
+    + '<tr class="total-row"><td colspan="4" style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--grey600)">Project Costs</td></tr>'
+    + COST_ITEMS_PROJECT.map(function(item) { return costRow(item, ''); }).join("")
+    + '<tr class="total-row"><td>Subtotal</td><td class="num" id="ct-proj-total">$0</td><td class="num" id="ct-proj-eq">$0</td><td class="num" id="ct-proj-fin">$0</td></tr>'
+    + '<tr class="total-row" style="background:var(--grey800);"><td style="color:white;font-weight:700">TOTAL</td><td class="num" id="ct-total" style="color:white;font-weight:700">$0</td><td class="num" id="ct-eq-total" style="color:white">$0</td><td class="num" id="ct-fin-total" style="color:white">$0</td></tr>'
+    + '</tbody></table>'
+    + '<div class="tbl-actions">'
+    + '<button class="tbl-btn save" onclick="saveCostTable()">Save & continue</button>'
+    + '</div>';
+  return html;
+}
+
+function calcCostTable() {
+  var allItems = COST_ITEMS_LAND.concat(COST_ITEMS_PROJECT);
+  var landTotal = 0, landEq = 0, projTotal = 0, projEq = 0;
+
+  allItems.forEach(function(item) {
+    var costInput = document.querySelector('[data-key="' + item.key + '"]');
+    var eqInput = document.querySelector('[data-eq="' + item.key + '"]');
+    var finCell = document.querySelector('[data-fin="' + item.key + '"]');
+    var cost = parseFloat(costInput.value) || 0;
+    var eq = parseFloat(eqInput.value) || 0;
+    var fin = Math.max(0, cost - eq);
+    finCell.textContent = fd(fin);
+
+    var isLand = COST_ITEMS_LAND.some(function(l) { return l.key === item.key; });
+    if (isLand) { landTotal += cost; landEq += eq; }
+    else { projTotal += cost; projEq += eq; }
+  });
+
+  document.getElementById("ct-land-total").textContent = fd(landTotal);
+  document.getElementById("ct-land-eq").textContent = fd(landEq);
+  document.getElementById("ct-land-fin").textContent = fd(landTotal - landEq);
+  document.getElementById("ct-proj-total").textContent = fd(projTotal);
+  document.getElementById("ct-proj-eq").textContent = fd(projEq);
+  document.getElementById("ct-proj-fin").textContent = fd(projTotal - projEq);
+  document.getElementById("ct-total").textContent = fd(landTotal + projTotal);
+  document.getElementById("ct-eq-total").textContent = fd(landEq + projEq);
+  document.getElementById("ct-fin-total").textContent = fd((landTotal - landEq) + (projTotal - projEq));
+}
+
+function saveCostTable() {
+  var allItems = COST_ITEMS_LAND.concat(COST_ITEMS_PROJECT);
+  var totalCost = 0;
+  allItems.forEach(function(item) {
+    var costInput = document.querySelector('[data-key="' + item.key + '"]');
+    var eqInput = document.querySelector('[data-eq="' + item.key + '"]');
+    var cost = parseFloat(costInput.value) || 0;
+    var eq = parseFloat(eqInput.value) || 0;
+    S.data[item.key] = cost;
+    S.data[item.key + "_equity"] = eq;
+    totalCost += cost;
+  });
+
+  if (totalCost <= 0) {
+    addMsg("ai", "Please enter at least the build contract value before continuing.");
+    return;
+  }
+
+  addMsg("u", "Total project costs: " + fd(totalCost));
+  S.step++;
+  updatePanel();
+  S.busy = false;
+  document.getElementById("send-btn").disabled = false;
+  setTimeout(function() {
+    addMsg("ai", "Got it — total project costs of " + fd(totalCost) + " confirmed.");
+    setTimeout(function() { showStep(); }, 400);
+  }, 300);
+}
+
+// ─────────────────────────────────────────────
+// STEP ENGINE
+// ─────────────────────────────────────────────
+function getCurrentStep() {
+  while (S.step < STEPS.length) {
+    var step = STEPS[S.step];
+    if (step.conditional) {
+      if (step.id === "debtAmount" && S.data.existingDebt !== "Yes") { S.step++; continue; }
+      if (step.id === "presalesValue" && S.data.hasPresales !== "Yes") { S.step++; continue; }
+      if (step.id === "daValue" && S.data.hasDA !== "Yes — DA approved") { S.step++; continue; }
+      if (step.id === "advancedGRVTable" && S.data.useAdvancedGRV !== "Yes — detailed breakdown") { S.step++; continue; }
+    }
+    return step;
+  }
+  return null;
+}
+
+function showStep() {
+  var step = getCurrentStep();
+  if (!step) return;
+
+  var msg = step.msg;
+  var chips = step.chips;
+
+  // ── DYNAMIC MESSAGES ──
+
+  // Sub-type depends on category
+  if (step.id === "subtype") {
+    if (S.data.category === "Residential") {
+      msg = "What type of residential development?";
+      chips = ["Duplex","Townhouses","Villas","Apartments","House & Land","Other"];
+    } else if (S.data.category === "Commercial") {
+      msg = "What type of commercial development?";
+      chips = ["Building","Strata Unit"];
+    } else if (S.data.category === "Land Subdivision") {
+      msg = "What type of land subdivision?";
+      chips = ["Residential Lots","House & Land","Retail","Office","Industrial"];
+    } else if (S.data.category === "Other") {
+      msg = "What type of development?";
+      chips = ["Childcare","Medical Centre","Nursing Home","Pubs/Clubs","Service Station","Other"];
+    }
+  }
+
+  // Email — personalised
+  if (step.id === "email") {
+    msg = "Thanks " + (S.data.name || "") + ". What's your email address?";
+  }
+
+  // Income — label depends on employment type
+  if (step.id === "income") {
+    if (S.data.employmentType === "PAYG") {
+      msg = "What is your annual wage or salary?";
+    } else {
+      msg = "What is your annual income — wage or business profit?";
+    }
+  }
+
+  // Units — plural labels
+  if (step.id === "units") {
+    var plurals = {
+      "Duplex": "duplexes", "Townhouses": "townhouses", "Villas": "villas",
+      "Apartments": "apartments", "House & Land": "house & land lots",
+      "Building": "suites", "Strata Unit": "strata units",
+      "Residential Lots": "residential lots", "Retail": "retail lots",
+      "Office": "office lots", "Industrial": "industrial lots",
+      "Childcare": "childcare centres", "Medical Centre": "medical suites",
+      "Nursing Home": "nursing home beds", "Pubs/Clubs": "venues",
+      "Service Station": "service stations", "Other": "units"
+    };
+    var typeLabel = plurals[S.data.subtype] || "units";
+    msg = "Now let's talk about your project's revenue. How many " + typeLabel + " are you planning?";
+  }
+
+  // Avg price — singular labels
+  if (step.id === "avgPrice") {
+    var singulars = {
+      "Duplex": "duplex", "Townhouses": "townhouse", "Villas": "villa",
+      "Apartments": "apartment", "House & Land": "house & land lot",
+      "Building": "suite", "Strata Unit": "strata unit",
+      "Residential Lots": "lot", "Retail": "retail lot",
+      "Office": "office lot", "Industrial": "industrial lot",
+      "Childcare": "centre", "Medical Centre": "suite",
+      "Other": "unit"
+    };
+    var typeLabel2 = singulars[S.data.subtype] || "unit";
+    msg = "What's the expected average sale price per " + typeLabel2 + "?";
+  }
+
+  // Cost land — pre-fill hint
+  if (step.id === "costLand" && S.data.landCost) {
+    msg = "Now let's talk about the project costs. All figures should be exclusive of GST.<br><br>You mentioned the land cost is " + fd(S.data.landCost) + " — confirm or update this figure.";
+  }
+
+  // Set address mode
+  S.addressMode = !!step.addressMode;
+
+  // Doc upload shortcut step — show upload zone after chips
+  if (step.docUploadStep) {
+    addMsg("ai", msg, chips);
+    return;
+  }
+
+  // Auto-trigger the Claude confirm step
+  if (step.useClaude) {
+    updatePanel();
+    S.busy = true;
+    document.getElementById("send-btn").disabled = true;
+    showTyping();
+    handleClaudeStep("");
+    return;
+  }
+
+  // Render interactive table steps
+  if (step.tableType === "grv") {
+    addMsg("ai", "Enter each unit type in your project." + buildGRVTable());
+    return;
+  }
+  if (step.tableType === "costs") {
+    addMsg("ai", "Now let's detail the project costs. Enter each cost item, along with how much equity you're contributing versus how much finance is required." + buildCostTable());
+    setTimeout(function() { calcCostTable(); }, 100);
+    return;
+  }
+
+  if (msg) {
+    addMsg("ai", msg, chips);
+  }
+}
+
+// Dollar amount fields that need validation
+var DOLLAR_FIELDS = ["avgPrice","loanAmount","landCost","landValue","debtAmount","daValue","income",
+  "costLand","costAcquisition","costBuildContract","costCivilContract","costContingency",
+  "costProfFees","costCouncil","costProjectMgmt","costMarketing","costGST","costOther","presalesValue"];
+
+// Validation: check if value is a valid email
+function isValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+// Percentage check
+function parsePercentage(text) {
+  var m = text.match(/^(\d+(?:\.\d+)?)\s*%$/);
+  return m ? parseFloat(m[1]) : null;
+}
+
+function handleStepInput(text) {
+  if (S.busy) return;
+  var step = getCurrentStep();
+  if (!step) return;
+
+  S.busy = true;
+  document.getElementById("send-btn").disabled = true;
+
+  addMsg("u", text);
+  disableLastChips();
+
+  var field = step.field;
+  var value = text.trim();
+  var confirmMsg = null; // will hold confirmation message
+
+  // ── VALIDATION + PARSING ──
+  switch (field) {
+    case "email":
+      if (!isValidEmail(value)) {
+        addMsg("ai", "That doesn't look like a valid email address — could you re-enter it? Something like name@example.com.");
+        S.busy = false;
+        document.getElementById("send-btn").disabled = false;
+        return; // stay on same step
+      }
+      S.data.email = value.toLowerCase();
+      break;
+
+    case "units":
+      var uv = parseUnits(value);
+      if (!uv || uv <= 0) {
+        addMsg("ai", "I need a number for the units — could you enter that as a figure? For example, 4 or 12.");
+        S.busy = false;
+        document.getElementById("send-btn").disabled = false;
+        return;
+      }
+      S.data.units = uv;
+      var unitLabel = (S.data.subtype || "units").toLowerCase();
+      confirmMsg = "Got it — " + uv + " " + unitLabel + ".";
+      break;
+
+    case "avgPrice":
+    case "loanAmount":
+    case "landCost":
+    case "landValue":
+    case "debtAmount":
+    case "daValue":
+    case "income":
+    case "costLand":
+    case "costAcquisition":
+    case "costBuildContract":
+    case "costCivilContract":
+    case "costContingency":
+    case "costProfFees":
+    case "costCouncil":
+    case "costProjectMgmt":
+    case "costMarketing":
+    case "costGST":
+    case "costOther":
+    case "presalesValue":
+      // Check for percentage (contingency often entered as %)
+      var pct = parsePercentage(value);
+      if (pct !== null && field === "costContingency" && S.data.costBuildContract) {
+        S.data[field] = Math.round(S.data.costBuildContract * pct / 100);
+        confirmMsg = "Got it — " + pct + "% of construction = " + fd(S.data[field]) + ".";
+        break;
+      }
+      var dv = parseDollars(value);
+      // Allow $0 for optional cost fields
+      var allowZero = ["costCivilContract","costCouncil","costProjectMgmt","costGST","costOther","costAcquisition"].indexOf(field) >= 0;
+      if (dv === null || typeof dv !== "number" || (dv < 0) || (dv === 0 && !allowZero)) {
+        addMsg("ai", "That doesn't look right — could you enter a dollar amount? For example, $2.4m or $500,000." + (allowZero ? " Enter $0 if not applicable." : ""));
+        S.busy = false;
+        document.getElementById("send-btn").disabled = false;
+        return;
+      }
+      S.data[field] = dv;
+      confirmMsg = "Got it — " + fd(dv) + ".";
+      break;
+
+    case "settleDays":
+    case "preConst":
+    case "constTerm":
+    case "salesPeriod":
+      var mv = parseMonths(value);
+      if (mv === null) {
+        addMsg("ai", "Could you enter that as a number of months? For example, 18 months.");
+        S.busy = false;
+        document.getElementById("send-btn").disabled = false;
+        return;
+      }
+      S.data[field] = mv;
+      if (mv === 0) {
+        confirmMsg = field === "settleDays" ? "Got it — already settled." : "Got it — starting immediately.";
+      } else {
+        confirmMsg = "Got it — " + mv + " months.";
+      }
+      break;
+
+    default:
+      S.data[field] = value;
+  }
+
+  // ── DOC UPLOAD SHORTCUT ──
+  if (field === "entryChoice") {
+    if (value === "✨ Upload docs & fast-track") {
+      // Show the upload zone in chat
+      showDocUploadZone();
+      S.busy = false;
+      document.getElementById("send-btn").disabled = false;
+      return; // don't advance — wait for upload completion
+    }
+    // "Enter manually" — just advance
+  }
+
+  // ── CALCULATE LOAN TERM ──
+  if (S.data.settleDays !== undefined && S.data.preConst !== undefined &&
+      S.data.constTerm !== undefined && S.data.salesPeriod !== undefined) {
+    var settle = typeof S.data.settleDays === "number" ? S.data.settleDays : 0;
+    var pre = typeof S.data.preConst === "number" ? S.data.preConst : 0;
+    var cterm = typeof S.data.constTerm === "number" ? S.data.constTerm : 18;
+    var sales = typeof S.data.salesPeriod === "number" ? S.data.salesPeriod : 3;
+    S.data.totalLoanTerm = settle + pre + cterm + sales;
+  }
+
+  // Also parse loanTerm from Screen 1 if it's a chip value
+  if (field === "loanTerm") {
+    var ltm = parseMonths(value);
+    if (ltm !== null) S.data.loanTerm = ltm;
+  }
+
+  // ── UPDATE PANEL (every step) ──
+  updatePanel();
+
+  // ── CONFIRM step → Claude ──
+  if (step.useClaude) {
+    handleClaudeStep(text);
+    return;
+  }
+
+  // ── ADVANCE TO NEXT STEP ──
+  S.step++;
+  S.busy = false;
+  document.getElementById("send-btn").disabled = false;
+
+  // Special insight for no presales
+  if (field === "hasPresales" && value === "No presales yet") {
+    setTimeout(function() {
+      addMsg("ai", "Noted — no presales at this stage. That's fine, plenty of lenders fund without presales. Just be aware that without presales, lenders typically impose higher interest rates (usually 0.5–1.5% above standard), may restrict the LVR to 60–65%, and often require sales milestones during construction as a condition of the facility. We'll factor that into the lender matching.");
+      setTimeout(function() { showStep(); }, 600);
+    }, 300);
+    return;
+  }
+
+  // Show confirmation + next question with slight delay
+  setTimeout(function() {
+    if (confirmMsg) {
+      addMsg("ai", confirmMsg);
+      setTimeout(function() { showStep(); }, 400);
+    } else {
+      showStep();
+    }
+  }, 300);
+}
+
+async function handleClaudeStep(text) {
+  // Build summary for Claude
+  var summary = buildSummary();
+  var r = S.calcResult;
+
+  console.log("Running Claude confirm step. Data:", JSON.stringify(S.data));
+  console.log("Calc result:", r ? "yes" : "no");
+
+  var systemPrompt = "You are a senior commercial real estate finance originator at getkredit.ai, Australia's leading AI-powered lending platform.\n\n"
+    + "The user has just completed a development finance questionnaire. Here is all the data collected:\n\n"
+    + JSON.stringify(S.data, null, 2) + "\n\n"
+    + (r ? "FEASIBILITY RESULTS:\n" + JSON.stringify({
+        grv: fd(r.grv), nrv: fd(r.nrv), tdc: fd(r.tdc), facility: fd(r.facility),
+        equity: fd(r.equity), profit: fd(r.profit), lvr: fp(r.lvr), ltc: fp(r.ltc),
+        poc: fp(r.poc), debtCover: fp(r.debtCover), irr: fp(r.devIRR),
+        lendersMatched: matchLenders(r.lvr, r.ltc, r.poc).length + " of " + PANEL.length
+      }, null, 2) + "\n\n" : "")
+    + "TASK: Provide a professional summary of the deal. Confirm every key number. Highlight any concerns (LVR over 65%, profit on cost below 18%, presales coverage below 100%). "
+    + "If there are no presales, DO NOT treat it as a dealbreaker. Instead explain that many lenders fund without presales but typically charge higher rates (0.5-1.5% premium), may restrict LVR to 60-65%, and often require sales milestones during construction as conditions of the facility. "
+    + "Tell them the feasibility is live in the panel on the right and they can click 'View Term Sheet' to generate the full document. "
+    + "Keep it to 4-5 sentences. Speak like a senior Australian finance professional — warm, precise, confident. No bullet points.";
+
+  S.history = [{ role: "user", content: "Please summarise my development finance application and the feasibility results." }];
+
+  try {
+    console.log("Calling Claude API...");
+    var res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ system: systemPrompt, messages: S.history })
+    });
+    console.log("Claude API response status:", res.status);
+    var json = await res.json();
+    console.log("Claude API response:", json);
+    var reply = (json.content && json.content[0] && json.content[0].text) || "Your feasibility is ready — check the panel on the right and click View Term Sheet to see the full breakdown.";
+    addMsg("ai", reply);
+  } catch(e) {
+    console.error("Claude error:", e);
+    addMsg("ai", "Your feasibility is ready — check the panel on the right and click View Term Sheet to see the full breakdown.");
+  }
+
+  S.busy = false;
+  document.getElementById("send-btn").disabled = false;
+
+  // Save deal to Supabase
+  saveDealToSupabase();
+}
+
+// ─────────────────────────────────────────────
+// SAVE DEAL TO SUPABASE
+// ─────────────────────────────────────────────
+async function saveDealToSupabase() {
+  var d = S.data;
+  var r = S.calcResult;
+  try {
+    var deal = {
+      status: "feasibility_complete",
+      borrower_name: d.name || null,
+      borrower_email: d.email || null,
+      borrower_phone: d.phone || null,
+      borrower_type: d.borrowerType || null,
+      category: d.category || null,
+      sub_category: d.subtype || null,
+      address: d.address || null,
+      da_status: d.hasDA || null,
+      units: typeof d.units === "number" ? d.units : parseInt(d.units) || null,
+      avg_price: typeof d.avgPrice === "number" ? d.avgPrice : null,
+      grv: r ? r.grv : null,
+      land_cost: typeof d.landCost === "number" ? d.landCost : null,
+      land_value: typeof d.landValue === "number" ? d.landValue : null,
+      existing_debt: typeof d.debtAmount === "number" ? d.debtAmount : null,
+      construction_cost: typeof d.costBuildContract === "number" ? d.costBuildContract : null,
+      settle_days: typeof d.settleDays === "number" ? d.settleDays : null,
+      pre_const: typeof d.preConst === "number" ? d.preConst : null,
+      const_term: typeof d.constTerm === "number" ? d.constTerm : null,
+      sales_period: typeof d.salesPeriod === "number" ? d.salesPeriod : null,
+      total_loan_term: typeof d.totalLoanTerm === "number" ? d.totalLoanTerm : (typeof d.loanTerm === "number" ? d.loanTerm : null),
+      prof_fees: typeof d.costProfFees === "number" ? d.costProfFees : null,
+      holding_costs: null,
+      marketing_costs: typeof d.costMarketing === "number" ? d.costMarketing : null,
+      contingency: typeof d.costContingency === "number" ? d.costContingency : null,
+      borrow_amount: typeof d.loanAmount === "number" ? String(d.loanAmount) : null,
+      borrow_figure: typeof d.loanAmount === "number" ? d.loanAmount : null,
+      has_presales: d.hasPresales || null,
+      presales_value: typeof d.presalesValue === "number" ? d.presalesValue : null,
+      calc_nrv: r ? r.nrv : null,
+      calc_tdc: r ? r.tdc : null,
+      calc_facility: r ? r.facility : null,
+      calc_equity: r ? r.equity : null,
+      calc_lvr: r ? r.lvr : null,
+      calc_ltc: r ? r.ltc : null,
+      calc_poc: r ? r.poc : null,
+      calc_debt_cover: r ? r.debtCover : null,
+      calc_irr: r ? r.devIRR : null,
+      calc_lenders_matched: r ? matchLenders(r.lvr, r.ltc, r.poc).length : null,
+      raw_data: d
+    };
+
+    console.log("Saving deal to Supabase...");
+    var res = await fetch(SB_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "save_deal", deal: deal })
+    });
+    var json = await res.json();
+    if (json.success && json.deal) {
+      S.dealId = json.deal.id;
+      console.log("Deal saved to Supabase:", S.dealId);
+    } else {
+      console.error("Supabase save error:", json);
+    }
+  } catch(e) {
+    console.error("Supabase save error:", e);
+  }
+}
+
+function buildSummary() {
+  var d = S.data;
+  var parts = [];
+  if (d.name) parts.push("Borrower: " + d.name);
+  if (d.category) parts.push("Type: " + d.category + (d.subtype ? " — " + d.subtype : ""));
+  if (d.address) parts.push("Address: " + d.address);
+  if (d.units && d.avgPrice) parts.push("GRV: " + d.units + " units × " + fd(d.avgPrice) + " = " + fd(d.units * d.avgPrice));
+  if (d.landCost) parts.push("Land cost: " + fd(d.landCost));
+  if (d.constCost) parts.push("Construction: " + fd(d.constCost));
+  return parts.join("\n");
+}
+
+// ─────────────────────────────────────────────
+// AI DOC READER
+// ─────────────────────────────────────────────
+var DOC_READER_URL = "/.netlify/functions/doc-reader";
+var pendingDocs = []; // [{file, base64, name, type, status}]
+
+function showDocUploadZone() {
+  pendingDocs = [];
+  var html = '<div id="doc-upload-container">'
+    + '<div class="doc-upload-zone" id="doc-drop-zone" onclick="document.getElementById(\'doc-file-input\').click()" ondragover="event.preventDefault();this.classList.add(\'dragover\')" ondragleave="this.classList.remove(\'dragover\')" ondrop="handleDocDrop(event)">'
+    + '<div class="upload-icon">📄</div>'
+    + '<div class="upload-label"><strong>Click to upload</strong> or drag and drop<br>Valuation · Financials · QS Report · Loan Summary</div>'
+    + '<div class="upload-hint">PDF up to 20MB · Multiple files supported</div>'
+    + '<input type="file" id="doc-file-input" accept=".pdf,.png,.jpg,.jpeg" multiple style="display:none" onchange="handleDocFiles(this.files)">'
+    + '</div>'
+    + '<div class="doc-upload-list" id="doc-file-list"></div>'
+    + '<button class="doc-analyse-btn" id="doc-analyse-btn" style="display:none" onclick="analyseAllDocs()">✨ Analyse with AI</button>'
+    + '<div id="doc-ai-results"></div>'
+    + '</div>';
+  addMsg("ai", html);
+}
+
+function handleDocDrop(e) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('dragover');
+  handleDocFiles(e.dataTransfer.files);
+}
+
+function handleDocFiles(files) {
+  for (var i = 0; i < files.length; i++) {
+    var file = files[i];
+    if (file.size > 20 * 1024 * 1024) {
+      alert(file.name + " is too large — maximum 20MB.");
+      continue;
+    }
+    var ext = file.name.split('.').pop().toLowerCase();
+    if (['pdf','png','jpg','jpeg'].indexOf(ext) === -1) {
+      alert(file.name + " — unsupported file type. Please upload PDF or image files.");
+      continue;
+    }
+    addDocToList(file, ext);
+  }
+  // Reset input
+  var input = document.getElementById('doc-file-input');
+  if (input) input.value = '';
+}
+
+function addDocToList(file, ext) {
+  var docEntry = { file: file, name: file.name, type: ext, status: 'ready', base64: null };
+  pendingDocs.push(docEntry);
+
+  // Read as base64
+  var reader = new FileReader();
+  var idx = pendingDocs.length - 1;
+  reader.onload = function(e) {
+    pendingDocs[idx].base64 = e.target.result.split(',')[1];
+  };
+  reader.readAsDataURL(file);
+
+  renderDocList();
+}
+
+function removeDoc(idx) {
+  pendingDocs.splice(idx, 1);
+  renderDocList();
+}
+
+function renderDocList() {
+  var listEl = document.getElementById('doc-file-list');
+  var btnEl = document.getElementById('doc-analyse-btn');
+  if (!listEl) return;
+
+  if (pendingDocs.length === 0) {
+    listEl.innerHTML = '';
+    if (btnEl) btnEl.style.display = 'none';
+    return;
+  }
+
+  listEl.innerHTML = pendingDocs.map(function(d, i) {
+    var statusClass = d.status === 'done' ? 'success' : d.status === 'reading' ? 'reading' : d.status === 'error' ? 'error' : '';
+    var statusText = d.status === 'done' ? '✓ Extracted' : d.status === 'reading' ? 'Reading...' : d.status === 'error' ? '✗ Failed' : 'Ready';
+    return '<div class="doc-upload-item">'
+      + '<div class="doc-file-icon">' + d.type.toUpperCase().substring(0,3) + '</div>'
+      + '<div class="doc-file-name">' + d.name + '</div>'
+      + '<span class="doc-file-status ' + statusClass + '">' + statusText + '</span>'
+      + (d.status === 'ready' ? '<button class="doc-remove" onclick="removeDoc(' + i + ')">×</button>' : '')
+      + '</div>';
+  }).join('');
+
+  if (btnEl) {
+    var hasReady = pendingDocs.some(function(d) { return d.status === 'ready'; });
+    btnEl.style.display = hasReady ? 'block' : 'none';
+  }
+}
+
+async function analyseAllDocs() {
+  var btn = document.getElementById('doc-analyse-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '✨ Analysing...'; }
+
+  var allExtracted = {};
+  var allNarratives = [];
+  var allFlags = [];
+  var allSummaries = [];
+
+  for (var i = 0; i < pendingDocs.length; i++) {
+    if (pendingDocs[i].status !== 'ready') continue;
+    pendingDocs[i].status = 'reading';
+    renderDocList();
+
+    try {
+      var res = await fetch(DOC_READER_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fileBase64: pendingDocs[i].base64,
+          fileType: pendingDocs[i].type,
+          docType: 'auto-detect',
+          existingData: S.data
+        })
+      });
+
+      if (!res.ok) throw new Error('API error ' + res.status);
+      var result = await res.json();
+
+      pendingDocs[i].status = 'done';
+      pendingDocs[i].result = result;
+
+      // Merge extracted fields into S.data
+      if (result.extractedFields) {
+        var ef = result.extractedFields;
+        var fieldMap = {
+          borrowerName: 'name', address: 'address', landArea: 'landArea',
+          landValue: 'landValue', daValue: 'daValue', units: 'units',
+          avgPrice: 'avgPrice', grv: 'grv', loanAmount: 'loanAmount',
+          existingDebt: 'debtAmount', presalesValue: 'presalesValue',
+          constructionCost: 'costBuildContract', netIncome: 'income',
+          daStatus: 'hasDA', builder: 'builder', zoning: 'zoning',
+          constructionTerm: 'constTerm'
+        };
+        for (var key in fieldMap) {
+          if (ef[key] !== null && ef[key] !== undefined && ef[key] !== '') {
+            var targetField = fieldMap[key];
+            // Only overwrite if we don't already have data or AI has better data
+            if (S.data[targetField] === undefined || S.data[targetField] === null || S.data[targetField] === '') {
+              S.data[targetField] = ef[key];
+              allExtracted[targetField] = ef[key];
+            }
+          }
+        }
+      }
+
+      if (result.narrative) allNarratives.push(result.narrative);
+      if (result.flags && result.flags.length) allFlags = allFlags.concat(result.flags);
+      if (result.summary) allSummaries.push(result.summary);
+
+    } catch (err) {
+      pendingDocs[i].status = 'error';
+      console.error('Doc reader error:', err);
+    }
+
+    renderDocList();
+  }
+
+  // Store narrative for later use in credit memo
+  S.data._aiNarrative = allNarratives.join('\n\n');
+  S.data._aiFlags = allFlags;
+
+  // Show results
+  showDocResults(allExtracted, allSummaries, allFlags);
+
+  // Update panel with new data
+  updatePanel();
+
+  // Hide analyse button, show continue
+  if (btn) btn.style.display = 'none';
+}
+
+function showDocResults(extracted, summaries, flags) {
+  var resultsEl = document.getElementById('doc-ai-results');
+  if (!resultsEl) return;
+
+  var fieldsHtml = '';
+  var fieldLabels = {
+    name: 'Borrower', address: 'Address', landValue: 'Land Value',
+    daValue: 'DA Value', units: 'Units', avgPrice: 'Avg Price',
+    grv: 'GRV', loanAmount: 'Loan Amount', debtAmount: 'Existing Debt',
+    presalesValue: 'Presales', costBuildContract: 'Construction Cost',
+    income: 'Income', landArea: 'Land Area', builder: 'Builder', zoning: 'Zoning'
+  };
+
+  var extractedKeys = Object.keys(extracted);
+  if (extractedKeys.length > 0) {
+    fieldsHtml = '<div class="result-fields">' + extractedKeys.map(function(k) {
+      var label = fieldLabels[k] || k;
+      var val = extracted[k];
+      if (typeof val === 'number' && val > 1000) val = fd(val);
+      return '<div class="rf"><span class="rf-k">' + label + '</span><span class="rf-v">' + val + '</span></div>';
+    }).join('') + '</div>';
+  }
+
+  var flagsHtml = '';
+  if (flags.length > 0) {
+    flagsHtml = '<div class="doc-ai-flags">⚠️ ' + flags.join(' · ') + '</div>';
+  }
+
+  var summaryText = summaries.length > 0 ? summaries.join(' ') : 'Documents processed successfully.';
+
+  resultsEl.innerHTML = '<div class="doc-ai-result">'
+    + '<div class="result-title">✨ AI Extraction Complete</div>'
+    + '<div class="result-summary">' + summaryText + '</div>'
+    + fieldsHtml
+    + flagsHtml
+    + '</div>';
+
+  // Add continue button
+  setTimeout(function() {
+    addMsg("ai", "I've pre-filled your application with the extracted data. You can review and update any fields as we go through the remaining questions.", ["Continue with application"]);
+  }, 600);
+
+  // When they click continue, advance past the docShortcut step
+  S.docUploadComplete = true;
+}
+
+// Override chipClick to handle docShortcut continue
+var _originalChipClick = typeof chipClick === 'function' ? chipClick : null;
+
+// ─────────────────────────────────────────────
+// CHAT UI
+// ─────────────────────────────────────────────
+function addMsg(role, text, chips) {
+  var msgs = document.getElementById("msgs");
+  var ti = document.getElementById("typing-ind");
+  if (ti) ti.remove();
+
+  var wrap = document.createElement("div");
+  wrap.className = "msg " + role;
+
+  var av = '<div class="av ' + (role === "ai" ? 'o">O' : 'y">You') + '</div>';
+
+  var chipsHtml = "";
+  if (chips && chips.length > 0) {
+    chipsHtml = '<div class="chips">' + chips.map(function(c) {
+      return '<button class="chip" onclick="chipClick(this,\'' + c.replace(/'/g, "\\'") + '\')">' + c + '</button>';
+    }).join("") + '</div>';
+  }
+
+  var bubble = '<div><div class="bbl">' + text.replace(/\n/g, "<br>") + '</div>' + chipsHtml + '</div>';
+  wrap.innerHTML = av + bubble;
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function disableLastChips() {
+  var allChipGroups = document.querySelectorAll(".chips:not(.disabled)");
+  allChipGroups.forEach(function(g) { g.classList.add("disabled"); });
+}
+
+function chipClick(el, val) {
+  // Highlight selected chip
+  el.classList.add("selected");
+
+  // Handle "Continue with application" after doc upload
+  if (val === "Continue with application" && S.docUploadComplete) {
+    S.docUploadComplete = false;
+    addMsg("u", val);
+    disableLastChips();
+    S.step++;
+    S.busy = false;
+    document.getElementById("send-btn").disabled = false;
+    setTimeout(function() { showStep(); }, 400);
+    return;
+  }
+
+  // Process as input
+  handleStepInput(val);
+}
+
+function showTyping() {
+  var msgs = document.getElementById("msgs");
+  var old = document.getElementById("typing-ind");
+  if (old) old.remove();
+  var d = document.createElement("div");
+  d.id = "typing-ind";
+  d.className = "typing-row";
+  d.innerHTML = '<div class="av o">O</div><div class="dots"><span></span><span></span><span></span></div>';
+  msgs.appendChild(d);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function send() {
+  var ta = document.getElementById("ta");
+  var text = ta.value.trim();
+  if (!text || S.busy) return;
+  ta.value = "";
+  ta.style.height = "auto";
+  document.getElementById("addr-drop").style.display = "none";
+  handleStepInput(text);
+}
+
+function onKey(e) {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+  if (e.key === "Escape") document.getElementById("addr-drop").style.display = "none";
+}
+
+function onInput(el) {
+  el.style.height = "auto";
+  el.style.height = Math.min(el.scrollHeight, 96) + "px";
+  if (S.addressMode && el.value.trim().length >= 4) {
+    getSuggestions(el.value.trim());
+  } else {
+    document.getElementById("addr-drop").style.display = "none";
+  }
+}
+
+document.addEventListener("click", function(e) {
+  if (!e.target.closest(".input-area")) {
+    document.getElementById("addr-drop").style.display = "none";
+  }
+});
+
+// ─────────────────────────────────────────────
+// GO BACK — click panel item to re-ask
+// ─────────────────────────────────────────────
+// Map panel IDs to step indices
+var PANEL_TO_STEP = {
+  "p-name": 7, "p-email": 8, "p-phone": 9,
+  "p-address": 3, "p-da": 28,
+  "p-units": 20, "p-avgprice": 21,
+  "p-land": 26, "p-landval": 30, "p-debt": 32,
+  "p-const": 33,
+  "p-proffees": 33, "p-marketing": 33, "p-contingency": 33,
+  "p-presales": 25
+};
+
+function goBackTo(panelId) {
+  if (S.busy) return;
+  var targetStep = PANEL_TO_STEP[panelId];
+  if (targetStep === undefined) return;
+
+  // Find the step by index
+  var step = STEPS[targetStep];
+  if (!step) return;
+
+  // Clear the old value
+  if (step.field && S.data[step.field] !== undefined) {
+    delete S.data[step.field];
+  }
+
+  // Mark the panel item as editing
+  var panelRow = document.getElementById(panelId);
+  if (panelRow) {
+    var pr = panelRow.closest(".pr");
+    if (pr) {
+      pr.classList.add("editing");
+      panelRow.textContent = "✗ Re-entering...";
+      panelRow.className = "pv error";
+    }
+  }
+
+  // Jump back to that step
+  S.step = targetStep;
+  S.calcResult = null; // force recalc
+
+  // Show the step question
+  addMsg("ai", "No worries — let's update that. I'll re-ask the question.");
+  setTimeout(function() { showStep(); }, 400);
+}
+
+// ─────────────────────────────────────────────
+// PANEL UPDATE
+// ─────────────────────────────────────────────
+function updatePanel() {
+  var d = S.data;
+
+  function set(id, val, cls) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (val) {
+      el.textContent = val;
+      el.className = "pv " + (cls || "");
+      // Make the parent row clickable for go-back
+      var pr = el.closest(".pr");
+      if (pr && PANEL_TO_STEP[id] !== undefined) {
+        pr.classList.remove("editing");
+        if (!pr.classList.contains("clickable")) {
+          pr.classList.add("clickable");
+          pr.onclick = function() { goBackTo(id); };
+        }
+      }
+    } else {
+      el.textContent = "—";
+      el.className = "pv dim";
+    }
+  }
+  function tick(id) {
+    var el = document.getElementById(id);
+    if (el) { el.textContent = "✓"; el.className = "prog-v done"; }
+  }
+
+  // Category
+  if (d.category) {
+    set("p-type", d.category + (d.subtype ? " — " + d.subtype : ""));
+    tick("pg0");
+  }
+
+  // Contact
+  if (d.name) set("p-name", d.name);
+  if (d.email) set("p-email", d.email);
+  if (d.phone) set("p-phone", d.phone);
+  if (d.name && d.email && d.phone) tick("pg1");
+
+  // Address
+  if (d.address) {
+    var short = d.address.length > 26 ? d.address.substring(0, 26) + "…" : d.address;
+    set("p-address", short);
+    tick("pg2");
+    // Show map
+    var mapDiv = document.getElementById("panel-map");
+    var mapFrame = document.getElementById("map-iframe");
+    if (mapDiv && mapFrame) {
+      mapFrame.src = "https://www.google.com/maps/embed/v1/place?key=AIzaSyB4idPsz29ElJRW1kU7EPrwV9W2Cdey6rg&q=" + encodeURIComponent(d.address) + "&zoom=15";
+      mapDiv.style.display = "block";
+    }
+  }
+
+  // DA
+  if (d.hasDA) { set("p-da", d.hasDA); tick("pg2b"); }
+
+  // Revenue
+  if (d.units) set("p-units", d.units + " units");
+  if (d.avgPrice) set("p-avgprice", fd(d.avgPrice));
+  if (d.units && d.avgPrice) {
+    set("p-grv", fd(d.units * d.avgPrice), "gr");
+    tick("pg3");
+  }
+
+  // Land
+  if (d.landCost) set("p-land", fd(d.landCost));
+  if (d.landValue) set("p-landval", fd(d.landValue));
+  if (d.debtAmount) set("p-debt", fd(d.debtAmount));
+  else if (d.existingDebt === "No existing debt") set("p-debt", "None");
+  if (d.landCost) tick("pg4");
+
+  // Construction
+  if (d.costBuildContract) { set("p-const", fd(d.costBuildContract)); tick("pg5"); }
+
+  // Timeline
+  if (d.totalLoanTerm) {
+    set("p-term", d.totalLoanTerm + " months");
+    tick("pg6");
+  } else if (d.loanTerm) {
+    set("p-term", d.loanTerm + " months");
+  }
+
+  // Costs
+  if (d.costProfFees) set("p-proffees", fd(d.costProfFees));
+  if (d.costMarketing) set("p-marketing", fd(d.costMarketing));
+  if (d.costContingency) set("p-contingency", fd(d.costContingency));
+  if (d.costProfFees || d.costMarketing || d.costContingency || d.costBuildContract) tick("pg7");
+
+  // Funding
+  if (d.loanAmount) tick("pg8");
+
+  // Presales
+  if (d.hasPresales !== undefined) {
+    if (d.presalesValue) set("p-presales", fd(d.presalesValue), "gr");
+    else if (d.hasPresales === "No presales yet") set("p-presales", "None");
+    tick("pg9");
+  }
+
+  // Progress bar
+  var pgKeys = ["pg0","pg1","pg2","pg2b","pg3","pg4","pg5","pg6","pg7","pg8","pg9"];
+  var done = pgKeys.filter(function(id) {
+    var el = document.getElementById(id);
+    return el && el.textContent === "✓";
+  }).length;
+  document.getElementById("prog-fill").style.width = (done / pgKeys.length * 100) + "%";
+
+  // Run calc if enough data
+  var numUnits = typeof d.units === "number" ? d.units : parseInt(d.units) || 0;
+  var numAvgPrice = typeof d.avgPrice === "number" ? d.avgPrice : parseFloat(d.avgPrice) || 0;
+  var numLandCost = typeof d.landCost === "number" ? d.landCost : (typeof d.costLand === "number" ? d.costLand : 0);
+  var numConstCost = typeof d.costBuildContract === "number" ? d.costBuildContract : 0;
+
+  var canCalc = numUnits > 0 && numAvgPrice > 0 && (numLandCost > 0 || numConstCost > 0);
+  console.log("canCalc:", canCalc, "units:", numUnits, "avgPrice:", numAvgPrice, "land:", numLandCost, "const:", numConstCost);
+
+  if (canCalc) {
+    try {
+      var r = runCalc(d);
+      S.calcResult = r;
+
+      function setBox(id, val, cls) {
+        var el = document.getElementById(id);
+        if (el) { el.textContent = val; el.className = "mv " + (cls || ""); }
+      }
+      setBox("m-lvr", fp(r.lvr), r.lvr <= 0.65 ? "gr" : r.lvr <= 0.70 ? "am" : "r");
+      setBox("m-ltc", fp(r.ltc), r.ltc <= 0.70 ? "gr" : r.ltc <= 0.75 ? "am" : "r");
+      setBox("m-poc", fp(r.poc), r.poc >= 0.20 ? "gr" : r.poc >= 0.15 ? "am" : "r");
+      setBox("m-dc", fp(r.debtCover), r.debtCover >= 1.0 ? "gr" : r.debtCover > 0 ? "am" : "r");
+      set("p-facility", fd(r.facility), "g");
+      set("p-equity", fd(r.equity));
+      set("p-irr", r.devIRR > 0 ? fp(r.devIRR) : "—", "gr");
+
+      var matched = matchLenders(r.lvr, r.ltc, r.poc);
+      var ll = document.getElementById("lender-list");
+      if (matched.length === 0) {
+        ll.innerHTML = '<div style="font-size:12px;color:var(--red);padding:4px 0">Deal metrics exceed most panel criteria — speak to our team.</div>';
+      } else {
+        ll.innerHTML = matched.map(function(l) {
+          return '<div class="lrow"><span class="ln">' + l.name + '</span><span class="lr">' + l.rate.toFixed(2) + '% p.a.</span></div>';
+        }).join("") + '<div style="font-size:11px;color:var(--grey500);margin-top:7px;padding:3px 0">' + matched.length + ' of ' + PANEL.length + ' lenders matched</div>';
+      }
+    } catch(e) {
+      console.error("Calc error:", e);
+    }
+  }
+
+  // Show term sheet button
+  if (d.name && S.calcResult) {
+    document.getElementById("ts-btn").style.display = "block";
+  }
+
+  // CRM sync
+  if (d.email && d.name && S.calcResult && !S.crmDone) {
+    S.crmDone = true;
+    syncCRM();
+  }
+}
+
+// ─────────────────────────────────────────────
+// HUBSPOT SYNC
+// ─────────────────────────────────────────────
+async function syncCRM() {
+  var d = S.data;
+  var r = S.calcResult;
+  try {
+    var res = await fetch(HS_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: d.name || "",
+        email: d.email || "",
+        phone: d.phone || "",
+        loanType: "development",
+        loanAmount: d.borrowFigure || (r ? r.facility : 0),
+        address: d.address || "",
+        loanTerm: d.totalLoanTerm ? d.totalLoanTerm + " months" : "",
+        lvr: r ? fp(r.lvr) : "",
+        ltc: r ? fp(r.ltc) : "",
+        poc: r ? fp(r.poc) : "",
+        facility: r ? fd(r.facility) : "",
+        notes: "Development Finance — " + (d.category || "") + " " + (d.subtype || "") + " — AI chat enquiry"
+      })
+    });
+    var json = await res.json();
+    if (json.success) {
+      var ok = document.getElementById("crm-ok");
+      ok.style.display = "block";
+      setTimeout(function() { ok.style.display = "none"; }, 4000);
+    }
+  } catch(e) {
+    console.error("CRM sync error:", e);
+  }
+}
+
+// ─────────────────────────────────────────────
+// TERM SHEET
+// ─────────────────────────────────────────────
+function showTermSheet() {
+  var d = S.data;
+  var r = S.calcResult;
+  if (!r) return;
+
+  var today = new Date();
+  document.getElementById("ts-date").textContent = today.toLocaleDateString("en-AU", { day: "2-digit", month: "long", year: "numeric" });
+  document.getElementById("ts-ref").textContent = "OAI-" + today.getFullYear() + "-" + String(Math.floor(Math.random() * 900) + 100);
+  document.getElementById("ts-for").textContent = d.name || "—";
+  document.getElementById("ts-name").textContent = d.name || "—";
+  document.getElementById("ts-email").textContent = d.email || "—";
+  document.getElementById("ts-phone").textContent = d.phone || "—";
+  document.getElementById("ts-address").textContent = d.address || "—";
+  // Show map in term sheet
+  if (d.address) {
+    var tsMap = document.getElementById("ts-map");
+    var tsMapFrame = document.getElementById("ts-map-iframe");
+    if (tsMap && tsMapFrame) {
+      tsMapFrame.src = "https://www.google.com/maps/embed/v1/place?key=AIzaSyB4idPsz29ElJRW1kU7EPrwV9W2Cdey6rg&q=" + encodeURIComponent(d.address) + "&zoom=15";
+      tsMap.style.display = "block";
+    }
+  }
+  document.getElementById("ts-devtype").textContent = (d.category || "") + " — " + (d.subtype || "") + " (" + (d.units || "—") + " units)";
+  document.getElementById("ts-da").textContent = d.daStatus || "—";
+  document.getElementById("ts-grv").textContent = fd(r.grv);
+  document.getElementById("ts-nrv").textContent = fd(r.nrv);
+  document.getElementById("ts-facility").textContent = fd(r.facility);
+  document.getElementById("ts-term").textContent = r.loanTerm + " months";
+  document.getElementById("ts-rate").textContent = (r.rate * 100).toFixed(2) + "% p.a. (capitalised monthly)";
+  document.getElementById("ts-linefee").textContent = (r.lineFeeRate * 100).toFixed(2) + "% p.a.";
+  document.getElementById("ts-appfee").textContent = (r.appFeeRate * 100).toFixed(2) + "% = " + fd(r.appFee);
+  document.getElementById("ts-equity").textContent = fd(r.equity);
+  document.getElementById("ts-tdc").textContent = fd(r.tdc);
+
+  // Timeline
+  document.getElementById("ts-settle").textContent = d.settleDays === 0 ? "Already settled" : (d.settleDays || "—") + " months";
+  document.getElementById("ts-precon").textContent = d.preConst === 0 ? "Immediately" : (d.preConst || "—") + " months";
+  document.getElementById("ts-constperiod").textContent = (d.constTerm || "—") + " months";
+  document.getElementById("ts-salesperiod").textContent = (d.salesPeriod || "—") + " months";
+  document.getElementById("ts-totalterm").textContent = (d.totalLoanTerm || "—") + " months";
+
+  var lvrEl = document.getElementById("ts-lvr");
+  lvrEl.textContent = fp(r.lvr) + " " + (r.flags.lvrOk ? "✓" : "⚠");
+  lvrEl.className = "ts-v " + (r.flags.lvrOk ? "ok" : r.lvr <= 0.70 ? "warn" : "bad");
+
+  var ltcEl = document.getElementById("ts-ltc");
+  ltcEl.textContent = fp(r.ltc) + " " + (r.flags.ltcOk ? "✓" : "⚠");
+  ltcEl.className = "ts-v " + (r.flags.ltcOk ? "ok" : r.ltc <= 0.75 ? "warn" : "bad");
+
+  var pocEl = document.getElementById("ts-poc");
+  pocEl.textContent = fp(r.poc) + " " + (r.flags.pocOk ? "✓" : "⚠");
+  pocEl.className = "ts-v " + (r.flags.pocOk ? "ok" : r.poc >= 0.12 ? "warn" : "bad");
+
+  document.getElementById("ts-presales").textContent = d.presalesValue
+    ? fd(d.presalesValue) + " gross / " + fp(r.debtCover) + " cover " + (r.flags.dcOk ? "✓" : "⚠")
+    : "No presales — lender may impose higher rate, LVR restrictions, and sales milestones";
+
+  document.getElementById("ts-irr").textContent = r.devIRR > 0 ? fp(r.devIRR) : "—";
+
+  var matched = matchLenders(r.lvr, r.ltc, r.poc);
+  document.getElementById("ts-lenders").textContent = matched.length + " of " + PANEL.length + " lenders matched";
+
+  // Funding table
+  var ftb = document.getElementById("ts-ft-body");
+  ftb.innerHTML =
+    '<tr class="grp"><td colspan="4">Land &amp; Acquisition</td></tr>' +
+    '<tr><td>Land at Cost</td><td>' + fd(r.landCost) + '</td><td>' + fd(r.landCost) + '</td><td>$0</td></tr>' +
+    (r.existingDebt > 0 ? '<tr><td>Less: Existing Debt</td><td>(' + fd(r.existingDebt) + ')</td><td>(' + fd(r.existingDebt) + ')</td><td>$0</td></tr>' : '') +
+    '<tr class="grp"><td colspan="4">Construction &amp; Development</td></tr>' +
+    '<tr><td>Construction Contract</td><td>' + fd(r.constCost) + '</td><td>$0</td><td>' + fd(r.constCost) + '</td></tr>' +
+    '<tr><td>Professional Fees</td><td>' + fd(r.profFees) + '</td><td>' + fd(r.profFees * 0.4) + '</td><td>' + fd(r.profFees * 0.6) + '</td></tr>' +
+    '<tr><td>Holding Costs</td><td>' + fd(r.holdingCosts) + '</td><td>' + fd(r.holdingCosts) + '</td><td>$0</td></tr>' +
+    '<tr><td>Marketing</td><td>' + fd(r.marketingCosts) + '</td><td>' + fd(r.marketingCosts * 0.5) + '</td><td>' + fd(r.marketingCosts * 0.5) + '</td></tr>' +
+    '<tr><td>Contingency</td><td>' + fd(r.contingency) + '</td><td>' + fd(r.contingency) + '</td><td>$0</td></tr>' +
+    '<tr class="sub"><td>Subtotal — Pre-Finance</td><td>' + fd(r.totalPreFin) + '</td><td>' + fd(r.equity) + '</td><td>' + fd(r.totalPreFin - r.equity) + '</td></tr>' +
+    '<tr class="grp"><td colspan="4">Finance Costs (Capitalised)</td></tr>' +
+    '<tr><td>Interest (S-Curve drawdown)</td><td>' + fd(r.interest) + '</td><td>$0</td><td>' + fd(r.interest) + '</td></tr>' +
+    '<tr><td>Line Fee (' + (r.lineFeeRate * 100).toFixed(1) + '% p.a.)</td><td>' + fd(r.lineFee) + '</td><td>$0</td><td>' + fd(r.lineFee) + '</td></tr>' +
+    '<tr><td>Application Fee</td><td>' + fd(r.appFee) + '</td><td>$0</td><td>' + fd(r.appFee) + '</td></tr>' +
+    '<tr class="tot"><td>TOTAL DEVELOPMENT COSTS</td><td>' + fd(r.tdc) + '</td><td>' + fd(r.equity) + '</td><td>' + fd(r.facility) + '</td></tr>';
+
+  document.getElementById("ts-overlay").classList.add("show");
+}
+
+function closeTS() {
+  document.getElementById("ts-overlay").classList.remove("show");
+}
+
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+window.addEventListener("DOMContentLoaded", function() {
+  var params = new URLSearchParams(window.location.search);
+  var aiMode = params.get("mode") === "ai";
+
+  setTimeout(function() {
+    if (aiMode) {
+      // Auto-select "Upload docs & fast-track"
+      addMsg("ai", STEPS[0].msg, STEPS[0].chips);
+      setTimeout(function() {
+        S.data.entryChoice = "✨ Upload docs & fast-track";
+        addMsg("u", "✨ Upload docs & fast-track");
+        disableLastChips();
+        showDocUploadZone();
+      }, 300);
+    } else {
+      showStep();
+    }
+  }, 400);
+});
+</script>
+</body>
+</html>
