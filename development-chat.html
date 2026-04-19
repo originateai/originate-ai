@@ -49,6 +49,25 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--white);c
 .msg.u .bbl{background:var(--teal);color:white;border-top-right-radius:3px;font-weight:500}
 .bbl b,.bbl strong{color:var(--teal-dark);font-weight:600}
 
+/* Inline tables in chat */
+.chat-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.chat-table th{background:var(--grey100);color:var(--grey700);font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;padding:8px 10px;text-align:left;border-bottom:1px solid var(--border)}
+.chat-table th.num{text-align:right}
+.chat-table td{padding:6px 10px;border-bottom:1px solid var(--border);color:var(--text)}
+.chat-table td.num{text-align:right;font-weight:500}
+.chat-table tr:last-child td{border-bottom:none}
+.chat-table tr.total-row td{background:var(--grey100);font-weight:600;border-top:2px solid var(--border)}
+.chat-table input,.chat-table select{width:100%;padding:5px 7px;border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:12px;background:var(--white);color:var(--text)}
+.chat-table input:focus,.chat-table select:focus{outline:none;border-color:var(--teal)}
+.chat-table input.num-input{text-align:right;width:100px}
+.chat-table select{width:140px}
+.tbl-actions{display:flex;gap:8px;margin-top:8px}
+.tbl-btn{padding:6px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;border:none}
+.tbl-btn.add{background:var(--grey100);color:var(--grey700);border:1px solid var(--border)}
+.tbl-btn.add:hover{background:var(--teal-bg);color:var(--teal);border-color:var(--teal-subtle)}
+.tbl-btn.save{background:var(--teal);color:white}
+.tbl-btn.save:hover{background:var(--teal-dark)}
+
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .chip{padding:7px 13px;border-radius:6px;border:1px solid var(--border);background:var(--white);color:var(--grey700);font-size:12.5px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all 0.16s;font-weight:500}
 .chip:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-bg)}
@@ -356,6 +375,7 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--white);c
 // ─────────────────────────────────────────────
 var API_URL = "/.netlify/functions/claude";
 var HS_URL = "/.netlify/functions/hubspot";
+var SB_URL = "/.netlify/functions/supabase";
 
 // ─────────────────────────────────────────────
 // WORKFLOW STEPS
@@ -414,7 +434,7 @@ var STEPS = [
   { id: "avgPrice", msg: null, field: "avgPrice", dynamic: true },
   { id: "useAdvancedGRV", msg: "Would you like to do a detailed unit-by-unit breakdown of your project revenue? This gives a more accurate feasibility.",
     chips: ["Yes — detailed breakdown","No — keep it simple"], field: "useAdvancedGRV" },
-  // Advanced GRV would be a table UI — for now we collect basic, advanced is Phase 2
+  { id: "advancedGRVTable", msg: null, field: "unitRows", tableType: "grv", conditional: true },
 
   // ══════════════════════════════════════════
   // SCREEN 4.2/4.3 — Presales
@@ -438,20 +458,9 @@ var STEPS = [
   { id: "debtAmount", msg: "What's the current balance owing?", field: "debtAmount", conditional: true },
 
   // ══════════════════════════════════════════
-  // SCREEN 6 — Project costs
+  // SCREEN 6 — Project costs (as interactive table)
   // ══════════════════════════════════════════
-  { id: "costLand", msg: "Now let's talk about the project costs. All figures should be exclusive of GST.<br><br>First, confirm the land cost (this has been pre-filled from your earlier answer).", field: "costLand" },
-  { id: "costAcquisition", msg: "Acquisition costs — stamp duty, legals, due diligence?", field: "costAcquisition" },
-  { id: "costBuildContract", msg: "Build contract value (ex GST)?", field: "costBuildContract" },
-  { id: "costCivilContract", msg: "Civil contract — site works, earthworks, services? Enter $0 if included in the build contract.", field: "costCivilContract" },
-  { id: "costContingency", msg: "Contingency allowance? You can enter a dollar amount or a percentage of construction (e.g. 5%).", field: "costContingency" },
-  { id: "costProfFees", msg: "Professional fees — architect, engineers, quantity surveyor, project management?", field: "costProfFees" },
-  { id: "costCouncil", msg: "Council contributions — s7.11, s7.12, infrastructure levies?", field: "costCouncil" },
-  { id: "costProjectMgmt", msg: "Project management fee? Enter $0 if included in professional fees.", field: "costProjectMgmt" },
-  { id: "costMarketing", msg: "Marketing and sales agent costs?", field: "costMarketing" },
-  { id: "costGST", msg: "GST facility required? Enter $0 if not applicable.", field: "costGST" },
-  { id: "costOther", msg: "Any other project costs not covered above? Enter $0 if none.", field: "costOther" },
-  { id: "costNotes", msg: "Any comments or notes on the project costs? Type 'none' to skip.", field: "costNotes" },
+  { id: "costTable", msg: null, field: "costData", tableType: "costs" },
 
   // ══════════════════════════════════════════
   // SCREEN 7 — Feasibility output (auto)
@@ -693,6 +702,215 @@ function parseUnits(text) {
 }
 
 // ─────────────────────────────────────────────
+// TABLE BUILDERS
+// ─────────────────────────────────────────────
+var GRV_TYPES = [
+  "Studio / 0 Car","Studio / 1 Car","1 Bed / 1 Bath / 0 Car","1 Bed / 1 Bath / 1 Car",
+  "2 Bed / 1 Bath / 0 Car","2 Bed / 1 Bath / 1 Car","2 Bed / 2 Bath / 1 Car","2 Bed / 2 Bath / 2 Car",
+  "3 Bed / 2 Bath / 2 Car","3 Bed / 2 Bath / 3 Car","Penthouse","Vacant / Residual Land"
+];
+var GRV_SIZES = ["0-30 sqm","30-50 sqm","51-75 sqm","76-100 sqm","101-120 sqm","120+ sqm"];
+
+function buildGRVTable() {
+  var typeOpts = GRV_TYPES.map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join("");
+  var sizeOpts = GRV_SIZES.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join("");
+
+  var html = '<div style="margin-top:8px;font-size:13px;color:var(--grey700);font-weight:500;margin-bottom:6px">Residential Properties — Unit-by-Unit Breakdown</div>'
+    + '<table class="chat-table" id="grv-table">'
+    + '<thead><tr><th>Type</th><th>Size</th><th class="num">Number</th><th class="num">Avg Value ($)</th><th class="num">Total</th></tr></thead>'
+    + '<tbody id="grv-tbody">'
+    + buildGRVRow(0)
+    + '</tbody>'
+    + '<tfoot><tr class="total-row"><td colspan="2">Totals</td><td class="num" id="grv-t-units">0</td><td class="num">—</td><td class="num" id="grv-t-value">$0</td></tr></tfoot>'
+    + '</table>'
+    + '<div class="tbl-actions">'
+    + '<button class="tbl-btn add" onclick="addGRVRow()">+ Add row</button>'
+    + '<button class="tbl-btn save" onclick="saveGRVTable()">Save & continue</button>'
+    + '</div>';
+  return html;
+}
+
+function buildGRVRow(idx) {
+  var typeOpts = '<option value="">Select type...</option>' + GRV_TYPES.map(function(t) { return '<option value="' + t + '">' + t + '</option>'; }).join("");
+  var sizeOpts = '<option value="">Size...</option>' + GRV_SIZES.map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join("");
+  return '<tr>'
+    + '<td><select onchange="calcGRVRow(this)">' + typeOpts + '</select></td>'
+    + '<td><select>' + sizeOpts + '</select></td>'
+    + '<td><input type="number" class="num-input" placeholder="0" onchange="calcGRVRow(this)" min="0"></td>'
+    + '<td><input type="number" class="num-input" placeholder="$0" onchange="calcGRVRow(this)" min="0"></td>'
+    + '<td class="num grv-row-total">$0</td>'
+    + '</tr>';
+}
+
+function addGRVRow() {
+  var tbody = document.getElementById("grv-tbody");
+  var idx = tbody.rows.length;
+  tbody.insertAdjacentHTML("beforeend", buildGRVRow(idx));
+}
+
+function calcGRVRow(el) {
+  var row = el.closest("tr");
+  var inputs = row.querySelectorAll("input[type=number]");
+  var num = parseFloat(inputs[0].value) || 0;
+  var avg = parseFloat(inputs[1].value) || 0;
+  var total = num * avg;
+  row.querySelector(".grv-row-total").textContent = fd(total);
+  // Update totals
+  var tbody = document.getElementById("grv-tbody");
+  var totalUnits = 0, totalValue = 0;
+  for (var i = 0; i < tbody.rows.length; i++) {
+    var inp = tbody.rows[i].querySelectorAll("input[type=number]");
+    var n = parseFloat(inp[0].value) || 0;
+    var v = parseFloat(inp[1].value) || 0;
+    totalUnits += n;
+    totalValue += n * v;
+  }
+  document.getElementById("grv-t-units").textContent = totalUnits;
+  document.getElementById("grv-t-value").textContent = fd(totalValue);
+}
+
+function saveGRVTable() {
+  var tbody = document.getElementById("grv-tbody");
+  var rows = [];
+  var totalUnits = 0, totalValue = 0;
+  for (var i = 0; i < tbody.rows.length; i++) {
+    var sel = tbody.rows[i].querySelectorAll("select");
+    var inp = tbody.rows[i].querySelectorAll("input[type=number]");
+    var type = sel[0].value;
+    var size = sel[1].value;
+    var num = parseFloat(inp[0].value) || 0;
+    var avg = parseFloat(inp[1].value) || 0;
+    if (num > 0 && avg > 0) {
+      rows.push({ type: type, size: size, number: num, avgValue: avg, total: num * avg });
+      totalUnits += num;
+      totalValue += num * avg;
+    }
+  }
+  if (rows.length === 0) {
+    addMsg("ai", "Please add at least one row with a number of units and average value.");
+    return;
+  }
+  S.data.unitRows = rows;
+  S.data.units = totalUnits;
+  S.data.avgPrice = totalValue / totalUnits;
+  addMsg("u", totalUnits + " units — GRV " + fd(totalValue));
+  S.step++;
+  updatePanel();
+  S.busy = false;
+  document.getElementById("send-btn").disabled = false;
+  setTimeout(function() {
+    addMsg("ai", "Got it — " + totalUnits + " units with a total GRV of " + fd(totalValue) + ".");
+    setTimeout(function() { showStep(); }, 400);
+  }, 300);
+}
+
+// ── COST TABLE ──
+var COST_ITEMS_LAND = [
+  { key: "costLand", label: "Land", prefill: "landCost" },
+  { key: "costAcquisition", label: "Acquisition Costs" }
+];
+var COST_ITEMS_PROJECT = [
+  { key: "costBuildContract", label: "Build Contract (Ex GST)" },
+  { key: "costCivilContract", label: "Civil Contract (Ex GST)" },
+  { key: "costContingency", label: "Contingency" },
+  { key: "costProfFees", label: "Professional Fees" },
+  { key: "costCouncil", label: "Council Contributions" },
+  { key: "costProjectMgmt", label: "Project Management" },
+  { key: "costMarketing", label: "Marketing" },
+  { key: "costGST", label: "GST Facility" },
+  { key: "costOther", label: "Other" }
+];
+
+function buildCostTable() {
+  var landPrefill = S.data.landCost || 0;
+
+  function costRow(item, prefillVal) {
+    var val = prefillVal || '';
+    return '<tr>'
+      + '<td>' + item.label + '</td>'
+      + '<td><input type="number" class="num-input" data-key="' + item.key + '" value="' + val + '" placeholder="$0" onchange="calcCostTable()" min="0"></td>'
+      + '<td><input type="number" class="num-input" data-eq="' + item.key + '" placeholder="$0" onchange="calcCostTable()" min="0"></td>'
+      + '<td class="num cost-fin" data-fin="' + item.key + '">$0</td>'
+      + '</tr>';
+  }
+
+  var html = '<div style="margin-top:8px;font-size:13px;color:var(--grey700);font-weight:500;margin-bottom:6px">Project Costs — all figures exclusive of GST</div>'
+    + '<table class="chat-table" id="cost-table">'
+    + '<thead><tr><th>Cost Type</th><th class="num">Cost ($)</th><th class="num">Equity ($)</th><th class="num">Finance Req.</th></tr></thead>'
+    + '<tbody>'
+    + '<tr class="total-row"><td colspan="4" style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--grey600)">Land & Acquisition</td></tr>'
+    + COST_ITEMS_LAND.map(function(item) { return costRow(item, item.prefill ? landPrefill : ''); }).join("")
+    + '<tr class="total-row"><td>Subtotal</td><td class="num" id="ct-land-total">$0</td><td class="num" id="ct-land-eq">$0</td><td class="num" id="ct-land-fin">$0</td></tr>'
+    + '<tr class="total-row"><td colspan="4" style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--grey600)">Project Costs</td></tr>'
+    + COST_ITEMS_PROJECT.map(function(item) { return costRow(item, ''); }).join("")
+    + '<tr class="total-row"><td>Subtotal</td><td class="num" id="ct-proj-total">$0</td><td class="num" id="ct-proj-eq">$0</td><td class="num" id="ct-proj-fin">$0</td></tr>'
+    + '<tr class="total-row" style="background:var(--grey800);"><td style="color:white;font-weight:700">TOTAL</td><td class="num" id="ct-total" style="color:white;font-weight:700">$0</td><td class="num" id="ct-eq-total" style="color:white">$0</td><td class="num" id="ct-fin-total" style="color:white">$0</td></tr>'
+    + '</tbody></table>'
+    + '<div class="tbl-actions">'
+    + '<button class="tbl-btn save" onclick="saveCostTable()">Save & continue</button>'
+    + '</div>';
+  return html;
+}
+
+function calcCostTable() {
+  var allItems = COST_ITEMS_LAND.concat(COST_ITEMS_PROJECT);
+  var landTotal = 0, landEq = 0, projTotal = 0, projEq = 0;
+
+  allItems.forEach(function(item) {
+    var costInput = document.querySelector('[data-key="' + item.key + '"]');
+    var eqInput = document.querySelector('[data-eq="' + item.key + '"]');
+    var finCell = document.querySelector('[data-fin="' + item.key + '"]');
+    var cost = parseFloat(costInput.value) || 0;
+    var eq = parseFloat(eqInput.value) || 0;
+    var fin = Math.max(0, cost - eq);
+    finCell.textContent = fd(fin);
+
+    var isLand = COST_ITEMS_LAND.some(function(l) { return l.key === item.key; });
+    if (isLand) { landTotal += cost; landEq += eq; }
+    else { projTotal += cost; projEq += eq; }
+  });
+
+  document.getElementById("ct-land-total").textContent = fd(landTotal);
+  document.getElementById("ct-land-eq").textContent = fd(landEq);
+  document.getElementById("ct-land-fin").textContent = fd(landTotal - landEq);
+  document.getElementById("ct-proj-total").textContent = fd(projTotal);
+  document.getElementById("ct-proj-eq").textContent = fd(projEq);
+  document.getElementById("ct-proj-fin").textContent = fd(projTotal - projEq);
+  document.getElementById("ct-total").textContent = fd(landTotal + projTotal);
+  document.getElementById("ct-eq-total").textContent = fd(landEq + projEq);
+  document.getElementById("ct-fin-total").textContent = fd((landTotal - landEq) + (projTotal - projEq));
+}
+
+function saveCostTable() {
+  var allItems = COST_ITEMS_LAND.concat(COST_ITEMS_PROJECT);
+  var totalCost = 0;
+  allItems.forEach(function(item) {
+    var costInput = document.querySelector('[data-key="' + item.key + '"]');
+    var eqInput = document.querySelector('[data-eq="' + item.key + '"]');
+    var cost = parseFloat(costInput.value) || 0;
+    var eq = parseFloat(eqInput.value) || 0;
+    S.data[item.key] = cost;
+    S.data[item.key + "_equity"] = eq;
+    totalCost += cost;
+  });
+
+  if (totalCost <= 0) {
+    addMsg("ai", "Please enter at least the build contract value before continuing.");
+    return;
+  }
+
+  addMsg("u", "Total project costs: " + fd(totalCost));
+  S.step++;
+  updatePanel();
+  S.busy = false;
+  document.getElementById("send-btn").disabled = false;
+  setTimeout(function() {
+    addMsg("ai", "Got it — total project costs of " + fd(totalCost) + " confirmed.");
+    setTimeout(function() { showStep(); }, 400);
+  }, 300);
+}
+
+// ─────────────────────────────────────────────
 // STEP ENGINE
 // ─────────────────────────────────────────────
 function getCurrentStep() {
@@ -702,6 +920,7 @@ function getCurrentStep() {
       if (step.id === "debtAmount" && S.data.existingDebt !== "Yes") { S.step++; continue; }
       if (step.id === "presalesValue" && S.data.hasPresales !== "Yes") { S.step++; continue; }
       if (step.id === "daValue" && S.data.hasDA !== "Yes — DA approved") { S.step++; continue; }
+      if (step.id === "advancedGRVTable" && S.data.useAdvancedGRV !== "Yes — detailed breakdown") { S.step++; continue; }
     }
     return step;
   }
@@ -794,6 +1013,17 @@ function showStep() {
     document.getElementById("send-btn").disabled = true;
     showTyping();
     handleClaudeStep("");
+    return;
+  }
+
+  // Render interactive table steps
+  if (step.tableType === "grv") {
+    addMsg("ai", "Enter each unit type in your project." + buildGRVTable());
+    return;
+  }
+  if (step.tableType === "costs") {
+    addMsg("ai", "Now let's detail the project costs. Enter each cost item, along with how much equity you're contributing versus how much finance is required." + buildCostTable());
+    setTimeout(function() { calcCostTable(); }, 100);
     return;
   }
 
@@ -1011,6 +1241,77 @@ async function handleClaudeStep(text) {
 
   S.busy = false;
   document.getElementById("send-btn").disabled = false;
+
+  // Save deal to Supabase
+  saveDealToSupabase();
+}
+
+// ─────────────────────────────────────────────
+// SAVE DEAL TO SUPABASE
+// ─────────────────────────────────────────────
+async function saveDealToSupabase() {
+  var d = S.data;
+  var r = S.calcResult;
+  try {
+    var deal = {
+      status: "feasibility_complete",
+      borrower_name: d.name || null,
+      borrower_email: d.email || null,
+      borrower_phone: d.phone || null,
+      borrower_type: d.borrowerType || null,
+      category: d.category || null,
+      sub_category: d.subtype || null,
+      address: d.address || null,
+      da_status: d.hasDA || null,
+      units: typeof d.units === "number" ? d.units : parseInt(d.units) || null,
+      avg_price: typeof d.avgPrice === "number" ? d.avgPrice : null,
+      grv: r ? r.grv : null,
+      land_cost: typeof d.landCost === "number" ? d.landCost : null,
+      land_value: typeof d.landValue === "number" ? d.landValue : null,
+      existing_debt: typeof d.debtAmount === "number" ? d.debtAmount : null,
+      construction_cost: typeof d.costBuildContract === "number" ? d.costBuildContract : null,
+      settle_days: typeof d.settleDays === "number" ? d.settleDays : null,
+      pre_const: typeof d.preConst === "number" ? d.preConst : null,
+      const_term: typeof d.constTerm === "number" ? d.constTerm : null,
+      sales_period: typeof d.salesPeriod === "number" ? d.salesPeriod : null,
+      total_loan_term: typeof d.totalLoanTerm === "number" ? d.totalLoanTerm : (typeof d.loanTerm === "number" ? d.loanTerm : null),
+      prof_fees: typeof d.costProfFees === "number" ? d.costProfFees : null,
+      holding_costs: null,
+      marketing_costs: typeof d.costMarketing === "number" ? d.costMarketing : null,
+      contingency: typeof d.costContingency === "number" ? d.costContingency : null,
+      borrow_amount: typeof d.loanAmount === "number" ? String(d.loanAmount) : null,
+      borrow_figure: typeof d.loanAmount === "number" ? d.loanAmount : null,
+      has_presales: d.hasPresales || null,
+      presales_value: typeof d.presalesValue === "number" ? d.presalesValue : null,
+      calc_nrv: r ? r.nrv : null,
+      calc_tdc: r ? r.tdc : null,
+      calc_facility: r ? r.facility : null,
+      calc_equity: r ? r.equity : null,
+      calc_lvr: r ? r.lvr : null,
+      calc_ltc: r ? r.ltc : null,
+      calc_poc: r ? r.poc : null,
+      calc_debt_cover: r ? r.debtCover : null,
+      calc_irr: r ? r.devIRR : null,
+      calc_lenders_matched: r ? matchLenders(r.lvr, r.ltc, r.poc).length : null,
+      raw_data: d
+    };
+
+    console.log("Saving deal to Supabase...");
+    var res = await fetch(SB_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "save_deal", deal: deal })
+    });
+    var json = await res.json();
+    if (json.success && json.deal) {
+      S.dealId = json.deal.id;
+      console.log("Deal saved to Supabase:", S.dealId);
+    } else {
+      console.error("Supabase save error:", json);
+    }
+  } catch(e) {
+    console.error("Supabase save error:", e);
+  }
 }
 
 function buildSummary() {
