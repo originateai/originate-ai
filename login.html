@@ -49,6 +49,8 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);backgro
 
 .auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--grey500);font-size:12px}
 .auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -117,8 +119,22 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);backgro
         </select>
       </div>
       <div class="form-group" id="company-name-group" style="display:none">
-        <label class="form-label">Company / Trust Name</label>
-        <input type="text" class="form-input" id="signup-company" placeholder="Acton Developments Pty Ltd">
+        <label class="form-label">Search by ABN, ACN or company name</label>
+        <div style="position:relative">
+          <input type="text" class="form-input" id="abn-search" placeholder="e.g. 123 456 789 or Acton Developments" oninput="abnSearchDebounce()" autocomplete="off">
+          <div id="abn-spinner" style="display:none;position:absolute;right:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;border:2px solid var(--teal-subtle);border-top-color:var(--teal);border-radius:50%;animation:spin 0.7s linear infinite"></div>
+        </div>
+        <div id="abn-results" style="display:none;border:1px solid var(--border);border-radius:var(--radius);margin-top:4px;background:white;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,0.08)"></div>
+        <div id="abn-selected" style="display:none;margin-top:8px;padding:10px 12px;background:var(--teal-bg);border:1px solid var(--teal-subtle);border-radius:var(--radius);font-size:13px">
+          <div id="abn-selected-name" style="font-weight:600;color:var(--grey900)"></div>
+          <div id="abn-selected-details" style="color:var(--muted);font-size:12px;margin-top:2px"></div>
+          <a href="#" onclick="clearABN();return false" style="font-size:11px;color:var(--teal);text-decoration:none;margin-top:4px;display:inline-block">Change →</a>
+        </div>
+        <!-- Hidden fields -->
+        <input type="hidden" id="signup-company">
+        <input type="hidden" id="signup-abn">
+        <input type="hidden" id="signup-acn">
+        <input type="hidden" id="signup-entity-subtype">
       </div>
       <div class="form-group">
         <label class="form-label">I am a...</label>
@@ -221,6 +237,83 @@ function toggleCompanyField() {
   document.getElementById('company-name-group').style.display = (type === 'company' || type === 'trust') ? 'block' : 'none';
 }
 
+// ── ABN LOOKUP ────────────────────────────────────────────────────────────────
+var abnTimer = null;
+function abnSearchDebounce() {
+  clearTimeout(abnTimer);
+  abnTimer = setTimeout(doABNSearch, 400);
+}
+
+async function doABNSearch() {
+  var q = document.getElementById('abn-search').value.trim();
+  if (q.length < 3) { document.getElementById('abn-results').style.display = 'none'; return; }
+
+  document.getElementById('abn-spinner').style.display = 'block';
+  document.getElementById('abn-results').style.display = 'none';
+
+  try {
+    var resp = await fetch('/.netlify/functions/abn-lookup', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ query: q })
+    });
+    var data = await resp.json();
+    document.getElementById('abn-spinner').style.display = 'none';
+
+    if (!data.results || !data.results.length) {
+      showABNResults([]);
+      return;
+    }
+    showABNResults(data.results);
+  } catch(e) {
+    document.getElementById('abn-spinner').style.display = 'none';
+  }
+}
+
+function showABNResults(results) {
+  var box = document.getElementById('abn-results');
+  if (!results.length) {
+    box.innerHTML = '<div style="padding:10px 14px;font-size:13px;color:var(--muted)">No results found</div>';
+    box.style.display = 'block';
+    return;
+  }
+  box.innerHTML = results.map(function(r, i) {
+    var status = r.status === 'Active' ? '<span style="color:var(--green);font-size:11px">● Active</span>' : '<span style="color:var(--red);font-size:11px">● '+r.status+'</span>';
+    return '<div onclick="selectABN('+i+')" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:background 0.1s" onmouseover="this.style.background=\'var(--grey50)\'" onmouseout="this.style.background=\'\'">'
+      + '<div style="font-size:13px;font-weight:500;color:var(--grey900)">'+r.name+'</div>'
+      + '<div style="font-size:11px;color:var(--muted);margin-top:2px">ABN '+r.abn+(r.acn?' · ACN '+r.acn:'')+' · '+r.type+' '+status+'</div>'
+      + '</div>';
+  }).join('');
+  box.style.display = 'block';
+  box._results = results;
+}
+
+function selectABN(idx) {
+  var results = document.getElementById('abn-results')._results;
+  var r = results[idx];
+  // Store in hidden fields
+  document.getElementById('signup-company').value = r.name;
+  document.getElementById('signup-abn').value = r.abn;
+  document.getElementById('signup-acn').value = r.acn || '';
+  document.getElementById('signup-entity-subtype').value = r.type;
+  // Show selected
+  document.getElementById('abn-selected-name').textContent = r.name;
+  document.getElementById('abn-selected-details').textContent = 'ABN ' + r.abn + (r.acn ? ' · ACN ' + r.acn : '') + ' · ' + r.type + (r.state ? ' · ' + r.state : '');
+  document.getElementById('abn-selected').style.display = 'block';
+  document.getElementById('abn-results').style.display = 'none';
+  document.getElementById('abn-search').style.display = 'none';
+}
+
+function clearABN() {
+  document.getElementById('signup-company').value = '';
+  document.getElementById('signup-abn').value = '';
+  document.getElementById('signup-acn').value = '';
+  document.getElementById('abn-selected').style.display = 'none';
+  document.getElementById('abn-search').style.display = 'block';
+  document.getElementById('abn-search').value = '';
+  document.getElementById('abn-search').focus();
+}
+
 function generateClientNumber() {
   var year = new Date().getFullYear();
   var seq = String(Math.floor(Math.random() * 9000) + 1000);
@@ -234,11 +327,13 @@ async function doSignup() {
   var role = document.getElementById('signup-role').value;
   var entityType = document.getElementById('signup-entity-type').value;
   var company = document.getElementById('signup-company').value.trim();
+  var abn = document.getElementById('signup-abn') ? document.getElementById('signup-abn').value.trim() : '';
+  var acn = document.getElementById('signup-acn') ? document.getElementById('signup-acn').value.trim() : '';
   var msg = document.getElementById('signup-msg');
   var btn = document.getElementById('signup-btn');
 
   if (!name || !email || !password) { msg.className = 'auth-msg error'; msg.textContent = 'Please fill in all fields.'; return; }
-  if ((entityType === 'company' || entityType === 'trust') && !company) { msg.className = 'auth-msg error'; msg.textContent = 'Please enter your company / trust name.'; return; }
+  if ((entityType === 'company' || entityType === 'trust') && !company) { msg.className = 'auth-msg error'; msg.textContent = 'Please search and select your company / trust.'; return; }
   if (password.length < 6) { msg.className = 'auth-msg error'; msg.textContent = 'Password must be at least 6 characters.'; return; }
 
   btn.disabled = true; btn.textContent = 'Creating account...';
@@ -254,6 +349,8 @@ async function doSignup() {
         role: role,
         entity_type: entityType,
         company_name: company || null,
+        abn: abn || null,
+        acn: acn || null,
         client_number: clientNumber
       }
     }
