@@ -202,6 +202,9 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
     <a class="nav-link active" href="#" onclick="showAdminTab('deals',this)">Deals</a>
     <a class="nav-link" href="#" onclick="showAdminTab('contacts',this)">Contacts</a>
     <a class="nav-link" href="#" onclick="showAdminTab('lenders-tab',this)">Lenders</a>
+    <a class="nav-link" href="settlement.html">Settlement</a>
+    <a class="nav-link" href="credit-paper.html">Credit Paper</a>
+    <a class="nav-link" href="feasibility-capval.html">Feasibility</a>
     <a class="nav-link" href="#" onclick="doLogout()">Sign Out</a>
   </div>
 </nav>
@@ -369,6 +372,13 @@ function renderStats(deals) {
   document.getElementById("s-approved").textContent = deals.filter(function(d){return d.status==="approved"}).length;
 }
 
+function generateDealNumber(id) {
+  // Generate a deterministic deal number from the UUID
+  var year = new Date().getFullYear();
+  var hash = id ? parseInt(id.replace(/-/g,'').substring(0,6), 16) % 9000 + 1000 : Math.floor(Math.random()*9000)+1000;
+  return 'GK-DEAL-' + year + '-' + hash;
+}
+
 function filterDeals(status, btn) {
   currentFilter = status;
   document.querySelectorAll(".filter-btn").forEach(function(b){b.classList.remove("active")});
@@ -394,9 +404,13 @@ function showDetail(id) {
 
   var html = '<div class="detail-title">' + (d.borrower_name || "Unnamed Deal") + '</div>'
     + '<div class="detail-address">' + (d.address || "No address") + '</div>'
+    + '<div style="font-size:11px;color:var(--muted);margin-bottom:12px;font-family:monospace">'
+    + (d.deal_number || generateDealNumber(d.id)) + '</div>'
     + (d.address ? '<div style="margin-bottom:16px;border-radius:8px;overflow:hidden;border:1px solid var(--border)"><iframe width="100%" height="180" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps/embed/v1/place?key=' + GMAPS_KEY + '&q=' + encodeURIComponent(d.address) + '&zoom=15"></iframe></div>' : '')
-    + '<div style="display:flex;gap:8px;margin-bottom:20px">'
+    + '<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">'
     + '<button class="ld-btn primary" onclick="generateFundingRequest(\'' + d.id + '\')">📄 Generate Funding Request</button>'
+    + '<button class="ld-btn" onclick="window.open(\'settlement.html?deal=' + d.id + '\',\'_blank\')" style="background:var(--teal-bg);color:var(--teal-dark);border-color:var(--teal-subtle)">🏦 Settlement</button>'
+    + '<button class="ld-btn" onclick="window.open(\'credit-paper.html\',\'_blank\')" style="background:var(--grey50)">📋 Credit Paper</button>'
     + '</div>'
     + '<div class="detail-section">'
     + '<div class="detail-section-head">Status</div>'
@@ -415,6 +429,7 @@ function showDetail(id) {
     + edt("Email","borrower_email",d.borrower_email,"text")
     + edt("Phone","borrower_phone",d.borrower_phone,"text")
     + edt("Type","borrower_type",d.borrower_type,"text")
+    + edt("Company / Entity","company_name",d.company_name,"text")
     + '<div class="contact-actions">'
     + (d.borrower_email ? '<button class="contact-btn email" onclick="emailBorrower(\'' + d.id + '\')">✉ Email</button>' : '')
     + (d.borrower_phone ? '<a class="contact-btn phone" href="tel:' + (d.borrower_phone||'') + '">📞 Call</a>' : '')
