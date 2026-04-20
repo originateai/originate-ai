@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>getkredit.ai — Credit Paper Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#0D9488;--teal-light:#14B8A6;--teal-dark:#0F766E;--teal-bg:#F0FDFA;--teal-subtle:#CCFBF1;
+  --white:#ffffff;--grey50:#f8fafc;--grey100:#f1f5f9;--grey200:#e2e8f0;--grey300:#cbd5e1;
+  --grey500:#64748b;--grey600:#475569;--grey700:#334155;--grey800:#1e293b;--grey900:#0f172a;
+  --text:#0f172a;--muted:#64748b;--border:#e2e8f0;
+  --green:#059669;--red:#dc2626;--amber:#d97706;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ── NAV ── */
+.nav{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:100}
+.nav-logo{font-family:'Source Serif 4',serif;font-size:21px;font-weight:700;color:var(--grey900);text-decoration:none;display:flex;align-items:baseline;gap:1px}
+.nav-logo span{color:var(--teal)}
+.nav-links{display:flex;gap:6px;align-items:center}
+.nav-links a{font-size:13px;color:var(--grey600);text-decoration:none;font-weight:500;padding:7px 14px;border-radius:var(--radius);transition:all 0.15s}
+.nav-links a:hover{color:var(--teal);background:var(--teal-bg)}
+.nav-links a.active{color:var(--teal-dark);background:var(--teal-subtle);font-weight:600}
+.nav-right{display:flex;gap:10px;align-items:center}
+.nav-link{font-size:13px;color:var(--grey500);text-decoration:none;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);transition:all 0.15s;background:var(--white)}
+.nav-link:hover{border-color:var(--teal);color:var(--teal)}
+
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:400px 1fr;height:calc(100vh - 64px)}
+
+/* ── LEFT PANEL ── */
+.panel-left{background:var(--white);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+.panel-left::-webkit-scrollbar{width:3px}
+.panel-left::-webkit-scrollbar-thumb{background:var(--grey200);border-radius:2px}
+
+.panel-header{padding:24px 28px 20px;border-bottom:1px solid var(--border);flex-shrink:0}
+.panel-header h1{font-family:'Source Serif 4',serif;font-size:22px;font-weight:700;color:var(--grey900);letter-spacing:-0.2px}
+.panel-header p{font-size:13px;color:var(--grey500);margin-top:3px}
+
+/* Tier tabs */
+.tier-section{padding:16px 28px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--grey50)}
+.tier-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey500);margin-bottom:10px}
+.tier-tabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.tier-tab{padding:9px 6px;border-radius:var(--radius);border:1.5px solid var(--border);background:var(--white);cursor:pointer;text-align:center;transition:all 0.15s;font-family:'DM Sans',sans-serif;color:var(--grey600)}
+.tier-tab:hover{border-color:var(--teal-light)}
+.tier-tab.active{border-color:var(--teal);background:var(--teal-bg);color:var(--teal-dark)}
+.tier-tab .tt-name{font-size:12px;font-weight:600;display:block}
+.tier-tab .tt-sub{font-size:10px;color:var(--grey500);margin-top:1px}
+.tier-tab.active .tt-sub{color:var(--teal)}
+
+/* Form sections */
+.form-scroll{flex:1;overflow-y:auto;padding:0}
+.form-scroll::-webkit-scrollbar{width:3px}
+.form-scroll::-webkit-scrollbar-thumb{background:var(--grey200);border-radius:2px}
+
+.form-section{padding:20px 28px;border-bottom:1px solid var(--border)}
+.fs-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal-dark);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.fs-title::before{content:'';display:block;width:14px;height:1.5px;background:var(--teal);opacity:0.7}
+
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg.full{grid-template-columns:1fr}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted)}
+.field input,.field select,.field textarea{
+  width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);
+  font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);background:var(--white);
+  outline:none;transition:border-color 0.15s;-webkit-appearance:none
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--teal)}
+.field textarea{resize:vertical;min-height:68px;line-height:1.5}
+.field input[type=number]{-moz-appearance:textfield}
+.field input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
+
+/* Asset type buttons */
+.asset-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px}
+.asset-tab{padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:var(--white);cursor:pointer;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--grey600);font-weight:500;transition:all 0.15s}
+.asset-tab:hover{border-color:var(--teal-light)}
+.asset-tab.active{border-color:var(--teal);background:var(--teal-bg);color:var(--teal-dark);font-weight:600}
+
+/* Conditional sections */
+.cond{display:none}
+.cond.show{display:block}
+
+/* Errors */
+.form-error{margin:0 28px 12px;padding:10px 14px;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);border-radius:var(--radius);font-size:12px;color:var(--red);display:none}
+.form-error.show{display:block}
+
+/* Generate button */
+.panel-footer{padding:16px 28px;border-top:1px solid var(--border);flex-shrink:0;background:var(--white)}
+.btn-generate{
+  width:100%;padding:12px;background:var(--teal);color:white;border:none;border-radius:var(--radius);
+  font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:8px;transition:all 0.2s
+}
+.btn-generate:hover{background:var(--teal-dark)}
+.btn-generate:disabled{opacity:0.55;cursor:default}
+.btn-generate .spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;display:none}
+.btn-generate.loading .spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.btn-hint{text-align:center;font-size:11px;color:var(--grey500);margin-top:8px}
+
+/* ── RIGHT PANEL ── */
+.panel-right{display:flex;flex-direction:column;overflow:hidden}
+
+.output-bar{
+  padding:14px 32px;background:var(--white);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;flex-shrink:0
+}
+.ob-label{font-size:13px;font-weight:600;color:var(--grey700);margin-right:auto}
+.ob-badge{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--teal-bg);color:var(--teal-dark);letter-spacing:0.2px}
+.ob-tokens{font-size:11px;color:var(--grey500)}
+.btn-bar{
+  padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--white);
+  cursor:pointer;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;color:var(--grey600);
+  display:flex;align-items:center;gap:5px;transition:all 0.15s;text-decoration:none
+}
+.btn-bar:hover{border-color:var(--teal);color:var(--teal)}
+.btn-bar svg{flex-shrink:0}
+
+/* Output area */
+.output-area{flex:1;overflow-y:auto;padding:40px 56px;background:var(--white)}
+.output-area::-webkit-scrollbar{width:4px}
+.output-area::-webkit-scrollbar-thumb{background:var(--grey200);border-radius:2px}
+
+/* Empty state */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:var(--grey500);padding:40px}
+.empty-icon{width:64px;height:64px;border-radius:50%;background:var(--teal-bg);display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.empty h2{font-family:'Source Serif 4',serif;font-size:20px;font-weight:600;color:var(--grey700);margin-bottom:8px}
+.empty p{font-size:13px;line-height:1.6;max-width:280px}
+
+/* Loading state */
+.loading-state{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:40px}
+.loading-state.show{display:flex}
+.loading-dots{display:flex;gap:8px;margin-bottom:20px}
+.loading-dots span{width:9px;height:9px;border-radius:50%;background:var(--teal);animation:ldot 1.4s ease-in-out infinite}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes ldot{0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1}}
+.loading-title{font-family:'Source Serif 4',serif;font-size:20px;font-weight:600;color:var(--grey700);margin-bottom:6px}
+.loading-status{font-size:13px;color:var(--grey500)}
+
+/* ── CREDIT PAPER STYLES ── */
+#paper{display:none}
+#paper.show{display:block}
+
+#paper .paper-confidential{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--red);background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15);padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:14px}
+#paper h1{font-family:'Source Serif 4',serif;font-size:26px;font-weight:700;color:var(--grey900);letter-spacing:-0.4px;margin-bottom:6px}
+#paper .paper-meta{display:flex;gap:20px;flex-wrap:wrap;font-size:12px;color:var(--grey500);padding-bottom:20px;border-bottom:2px solid var(--teal);margin-bottom:8px}
+#paper h2{font-family:'Source Serif 4',serif;font-size:17px;font-weight:700;color:var(--teal-dark);border-bottom:1.5px solid var(--teal-subtle);padding-bottom:7px;margin:28px 0 14px;letter-spacing:-0.1px}
+#paper h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--grey600);margin:18px 0 8px}
+#paper p{font-size:13.5px;line-height:1.8;color:var(--text);margin-bottom:12px}
+#paper ul,#paper ol{padding-left:20px;margin-bottom:12px}
+#paper li{font-size:13.5px;line-height:1.75;margin-bottom:4px}
+#paper strong{font-weight:600}
+#paper table{width:100%;border-collapse:collapse;margin:10px 0 20px;font-size:13px}
+#paper th{background:var(--grey50);padding:9px 12px;text-align:left;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--grey600);border-bottom:2px solid var(--border)}
+#paper td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text)}
+#paper tr:last-child td{border-bottom:none}
+#paper tr:hover td{background:var(--grey50)}
+#paper .highlight{background:var(--teal-bg);border-left:3px solid var(--teal);padding:12px 16px;border-radius:0 var(--radius) var(--radius) 0;margin:14px 0;font-size:13px}
+#paper .risk-box{background:rgba(217,119,6,0.06);border-left:3px solid var(--amber);padding:12px 16px;border-radius:0 var(--radius) var(--radius) 0;margin:14px 0;font-size:13px}
+#paper .recommendation{background:#ECFDF5;border:1.5px solid #6EE7B7;border-radius:var(--radius-lg);padding:18px 22px;margin-top:24px}
+#paper .recommendation h2{border:none;padding:0;margin:0 0 10px;color:#065F46}
+#paper hr{border:none;border-top:1px solid var(--border);margin:24px 0}
+#paper .disclaimer{font-size:11px;color:var(--grey500);border-top:1px solid var(--border);padding-top:16px;margin-top:32px;line-height:1.6}
+
+@media print{
+  .nav,.panel-left,.output-bar{display:none!important}
+  .layout{display:block;height:auto}
+  .output-area{padding:0}
+  #paper{display:block!important}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a href="index.html" class="nav-logo">getkredit<span>.ai</span></a>
+  <div class="nav-links">
+    <a href="portal.html">My Deals</a>
+    <a href="lender-portal.html">Lenders</a>
+    <a href="feasibility.html">Feasibility</a>
+    <a href="credit-paper.html" class="active">Credit Paper</a>
+  </div>
+  <div class="nav-right">
+    <a href="portal.html" class="nav-link">← Back to Portal</a>
+  </div>
+</nav>
+
+<!-- TWO-PANEL LAYOUT -->
+<div class="layout">
+
+  <!-- ── LEFT: FORM ── -->
+  <div class="panel-left">
+    <div class="panel-header">
+      <h1>Credit Paper Generator</h1>
+      <p>AI-powered credit submissions in seconds</p>
+    </div>
+
+    <!-- Tier selector -->
+    <div class="tier-section">
+      <div class="tier-label">Paper Type</div>
+      <div class="tier-tabs">
+        <button class="tier-tab" data-tier="discussion" onclick="setTier('discussion',this)">
+          <span class="tt-name">Bank</span>
+          <span class="tt-sub">Discussion · 2–4pg</span>
+        </button>
+        <button class="tier-tab active" data-tier="board" onclick="setTier('board',this)">
+          <span class="tt-name">Non-Bank</span>
+          <span class="tt-sub">Board sub · 5–10pg</span>
+        </button>
+        <button class="tier-tab" data-tier="im" onclick="setTier('im',this)">
+          <span class="tt-name">Full IM</span>
+          <span class="tt-sub">Institutional · 25pg+</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="form-scroll">
+
+      <!-- Borrower -->
+      <div class="form-section">
+        <div class="fs-title">Borrower / Sponsor</div>
+        <div class="fg full" style="gap:10px">
+          <div class="field">
+            <label>Entity Name</label>
+            <input type="text" id="borrowerName" placeholder="e.g. Acton Developments Pty Ltd" />
+          </div>
+          <div class="fg">
+            <div class="field">
+              <label>ABN</label>
+              <input type="text" id="abn" placeholder="XX XXX XXX XXX" />
+            </div>
+            <div class="field">
+              <label>Deal Date</label>
+              <input type="date" id="dealDate" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Directors / Key Personnel</label>
+            <input type="text" id="directors" placeholder="e.g. John Smith, Sarah Jones" />
+          </div>
+          <div class="field">
+            <label>Guarantors</label>
+            <input type="text" id="guarantors" placeholder="Leave blank if same as directors" />
+          </div>
+          <div class="field">
+            <label>Development Experience</label>
+            <input type="text" id="borrowerExperience" placeholder="e.g. 15 years, 8 projects completed" />
+          </div>
+          <div class="fg">
+            <div class="field">
+              <label>Net Assets (stated, $)</label>
+              <input type="number" id="netAssets" placeholder="5000000" />
+            </div>
+            <div class="field">
+              <label>Liquidity ($)</label>
+              <input type="number" id="liquidity" placeholder="500000" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Asset / Security -->
+      <div class="form-section">
+        <div class="fs-title">Security / Asset</div>
+        <div class="fg full" style="gap:10px">
+          <div class="field">
+            <label>Property Address</label>
+            <input type="text" id="propertyAddress" placeholder="123 Example Street, Mosman NSW 2088" />
+          </div>
+          <div class="field">
+            <label>Asset Type</label>
+            <div class="asset-tabs">
+              <button class="asset-tab active" onclick="setAsset('Residential Development',this)">Resi Dev</button>
+              <button class="asset-tab" onclick="setAsset('Land Subdivision',this)">Land / Sub</button>
+              <button class="asset-tab" onclick="setAsset('Commercial',this)">Commercial</button>
+              <button class="asset-tab" onclick="setAsset('BTL',this)">BTL</button>
+              <button class="asset-tab" onclick="setAsset('Industrial',this)">Industrial</button>
+            </div>
+          </div>
+          <div class="fg">
+            <div class="field">
+              <label>Site Area (sqm)</label>
+              <input type="number" id="siteArea" placeholder="800" />
+            </div>
+            <div class="field">
+              <label>GFA (sqm)</label>
+              <input type="number" id="gfa" placeholder="1200" />
+            </div>
+            <div class="field">
+              <label>Units / Lots</label>
+              <input type="number" id="unitCount" placeholder="6" />
+            </div>
+            <div class="field">
+              <label>Floors / Levels</label>
+              <input type="number" id="floors" placeholder="4" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loan Structure -->
+      <div class="form-section">
+        <div class="fs-title">Loan Structure (Funding Request)</div>
+        <div class="fg full" style="gap:10px">
+          <div class="fg">
+            <div class="field">
+              <label>Facility Type</label>
+              <select id="facilityType">
+                <option>Construction Loan</option>
+                <option>Land Loan</option>
+                <option>Bridging Finance</option>
+                <option>BTL / Investment Loan</option>
+                <option>Mezzanine Finance</option>
+                <option>Preferred Equity</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Proposed Lender</label>
+              <input type="text" id="lenderName" placeholder="e.g. Wingate, MaxCap" />
+            </div>
+          </div>
+          <div class="fg">
+            <div class="field">
+              <label>Loan Amount ($)</label>
+              <input type="number" id="loanAmount" placeholder="8000000" />
+            </div>
+            <div class="field">
+              <label>Term (months)</label>
+              <input type="number" id="termMonths" placeholder="18" />
+            </div>
+            <div class="field">
+              <label>LVR (%)</label>
+              <input type="number" id="lvr" placeholder="65" step="0.1" />
+            </div>
+            <div class="field">
+              <label>LTC (%)</label>
+              <input type="number" id="ltc" placeholder="70" step="0.1" />
+            </div>
+            <div class="field">
+              <label>Interest Rate (% p.a.)</label>
+              <input type="number" id="interestRate" placeholder="9.5" step="0.1" />
+            </div>
+            <div class="field">
+              <label>Line / Estab Fee (%)</label>
+              <input type="number" id="lineFee" placeholder="1.5" step="0.1" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Repayment Type</label>
+            <select id="repaymentType">
+              <option>Interest capitalised to loan</option>
+              <option>Interest serviced monthly</option>
+              <option>Principal and interest</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resi Dev Financials -->
+      <div id="sec-resi" class="form-section cond show">
+        <div class="fs-title">Development Financials</div>
+        <div class="fg" style="gap:10px">
+          <div class="field">
+            <label>GRV — Total ($)</label>
+            <input type="number" id="grv" placeholder="12000000" />
+          </div>
+          <div class="field">
+            <label>Land Value ($)</label>
+            <input type="number" id="landValue" placeholder="3500000" />
+          </div>
+          <div class="field">
+            <label>Construction Cost ($)</label>
+            <input type="number" id="constructionCost" placeholder="5500000" />
+          </div>
+          <div class="field">
+            <label>Net Dev Profit ($)</label>
+            <input type="number" id="netProfit" placeholder="1200000" />
+          </div>
+          <div class="field">
+            <label>Dev Margin on Costs (%)</label>
+            <input type="number" id="devMargin" placeholder="18" step="0.1" />
+          </div>
+          <div class="field">
+            <label>Presales Value ($)</label>
+            <input type="number" id="presalesValue" placeholder="6000000" />
+          </div>
+          <div class="field">
+            <label>Presales (# contracts)</label>
+            <input type="number" id="presalesCount" placeholder="3" />
+          </div>
+          <div class="field">
+            <label>Presales (% of GRV)</label>
+            <input type="number" id="presalesPct" placeholder="50" step="0.1" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Commercial Financials -->
+      <div id="sec-comm" class="form-section cond">
+        <div class="fs-title">Income / Commercial Analysis</div>
+        <div class="fg" style="gap:10px">
+          <div class="field">
+            <label>Net Passing Income ($)</label>
+            <input type="number" id="netIncome" placeholder="750000" />
+          </div>
+          <div class="field">
+            <label>Passing Yield (%)</label>
+            <input type="number" id="passingYield" placeholder="5.5" step="0.1" />
+          </div>
+          <div class="field">
+            <label>Market Cap Rate (%)</label>
+            <input type="number" id="capRate" placeholder="5.25" step="0.1" />
+          </div>
+          <div class="field">
+            <label>WALE (years)</label>
+            <input type="number" id="wale" placeholder="4.2" step="0.1" />
+          </div>
+          <div class="field fg full">
+            <label>Vacancy (%)</label>
+            <input type="number" id="vacancy" placeholder="5" step="0.1" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-section">
+        <div class="fs-title">Broker Notes</div>
+        <div class="field">
+          <label>Additional context, highlights, conditions</label>
+          <textarea id="additionalNotes" placeholder="e.g. DA approved March 2025, builder secured (ABC Constructions, $4.8m fixed price contract), 3 of 6 units presold, completion expected Q4 2026..."></textarea>
+        </div>
+      </div>
+
+    </div><!-- /form-scroll -->
+
+    <div class="form-error" id="form-error"></div>
+
+    <div class="panel-footer">
+      <button class="btn-generate" id="btn-gen" onclick="generate()">
+        <div class="spinner"></div>
+        <span id="btn-text">Generate Credit Paper</span>
+      </button>
+      <div class="btn-hint">⌘ + Enter to generate</div>
+    </div>
+  </div><!-- /panel-left -->
+
+  <!-- ── RIGHT: OUTPUT ── -->
+  <div class="panel-right">
+
+    <div class="output-bar">
+      <span class="ob-label">Credit Paper Output</span>
+      <span class="ob-badge" id="ob-badge">Non-Bank Board</span>
+      <span class="ob-tokens" id="ob-tokens"></span>
+      <button class="btn-bar" id="btn-copy" onclick="copyHTML()" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+        Copy HTML
+      </button>
+      <button class="btn-bar" id="btn-print" onclick="window.print()" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print / Save PDF
+      </button>
+    </div>
+
+    <div class="output-area" id="output-area">
+
+      <!-- Empty state -->
+      <div class="empty" id="empty-state">
+        <div class="empty-icon">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="1.5">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        </div>
+        <h2>Ready to Generate</h2>
+        <p>Fill in the deal details and click Generate to create your credit paper.</p>
+      </div>
+
+      <!-- Loading -->
+      <div class="loading-state" id="loading-state">
+        <div class="loading-dots"><span></span><span></span><span></span></div>
+        <div class="loading-title">Drafting Credit Paper…</div>
+        <div class="loading-status" id="loading-msg">Analysing deal structure</div>
+      </div>
+
+      <!-- Paper output -->
+      <div id="paper"></div>
+
+    </div>
+  </div><!-- /panel-right -->
+
+</div><!-- /layout -->
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────────
+var currentTier = 'board';
+var currentAsset = 'Residential Development';
+
+document.getElementById('dealDate').valueAsDate = new Date();
+
+// ── Tier ──────────────────────────────────────────────────────────────────────
+function setTier(tier, el) {
+  currentTier = tier;
+  document.querySelectorAll('.tier-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  var labels = {discussion:'Bank Discussion', board:'Non-Bank Board', im:'Full IM'};
+  document.getElementById('ob-badge').textContent = labels[tier];
+}
+
+// ── Asset type ─────────────────────────────────────────────────────────────────
+function setAsset(type, el) {
+  currentAsset = type;
+  document.querySelectorAll('.asset-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  var isResi = ['Residential Development','Land Subdivision'].includes(type);
+  var isComm = ['Commercial','BTL','Industrial','Retail','Office'].includes(type);
+  document.getElementById('sec-resi').classList.toggle('show', isResi);
+  document.getElementById('sec-comm').classList.toggle('show', isComm);
+}
+
+// ── Collect form ────────────────────────────────────────────────────────────────
+function val(id) { return document.getElementById(id) ? document.getElementById(id).value.trim() : ''; }
+function num(id) { var v = parseFloat(val(id)); return isNaN(v) ? null : v; }
+
+function collectData() {
+  return {
+    tier: currentTier, assetType: currentAsset,
+    borrowerName: val('borrowerName'), abn: val('abn'), dealDate: val('dealDate'),
+    directors: val('directors'), guarantors: val('guarantors'),
+    borrowerExperience: val('borrowerExperience'),
+    netAssets: num('netAssets'), liquidity: num('liquidity'),
+    propertyAddress: val('propertyAddress'),
+    siteArea: num('siteArea'), gfa: num('gfa'), unitCount: num('unitCount'), floors: num('floors'),
+    facilityType: val('facilityType'), lenderName: val('lenderName'),
+    loanAmount: num('loanAmount'), termMonths: num('termMonths'),
+    lvr: num('lvr'), ltc: num('ltc'),
+    interestRate: num('interestRate'), lineFee: num('lineFee'),
+    repaymentType: val('repaymentType'),
+    grv: num('grv'), landValue: num('landValue'), constructionCost: num('constructionCost'),
+    netProfit: num('netProfit'), devMargin: num('devMargin'),
+    presalesValue: num('presalesValue'), presalesCount: num('presalesCount'), presalesPct: num('presalesPct'),
+    netIncome: num('netIncome'), passingYield: num('passingYield'), capRate: num('capRate'),
+    wale: num('wale'), vacancy: num('vacancy'),
+    additionalNotes: val('additionalNotes')
+  };
+}
+
+// ── Loading messages ───────────────────────────────────────────────────────────
+var msgs = [
+  'Analysing deal structure…','Reviewing borrower profile…',
+  'Calculating LVR & coverage…','Assessing security position…',
+  'Identifying key risks…','Drafting executive summary…',
+  'Structuring credit analysis…','Finalising recommendation…'
+];
+var msgInterval;
+function startMsgs() {
+  var i = 0;
+  document.getElementById('loading-msg').textContent = msgs[0];
+  msgInterval = setInterval(function() {
+    i = (i + 1) % msgs.length;
+    document.getElementById('loading-msg').textContent = msgs[i];
+  }, 2400);
+}
+function stopMsgs() { clearInterval(msgInterval); }
+
+// ── Generate ───────────────────────────────────────────────────────────────────
+async function generate() {
+  var btn = document.getElementById('btn-gen');
+  var errEl = document.getElementById('form-error');
+  errEl.classList.remove('show');
+
+  btn.disabled = true;
+  btn.classList.add('loading');
+  document.getElementById('btn-text').textContent = 'Generating…';
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('loading-state').classList.add('show');
+  document.getElementById('paper').classList.remove('show');
+  document.getElementById('btn-copy').style.display = 'none';
+  document.getElementById('btn-print').style.display = 'none';
+  document.getElementById('ob-tokens').textContent = '';
+  startMsgs();
+
+  try {
+    var data = collectData();
+    var resp = await fetch('/.netlify/functions/credit-paper', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+
+    var result = await resp.json();
+    if (!resp.ok || result.error) throw new Error(result.error || 'Server error ' + resp.status);
+
+    var paper = document.getElementById('paper');
+    paper.innerHTML = result.html;
+    paper.classList.add('show');
+    document.getElementById('loading-state').classList.remove('show');
+    document.getElementById('btn-copy').style.display = 'flex';
+    document.getElementById('btn-print').style.display = 'flex';
+    if (result.tokensUsed) document.getElementById('ob-tokens').textContent = '~' + result.tokensUsed.toLocaleString() + ' tokens';
+    document.getElementById('output-area').scrollTop = 0;
+
+  } catch(err) {
+    document.getElementById('loading-state').classList.remove('show');
+    document.getElementById('empty-state').style.display = 'flex';
+    errEl.textContent = err.message || 'Generation failed. Please try again.';
+    errEl.classList.add('show');
+  } finally {
+    stopMsgs();
+    btn.disabled = false;
+    btn.classList.remove('loading');
+    document.getElementById('btn-text').textContent = 'Generate Credit Paper';
+  }
+}
+
+// ── Copy HTML ──────────────────────────────────────────────────────────────────
+function copyHTML() {
+  navigator.clipboard.writeText(document.getElementById('paper').innerHTML).then(function() {
+    var btn = document.getElementById('btn-copy');
+    var orig = btn.innerHTML;
+    btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
+    setTimeout(function(){ btn.innerHTML = orig; }, 2000);
+  });
+}
+
+// ── Keyboard shortcut ──────────────────────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && !document.getElementById('btn-gen').disabled) generate();
+});
+</script>
+</body>
+</html>
