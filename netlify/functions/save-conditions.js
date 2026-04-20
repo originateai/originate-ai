@@ -11,7 +11,7 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: 'Not allowed' };
 
   const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_KEY = process.env.SUPABASE_KEY;
+  const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
 
   try {
     const body = JSON.parse(event.body);
