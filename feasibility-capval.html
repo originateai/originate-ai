@@ -22,10 +22,14 @@
 }
 body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50);min-height:100vh}
 
-/* NAV — matches portal.html */
+/* NAV */
 .nav{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:10}
 .nav-logo{font-family:'Source Serif 4',serif;font-size:21px;font-weight:700;color:var(--grey900);text-decoration:none}
 .nav-logo span{color:var(--teal)}
+.nav-links{display:flex;gap:4px;align-items:center}
+.nav-links a{font-size:13px;color:var(--grey600);text-decoration:none;font-weight:500;padding:7px 12px;border-radius:var(--radius);transition:all 0.15s}
+.nav-links a:hover{color:var(--teal);background:var(--teal-bg)}
+.nav-links a.active{color:var(--teal-dark);background:var(--teal-subtle);font-weight:600}
 .nav-right{display:flex;gap:12px;align-items:center}
 .nav-link{font-size:13px;color:var(--grey500);text-decoration:none;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);transition:all 0.15s;background:var(--white)}
 .nav-link:hover{border-color:var(--teal);color:var(--teal)}
@@ -48,7 +52,6 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 /* SECTION */
 .section{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:16px;overflow:hidden}
 .section-head{padding:16px 22px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);display:flex;align-items:center;justify-content:space-between}
-.section-badge{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:600;letter-spacing:0.3px;text-transform:uppercase}
 
 /* ROWS */
 .row{display:flex;justify-content:space-between;align-items:center;padding:10px 22px;border-bottom:1px solid rgba(0,0,0,0.03);font-size:13px}
@@ -110,9 +113,43 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 
 /* CREDIT ASSESSMENT */
 .credit-box{border-radius:var(--radius-lg);padding:16px;text-align:center;margin-top:16px;font-weight:600;font-size:15px}
+
+/* COST TABLE */
+.cost-table{width:100%;border-collapse:collapse;font-size:13px}
+.cost-table th{font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);padding:10px 12px;border-bottom:2px solid var(--border);text-align:right;background:var(--grey50)}
+.cost-table th:first-child{text-align:left}
+.cost-table td{padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.04);text-align:right;font-variant-numeric:tabular-nums}
+.cost-table td:first-child{text-align:left;color:var(--grey600);font-size:13px}
+.ct-group td{font-size:9.5px!important;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted)!important;padding:12px 12px 6px!important;background:var(--grey50);border-bottom:1px solid var(--border)!important}
+.ct-subtotal td{background:var(--grey50);font-weight:600;border-top:1px solid var(--border);border-bottom:1px solid var(--border)!important;color:var(--text)}
+.ct-total td{background:var(--grey900);color:white;font-weight:700;padding:12px;font-size:14px}
+.ct-input{background:var(--grey50);border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--teal-dark);text-align:right;width:120px;outline:none;font-variant-numeric:tabular-nums;font-weight:500;transition:border-color 0.2s}
+.ct-input:focus{border-color:var(--teal);background:var(--white)}
+.ct-bank{color:var(--red);font-weight:500}
 .credit-box.ok{background:rgba(5,150,105,0.08);border:1.5px solid var(--green);color:var(--green)}
 .credit-box.warn{background:rgba(217,119,6,0.08);border:1.5px solid var(--amber);color:var(--amber)}
 .credit-box.bad{background:rgba(220,38,38,0.06);border:1.5px solid var(--red);color:var(--red)}
+
+/* FLOW BANNER — shows value passing between tabs */
+.flow-banner{background:var(--teal-bg);border:1px solid var(--teal-subtle);border-radius:var(--radius);padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--teal-dark)}
+.flow-banner strong{font-weight:700;font-size:14px}
+
+/* UNIT SCHEDULE TABLE */
+.unit-table{width:100%;border-collapse:collapse;font-size:12px}
+.unit-table th{font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);padding:10px 12px;border-bottom:2px solid var(--border);background:var(--grey50);white-space:nowrap}
+.unit-table th:first-child{text-align:left}
+.unit-table td{padding:8px 12px;border-bottom:1px solid rgba(0,0,0,0.04);font-variant-numeric:tabular-nums}
+.unit-table td:first-child{text-align:left}
+.unit-table .ut-input{background:var(--grey50);border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);text-align:right;width:100%;outline:none;transition:border-color 0.2s;box-sizing:border-box}
+.unit-table .ut-input:focus{border-color:var(--teal);background:var(--white)}
+.unit-table .ut-input.dollar{color:var(--teal-dark);font-weight:500}
+.unit-table .ut-input.text{text-align:left}
+.unit-table .ut-calc{font-weight:600;color:var(--teal-dark);text-align:right}
+.unit-table tfoot td{background:var(--grey900);color:white;font-weight:600;padding:10px 12px}
+.unit-table .ut-remove{background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px;opacity:0.5;transition:opacity 0.15s}
+.unit-table .ut-remove:hover{opacity:1;background:rgba(220,38,38,0.06)}
+.add-row-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;margin:12px 22px;font-size:12px;font-weight:500;color:var(--teal);background:var(--teal-bg);border:1px dashed var(--teal-subtle);border-radius:var(--radius);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.add-row-btn:hover{background:var(--teal-subtle);border-style:solid}
 
 /* HIDE/SHOW */
 .hidden{display:none!important}
@@ -145,27 +182,29 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
   </div>
 </nav>
 
+<!-- TABS: logical left-to-right flow 1→2→3→4 -->
 <div class="tab-bar">
-  <button class="tab active" data-tab="capval" onclick="switchTab('capval')">◈ Cap Valuation</button>
-  <button class="tab" data-tab="feasibility" onclick="switchTab('feasibility')">◆ Dev Feasibility</button>
-  <button class="tab" data-tab="cashflow" onclick="switchTab('cashflow')">◇ Cash Flow</button>
-  <button class="tab" data-tab="metrics" onclick="switchTab('metrics')">◉ Returns</button>
+  <button class="tab active" data-tab="revenue" onclick="switchTab('revenue')">① Revenue</button>
+  <button class="tab" data-tab="costs" onclick="switchTab('costs')">② Costs & Funding</button>
+  <button class="tab" data-tab="results" onclick="switchTab('results')">③ Results</button>
+  <button class="tab" data-tab="cashflow" onclick="switchTab('cashflow')">④ Cash Flow</button>
 </div>
 
 <div class="container">
 
 <!-- ═══════════════════════════════════════ -->
-<!-- TAB: CAP VALUATION                     -->
+<!-- TAB 1: REVENUE                         -->
 <!-- ═══════════════════════════════════════ -->
-<div id="tab-capval">
+<div id="tab-revenue">
 
   <div class="mode-toggle">
     <button class="mode-btn active" onclick="setMode('commercial')">Commercial — Investment</button>
     <button class="mode-btn" onclick="setMode('resi')">Residential — Development</button>
+    <button class="mode-btn" onclick="setMode('strata')">Strata — Mixed Use</button>
   </div>
 
-  <!-- INCOME -->
-  <div class="section" id="sec-income">
+  <!-- COMMERCIAL: Income -->
+  <div id="sec-income" class="section">
     <div class="section-head">Income</div>
     <div class="row">
       <span class="row-label">Tenant</span>
@@ -189,8 +228,8 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
     </div>
   </div>
 
-  <!-- OUTGOINGS -->
-  <div class="section" id="sec-outgoings">
+  <!-- COMMERCIAL: Outgoings -->
+  <div id="sec-outgoings" class="section">
     <div class="section-head">Outgoings</div>
     <div class="row indent">
       <span class="row-label">Council Rates</span>
@@ -222,8 +261,8 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
     </div>
   </div>
 
-  <!-- CAPITALISATION -->
-  <div class="section" id="sec-caprate">
+  <!-- COMMERCIAL: Capitalisation -->
+  <div id="sec-caprate" class="section">
     <div class="section-head">Capitalisation</div>
     <div class="row subtotal">
       <span class="row-label">Net Income</span>
@@ -239,8 +278,8 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
     </div>
   </div>
 
-  <!-- BELOW THE LINE -->
-  <div class="section" id="sec-btl">
+  <!-- COMMERCIAL: Below the Line -->
+  <div id="sec-btl" class="section">
     <div class="section-head" style="color:var(--red)">Below the Line Adjustments</div>
     <div class="row indent">
       <span class="row-label">Outstanding Lease Incentives</span>
@@ -268,8 +307,8 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
     </div>
   </div>
 
-  <!-- ADOPTED VALUE BANNER -->
-  <div class="adopted-banner" id="sec-adopted">
+  <!-- COMMERCIAL: Adopted Value Banner -->
+  <div id="sec-adopted" class="adopted-banner">
     <div>
       <div class="ab-label">Adopted Value</div>
       <div class="ab-value" id="o-adopted">—</div>
@@ -280,87 +319,281 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
     </div>
   </div>
 
-  <!-- RESI MODE (hidden by default) -->
+  <!-- RESIDENTIAL: GRV -->
   <div class="section hidden" id="sec-resi">
     <div class="section-head">Revenue (Residential)</div>
     <div class="row">
-      <span class="row-label">Number of Units</span>
+      <span class="row-label">No. of Residential Units</span>
       <input class="edit-input" id="i-units" type="number" value="2" onchange="calc()">
     </div>
     <div class="row">
-      <span class="row-label">Avg Price per Unit</span>
+      <span class="row-label">Avg Unit Sale Price</span>
       <input class="edit-input dollar" id="i-avgprice" type="text" value="$2,750,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
     </div>
+    <div class="row subtotal">
+      <span class="row-label">Residential GRV</span>
+      <span class="row-value teal" id="o-resi-grv">—</span>
+    </div>
+  </div>
+
+  <div class="section hidden" id="sec-resi-comm">
+    <div class="section-head">Revenue (Commercial Component)</div>
     <div class="row">
-      <span class="row-label">Presales</span>
-      <input class="edit-input dollar" id="i-presales" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
+      <span class="row-label">No. of Commercial Units</span>
+      <input class="edit-input" id="i-cunits" type="number" value="0" onchange="calc()">
+    </div>
+    <div class="row">
+      <span class="row-label">Avg Commercial Price</span>
+      <input class="edit-input dollar" id="i-cavgprice" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
     </div>
     <div class="row subtotal">
-      <span class="row-label">GRV (Gross Realisable Value)</span>
-      <span class="row-value teal" id="o-grv" style="font-size:18px;font-weight:700">—</span>
+      <span class="row-label">Commercial GRV</span>
+      <span class="row-value teal" id="o-comm-grv">—</span>
+    </div>
+  </div>
+
+  <div class="section hidden" id="sec-resi-gst">
+    <div class="section-head">GST & Selling Costs</div>
+    <div class="row">
+      <span class="row-label">GST Method</span>
+      <select class="edit-input" id="i-gst" style="width:180px;text-align:left" onchange="calc()">
+        <option value="margin" selected>Margin Scheme</option>
+        <option value="standard">Standard (÷11)</option>
+        <option value="none">No GST</option>
+      </select>
+    </div>
+    <div class="row indent">
+      <span class="row-label">Less: GST</span>
+      <span class="row-value red" id="o-gst">—</span>
+    </div>
+    <div class="row">
+      <span class="row-label">Sales Commission</span>
+      <input class="edit-input" id="i-salescomm" type="number" value="2.0" step="0.1" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
+    </div>
+    <div class="row indent">
+      <span class="row-label">Less: Commission</span>
+      <span class="row-value red" id="o-salescomm">—</span>
+    </div>
+    <div class="row">
+      <span class="row-label">Marketing Budget</span>
+      <input class="edit-input dollar" id="i-marketing" type="text" value="$50,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
+    </div>
+    <div class="row subtotal">
+      <span class="row-label">Total Selling Costs</span>
+      <span class="row-value red" id="o-sellingcosts">—</span>
+    </div>
+  </div>
+
+  <div class="section hidden" id="sec-resi-presales">
+    <div class="section-head">Presales</div>
+    <div class="row">
+      <span class="row-label">Unconditional Presales</span>
+      <input class="edit-input dollar" id="i-presales" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
+    </div>
+    <div class="row indent">
+      <span class="row-label">Presales Coverage (of debt)</span>
+      <span class="row-value" id="o-presales-cov">—</span>
+    </div>
+  </div>
+
+  <div class="hidden" id="sec-resi-adopted">
+    <div class="adopted-banner">
+      <div>
+        <div class="ab-label">GRV (Gross Realisable Value)</div>
+        <div class="ab-value" id="o-grv">—</div>
+      </div>
+      <div class="ab-yield">
+        <div class="ab-label">Net GRV (after GST & costs)</div>
+        <div class="ab-yield-val" id="o-net-grv">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STRATA: Mixed Use -->
+  <div class="section hidden" id="sec-strata">
+    <div class="section-head">Revenue (Strata — Mixed Use)</div>
+    <div class="row">
+      <span class="row-label">Commercial Component</span>
+      <input class="edit-input dollar" id="i-strata-comm" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
+    </div>
+    <div class="row">
+      <span class="row-label">Residential Component</span>
+      <input class="edit-input dollar" id="i-strata-resi" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
+    </div>
+    <div class="row subtotal">
+      <span class="row-label">Combined GRV</span>
+      <span class="row-value teal" id="o-strata-grv" style="font-size:18px;font-weight:700">—</span>
     </div>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════ -->
-<!-- TAB: DEV FEASIBILITY                   -->
+<!-- TAB 2: COSTS & FUNDING                 -->
 <!-- ═══════════════════════════════════════ -->
-<div id="tab-feasibility" class="hidden">
+<div id="tab-costs" class="hidden">
+
+  <div class="flow-banner" id="flow-grv">
+    ← Revenue from Tab 1: <strong id="flow-grv-val">—</strong> <span style="margin-left:8px;opacity:0.6" id="flow-grv-mode">(commercial cap val)</span>
+  </div>
 
   <div class="section">
-    <div class="section-head">Land & Acquisition</div>
-    <div class="row">
-      <span class="row-label">Land Value</span>
-      <input class="edit-input dollar" id="i-landval" type="text" value="$1,100,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
+    <div class="section-head">Project Costs — Developer Equity Split
+      <span style="font-size:10px;font-weight:400;letter-spacing:0;text-transform:none;color:var(--muted)">Enter project cost, then what the developer funds — bank funds the rest</span>
     </div>
-    <div class="row indent">
-      <span class="row-label">Stamp Duty</span>
-      <input class="edit-input dollar" id="i-stamp" type="text" value="$45,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
-    </div>
-    <div class="row indent">
-      <span class="row-label">Legal Costs</span>
-      <input class="edit-input dollar" id="i-legal" type="text" value="$35,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
+    <div class="cf-scroll">
+      <table class="cost-table">
+        <thead>
+          <tr>
+            <th style="text-align:left">Cost Item</th>
+            <th>Project ($)</th>
+            <th>Dev. Equity ($)</th>
+            <th>Bank ($)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- LAND & ACQUISITION -->
+          <tr class="ct-group"><td colspan="4">Land & Acquisition</td></tr>
+          <tr>
+            <td>Land Purchase</td>
+            <td><input class="ct-input dollar" id="c-land" type="text" value="$1,100,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-land" type="text" value="$1,100,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-land">—</td>
+          </tr>
+          <tr>
+            <td>Stamp Duty</td>
+            <td><input class="ct-input dollar" id="c-stamp" type="text" value="$45,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-stamp" type="text" value="$45,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-stamp">—</td>
+          </tr>
+          <tr>
+            <td>Legal / Conveyancing</td>
+            <td><input class="ct-input dollar" id="c-legal" type="text" value="$35,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-legal" type="text" value="$35,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-legal">—</td>
+          </tr>
+          <tr>
+            <td>Valuation</td>
+            <td><input class="ct-input dollar" id="c-val" type="text" value="$10,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-val" type="text" value="$10,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-val">—</td>
+          </tr>
+          <tr>
+            <td>Statutory / Council Fees</td>
+            <td><input class="ct-input dollar" id="c-stat" type="text" value="$25,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-stat" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-stat">—</td>
+          </tr>
+          <tr class="ct-subtotal">
+            <td>Subtotal — Land & Acquisition</td>
+            <td id="st-land-proj">—</td>
+            <td id="st-land-dev">—</td>
+            <td id="st-land-bank">—</td>
+          </tr>
+
+          <!-- CONSTRUCTION -->
+          <tr class="ct-group"><td colspan="4">Construction & Development</td></tr>
+          <tr>
+            <td>Construction Contract</td>
+            <td><input class="ct-input dollar" id="c-const" type="text" value="$4,345,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-const" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-const">—</td>
+          </tr>
+          <tr>
+            <td>Contingency <span style="color:var(--muted);font-size:11px">(5%)</span></td>
+            <td><input class="ct-input dollar" id="c-cont" type="text" value="$217,250" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-cont" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-cont">—</td>
+          </tr>
+          <tr>
+            <td>Demolition</td>
+            <td><input class="ct-input dollar" id="c-demo" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-demo" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-demo">—</td>
+          </tr>
+          <tr>
+            <td>Excavation</td>
+            <td><input class="ct-input dollar" id="c-excav" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-excav" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-excav">—</td>
+          </tr>
+          <tr>
+            <td>Dev. Management Fee</td>
+            <td><input class="ct-input dollar" id="c-devmgmt" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-devmgmt" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-devmgmt">—</td>
+          </tr>
+          <tr>
+            <td>Marketing</td>
+            <td><input class="ct-input dollar" id="c-mktg" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-mktg" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-mktg">—</td>
+          </tr>
+          <tr>
+            <td>Holding Costs</td>
+            <td><input class="ct-input dollar" id="c-hold" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-hold" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-hold">—</td>
+          </tr>
+          <tr class="ct-subtotal">
+            <td>Subtotal — Construction</td>
+            <td id="st-const-proj">—</td>
+            <td id="st-const-dev">—</td>
+            <td id="st-const-bank">—</td>
+          </tr>
+
+          <!-- PROFESSIONAL FEES -->
+          <tr class="ct-group"><td colspan="4">Professional Fees</td></tr>
+          <tr>
+            <td>Architect</td>
+            <td><input class="ct-input dollar" id="c-arch" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-arch" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-arch">—</td>
+          </tr>
+          <tr>
+            <td>Structural / Hydraulic</td>
+            <td><input class="ct-input dollar" id="c-struct" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-struct" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-struct">—</td>
+          </tr>
+          <tr>
+            <td>Quantity Surveyor</td>
+            <td><input class="ct-input dollar" id="c-qs" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-qs" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-qs">—</td>
+          </tr>
+          <tr>
+            <td>Project Manager</td>
+            <td><input class="ct-input dollar" id="c-pm" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-pm" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-pm">—</td>
+          </tr>
+          <tr>
+            <td>Other Consultants</td>
+            <td><input class="ct-input dollar" id="c-consult" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td><input class="ct-input dollar" id="e-consult" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>
+            <td class="ct-bank" id="b-consult">—</td>
+          </tr>
+          <tr class="ct-subtotal">
+            <td>Subtotal — Professional Fees</td>
+            <td id="st-prof-proj">—</td>
+            <td id="st-prof-dev">—</td>
+            <td id="st-prof-bank">—</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr class="ct-total">
+            <td>Total Project Cost</td>
+            <td id="ct-total-proj">—</td>
+            <td id="ct-total-dev">—</td>
+            <td id="ct-total-bank">—</td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   </div>
 
   <div class="section">
-    <div class="section-head">Construction & Hard Costs</div>
-    <div class="row">
-      <span class="row-label">Construction Cost</span>
-      <input class="edit-input dollar" id="i-const" type="text" value="$4,345,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
-    </div>
-    <div class="row indent">
-      <span class="row-label">Professional Fees</span>
-      <input class="edit-input" id="i-proffees" type="number" value="6" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
-    </div>
-    <div class="row indent">
-      <span class="row-label">Prof Fees Amount</span>
-      <span class="row-value" id="o-proffees">—</span>
-    </div>
-    <div class="row indent">
-      <span class="row-label">Council Contributions</span>
-      <input class="edit-input dollar" id="i-council" type="text" value="$25,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
-    </div>
-    <div class="row indent">
-      <span class="row-label">Contingency</span>
-      <input class="edit-input" id="i-contingency" type="number" value="5" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
-    </div>
-    <div class="row indent">
-      <span class="row-label">Contingency Amount</span>
-      <span class="row-value" id="o-contingency">—</span>
-    </div>
-    <div class="row subtotal">
-      <span class="row-label">Total Hard Costs</span>
-      <span class="row-value" id="o-hardcosts">—</span>
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-head">Finance</div>
-    <div class="row">
-      <span class="row-label">LVR</span>
-      <input class="edit-input" id="i-lvr" type="number" value="65" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
-    </div>
+    <div class="section-head">Finance Terms</div>
     <div class="row">
       <span class="row-label">Interest Rate (p.a.)</span>
       <input class="edit-input" id="i-rate" type="number" value="8.5" step="0.25" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
@@ -373,8 +606,6 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
       <span class="row-label">Development Period</span>
       <input class="edit-input" id="i-devmonths" type="number" value="12" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">mths</span>
     </div>
-    <div class="row indent"><span class="row-label">Debt Facility</span><span class="row-value" id="o-facility">—</span></div>
-    <div class="row indent"><span class="row-label">Equity Required</span><span class="row-value" id="o-equity">—</span></div>
     <div class="row indent"><span class="row-label">Line Fee Amount</span><span class="row-value" id="o-linefeeamt">—</span></div>
     <div class="row indent"><span class="row-label">Interest Cost (est.)</span><span class="row-value" id="o-interest">—</span></div>
     <div class="row subtotal">
@@ -386,18 +617,49 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
   <div class="section">
     <div class="section-head">Summary</div>
     <div class="row subtotal"><span class="row-label">Total Development Cost</span><span class="row-value" id="o-tdc">—</span></div>
+    <div class="row subtotal"><span class="row-label">Debt Facility (Bank)</span><span class="row-value red" id="o-facility">—</span></div>
+    <div class="row subtotal"><span class="row-label">Equity Required (Developer)</span><span class="row-value teal" id="o-equity">—</span></div>
+    <div class="row subtotal"><span class="row-label">LVR (on total dev cost)</span><span class="row-value" id="o-lvr">—</span></div>
     <div class="row subtotal"><span class="row-label">Total Finance Costs</span><span class="row-value" id="o-tfc">—</span></div>
     <div class="row total"><span class="row-label">Total Project Cost</span><span class="row-value" id="o-tpc">—</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════ -->
+<!-- TAB 3: RESULTS                         -->
+<!-- ═══════════════════════════════════════ -->
+<div id="tab-results" class="hidden">
+
+  <div class="flow-banner" id="flow-results">
+    Revenue: <strong id="flow-res-grv">—</strong> &nbsp;|&nbsp; Total Project Cost: <strong id="flow-res-tpc">—</strong>
+  </div>
+
+  <div class="summary-grid" id="ret-cards"></div>
+
+  <div class="section">
+    <div class="section-head">Dev Margin & Feasibility</div>
     <div class="row subtotal"><span class="row-label">GRV (Adopted Value)</span><span class="row-value teal" id="o-grv2" style="font-size:16px;font-weight:700">—</span></div>
     <div class="row subtotal"><span class="row-label">Development Margin</span><span class="row-value" id="o-margin" style="font-size:16px;font-weight:700">—</span></div>
     <div class="row subtotal"><span class="row-label">Margin on Cost</span><span class="row-value" id="o-marginpct" style="font-size:16px;font-weight:700">—</span></div>
   </div>
 
   <div id="credit-box" class="credit-box ok">—</div>
+
+  <div class="section" style="margin-top:16px" id="sec-sensitivity">
+    <div class="section-head">Cap Rate Sensitivity</div>
+    <div style="padding:0">
+      <table class="sens-table" id="sens-table">
+        <thead>
+          <tr><th style="text-align:left">Cap Rate</th><th>Cap Value</th><th>Dev Margin</th><th>Margin %</th></tr>
+        </thead>
+        <tbody id="sens-tbody"></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════════════════ -->
-<!-- TAB: CASH FLOW                         -->
+<!-- TAB 4: CASH FLOW                       -->
 <!-- ═══════════════════════════════════════ -->
 <div id="tab-cashflow" class="hidden">
 
@@ -425,235 +687,350 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════ -->
-<!-- TAB: RETURNS                           -->
-<!-- ═══════════════════════════════════════ -->
-<div id="tab-metrics" class="hidden">
-
-  <div class="summary-grid" id="ret-cards"></div>
-
-  <div class="section">
-    <div class="section-head">Cap Rate Sensitivity</div>
-    <div style="padding:0">
-      <table class="sens-table" id="sens-table">
-        <thead>
-          <tr><th style="text-align:left">Cap Rate</th><th>Cap Value</th><th>Dev Margin</th><th>Margin %</th></tr>
-        </thead>
-        <tbody id="sens-tbody"></tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
 </div><!-- /container -->
 
 <script>
 "use strict";
 
-var MODE = "commercial"; // "commercial" or "resi"
+var MODE = "commercial";
 
+// ── FORMATTERS ──
 function fd(v){
-  if(v===null||v===undefined||isNaN(v)) return "—";
+  if(v === null || v === undefined || isNaN(v)) return "—";
   return new Intl.NumberFormat("en-AU",{style:"currency",currency:"AUD",minimumFractionDigits:0,maximumFractionDigits:0}).format(v);
 }
-function fp(v,d){if(v===null||v===undefined||isNaN(v))return"—";return(v*100).toFixed(d||2)+"%";}
-function n(id){
-  var el=document.getElementById(id);
-  if(!el) return 0;
-  // Strip $ and commas for dollar inputs
-  var raw = el.value.replace(/[$,\s]/g,'');
-  return parseFloat(raw)||0;
+function fp(v, d){
+  if(v === null || v === undefined || isNaN(v)) return "—";
+  return (v * 100).toFixed(d || 2) + "%";
 }
-function set(id,val){var el=document.getElementById(id);if(el)el.textContent=val;}
 
-// Dollar input formatting
+// ── INPUT HELPERS ──
+function n(id){
+  var el = document.getElementById(id);
+  if(!el) return 0;
+  var raw = String(el.value).replace(/[$,\s]/g, '');
+  var val = parseFloat(raw);
+  return isNaN(val) ? 0 : val;
+}
+function set(id, val){
+  var el = document.getElementById(id);
+  if(el) el.textContent = val;
+}
+
 function dollarFocus(el){
-  // On focus: show raw number for easy editing
-  var raw = el.value.replace(/[$,\s]/g,'');
+  var raw = String(el.value).replace(/[$,\s]/g, '');
   el.value = raw === '0' ? '' : raw;
   el.select();
 }
 function dollarBlur(el){
-  // On blur: format with $ and commas
-  var raw = parseFloat(el.value.replace(/[$,\s]/g,''))||0;
+  var raw = parseFloat(String(el.value).replace(/[$,\s]/g, '')) || 0;
   el.value = raw === 0 ? '$0' : '$' + raw.toLocaleString('en-AU');
   calc();
 }
 
 // ── TAB SWITCHING ──
+var TAB_IDS = ['revenue','costs','results','cashflow'];
 function switchTab(tab){
-  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active')});
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
   document.querySelector('[data-tab="'+tab+'"]').classList.add('active');
-  ['capval','feasibility','cashflow','metrics'].forEach(function(t){
-    document.getElementById('tab-'+t).classList.toggle('hidden', t!==tab);
+  TAB_IDS.forEach(function(t){
+    document.getElementById('tab-'+t).classList.toggle('hidden', t !== tab);
   });
+  calc();
 }
 
 // ── MODE SWITCHING ──
 function setMode(mode){
   MODE = mode;
-  document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.remove('active')});
-  // find the button by text content and activate it
+  document.querySelectorAll('.mode-btn').forEach(function(b){ b.classList.remove('active'); });
   document.querySelectorAll('.mode-btn').forEach(function(b){
-    if((mode==='commercial' && b.textContent.indexOf('Commercial')>-1) ||
-       (mode==='resi' && b.textContent.indexOf('Residential')>-1)){
+    if((mode === 'commercial' && b.textContent.indexOf('Commercial') > -1) ||
+       (mode === 'resi' && b.textContent.indexOf('Residential') > -1) ||
+       (mode === 'strata' && b.textContent.indexOf('Strata') > -1)){
       b.classList.add('active');
     }
   });
-  var commSections = ['sec-income','sec-outgoings','sec-caprate','sec-btl','sec-adopted'];
-  commSections.forEach(function(id){
-    var el=document.getElementById(id);
-    if(el) el.classList.toggle('hidden', mode!=='commercial');
+
+  // Show/hide commercial sections
+  ['sec-income','sec-outgoings','sec-caprate','sec-btl','sec-adopted'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.classList.toggle('hidden', mode !== 'commercial');
   });
-  var resiEl=document.getElementById('sec-resi');
-  if(resiEl) resiEl.classList.toggle('hidden', mode!=='resi');
+
+  // Show/hide resi sections
+  ['sec-resi','sec-resi-comm','sec-resi-gst','sec-resi-presales','sec-resi-adopted'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.classList.toggle('hidden', mode !== 'resi');
+  });
+
+  // Show/hide strata section
+  var strataEl = document.getElementById('sec-strata');
+  if(strataEl) strataEl.classList.toggle('hidden', mode !== 'strata');
+
+  // Sensitivity only for commercial
+  var sensEl = document.getElementById('sec-sensitivity');
+  if(sensEl) sensEl.classList.toggle('hidden', mode !== 'commercial');
+
   calc();
 }
 
 // ══════════════════════════════════════════
 // MAIN CALCULATION ENGINE
+// Runs sequentially: Revenue → Costs → Results → Cash Flow
 // ══════════════════════════════════════════
 function calc(){
   try { calcInner(); } catch(e) { console.warn('Calc error:', e); }
 }
+
 function calcInner(){
-  // ── CAP VAL (Commercial) ──
-  var grossIncome = n('i-income');
-  var vacancyPct = n('i-vacancy') / 100;
-  var vacancyAmt = grossIncome * vacancyPct;
-  var egi = grossIncome - vacancyAmt;
 
-  var rates = n('i-rates');
-  var insurance = n('i-insurance');
-  var landtax = n('i-landtax');
-  var mgmtPct = n('i-mgmt') / 100;
-  var mgmtAmt = egi * mgmtPct;
-  var otherOut = n('i-other');
-  var totalOutgoings = rates + insurance + landtax + mgmtAmt + otherOut;
-  var netIncome = egi - totalOutgoings;
+  // ─────────────────────────────────
+  // STEP 1: REVENUE (Tab 1)
+  // ─────────────────────────────────
+  var grv = 0;
+  var netIncome = 0;
+  var capRate = 0;
+  var totalBTL = 0;
+  var passingYield = 0;
+  var grossIncome = 0;
 
-  var capRate = n('i-caprate') / 100;
-  var capValue = capRate > 0 ? netIncome / capRate : 0;
+  if(MODE === 'commercial'){
+    grossIncome = n('i-income');
+    var vacancyPct = n('i-vacancy') / 100;
+    var vacancyAmt = grossIncome * vacancyPct;
+    var egi = grossIncome - vacancyAmt;
 
-  var btlIncentives = n('i-btl-incentives');
-  var btlMakegood = n('i-btl-makegood');
-  var btlCapex = n('i-btl-capex');
-  var btlShortfall = n('i-btl-shortfall');
-  var btlRemediation = n('i-btl-remediation');
-  var totalBTL = btlIncentives + btlMakegood + btlCapex + btlShortfall + btlRemediation;
-  var adoptedValue = capValue - totalBTL;
-  var passingYield = adoptedValue > 0 ? netIncome / adoptedValue : 0;
+    var rates = n('i-rates');
+    var insurance = n('i-insurance');
+    var landtax = n('i-landtax');
+    var mgmtPct = n('i-mgmt') / 100;
+    var mgmtAmt = egi * mgmtPct;
+    var otherOut = n('i-other');
+    var totalOutgoings = rates + insurance + landtax + mgmtAmt + otherOut;
+    netIncome = egi - totalOutgoings;
 
-  // Update cap val outputs
-  set('o-vacancy', "-" + fd(vacancyAmt));
-  set('o-egi', fd(egi));
-  set('o-mgmtamt', fd(mgmtAmt));
-  set('o-outgoings', "-" + fd(totalOutgoings));
-  set('o-netincome', fd(netIncome));
-  set('o-capvalue', fd(capValue));
-  set('o-btl', "-" + fd(totalBTL));
-  set('o-adopted', fd(adoptedValue));
-  set('o-yield', fp(passingYield));
+    capRate = n('i-caprate') / 100;
+    var capValue = capRate > 0 ? netIncome / capRate : 0;
 
-  // ── RESI GRV ──
-  var units = n('i-units');
-  var avgPrice = n('i-avgprice');
-  var resiGRV = units * avgPrice;
-  set('o-grv', fd(resiGRV));
+    var btlIncentives = n('i-btl-incentives');
+    var btlMakegood = n('i-btl-makegood');
+    var btlCapex = n('i-btl-capex');
+    var btlShortfall = n('i-btl-shortfall');
+    var btlRemediation = n('i-btl-remediation');
+    totalBTL = btlIncentives + btlMakegood + btlCapex + btlShortfall + btlRemediation;
+    var adoptedValue = capValue - totalBTL;
+    passingYield = adoptedValue > 0 ? grossIncome / adoptedValue : 0;
 
-  // ── GRV for feasibility ──
-  var grv = MODE === 'commercial' ? adoptedValue : resiGRV;
+    grv = adoptedValue;
 
-  // ── DEV FEASIBILITY ──
-  var landValue = n('i-landval');
-  var stamp = n('i-stamp');
-  var legal = n('i-legal');
-  var constCost = n('i-const');
-  var profFeesPct = n('i-proffees') / 100;
-  var profFeesAmt = constCost * profFeesPct;
-  var council = n('i-council');
-  var contPct = n('i-contingency') / 100;
-  var contAmt = constCost * contPct;
-  var totalHardCosts = constCost + profFeesAmt + contAmt + council;
+    // Update commercial outputs
+    set('o-vacancy', "-" + fd(vacancyAmt));
+    set('o-egi', fd(egi));
+    set('o-mgmtamt', fd(mgmtAmt));
+    set('o-outgoings', "-" + fd(totalOutgoings));
+    set('o-netincome', fd(netIncome));
+    set('o-capvalue', fd(capValue));
+    set('o-btl', "-" + fd(totalBTL));
+    set('o-adopted', fd(adoptedValue));
+    set('o-yield', fp(passingYield));
 
-  var totalDevCost = landValue + stamp + legal + totalHardCosts;
+  } else if(MODE === 'resi'){
+    var units = n('i-units');
+    var avgPrice = n('i-avgprice');
+    var resiGRV = units * avgPrice;
 
-  var lvr = n('i-lvr') / 100;
+    var cUnits = n('i-cunits');
+    var cAvgPrice = n('i-cavgprice');
+    var commGRV = cUnits * cAvgPrice;
+
+    var grossGRV = resiGRV + commGRV;
+
+    // GST
+    var gstMethod = document.getElementById('i-gst') ? document.getElementById('i-gst').value : 'margin';
+    var gst = 0;
+    if(gstMethod === 'margin'){
+      // Margin scheme: (resiGRV - (resiGRV/grossGRV * landValue)) / 11
+      var landForGST = n('i-landval');
+      if(grossGRV > 0){
+        gst = (resiGRV - ((resiGRV / grossGRV) * landForGST)) / 11;
+      }
+    } else if(gstMethod === 'standard'){
+      gst = resiGRV / 11;
+    }
+    if(gst < 0) gst = 0;
+
+    // Sales commission & marketing
+    var salesCommPct = n('i-salescomm') / 100;
+    var salesCommAmt = grossGRV * salesCommPct;
+    var marketing = n('i-marketing');
+    var totalSellingCosts = gst + salesCommAmt + marketing;
+
+    // Net GRV (what flows to feasibility)
+    var netGRV = grossGRV - totalSellingCosts;
+    grv = netGRV;
+
+    // Presales coverage
+    var presalesGross = n('i-presales');
+
+    // Update resi outputs
+    set('o-resi-grv', fd(resiGRV));
+    set('o-comm-grv', fd(commGRV));
+    set('o-gst', '-' + fd(gst));
+    set('o-salescomm', '-' + fd(salesCommAmt));
+    set('o-sellingcosts', '-' + fd(totalSellingCosts));
+    set('o-grv', fd(grossGRV));
+    set('o-net-grv', fd(netGRV));
+
+  } else if(MODE === 'strata'){
+    var strataComm = n('i-strata-comm');
+    var strataResi = n('i-strata-resi');
+    grv = strataComm + strataResi;
+    set('o-strata-grv', fd(grv));
+  }
+
+  // ─────────────────────────────────
+  // STEP 2: COSTS & FUNDING (Tab 2)
+  // Line-by-line: Project cost, Dev equity, Bank = Project - Dev
+  // ─────────────────────────────────
+  var landKeys = ['land','stamp','legal','val','stat'];
+  var constKeys = ['const','cont','demo','excav','devmgmt','mktg','hold'];
+  var profKeys = ['arch','struct','qs','pm','consult'];
+  var allKeys = landKeys.concat(constKeys).concat(profKeys);
+
+  var costs = {};
+  var totalProj = 0, totalDev = 0, totalBank = 0;
+  var landProj = 0, landDev = 0, landBank = 0;
+  var constProj = 0, constDev = 0, constBank = 0;
+  var profProj = 0, profDev = 0, profBank = 0;
+
+  allKeys.forEach(function(k){
+    var proj = n('c-' + k);
+    var dev = n('e-' + k);
+    dev = Math.min(dev, proj); // dev can't exceed project
+    var bank = proj - dev;
+    costs[k] = {proj: proj, dev: dev, bank: bank};
+    set('b-' + k, fd(bank));
+    totalProj += proj;
+    totalDev += dev;
+    totalBank += bank;
+  });
+
+  // Subtotals
+  landKeys.forEach(function(k){ landProj += costs[k].proj; landDev += costs[k].dev; landBank += costs[k].bank; });
+  constKeys.forEach(function(k){ constProj += costs[k].proj; constDev += costs[k].dev; constBank += costs[k].bank; });
+  profKeys.forEach(function(k){ profProj += costs[k].proj; profDev += costs[k].dev; profBank += costs[k].bank; });
+
+  set('st-land-proj', fd(landProj)); set('st-land-dev', fd(landDev)); set('st-land-bank', fd(landBank));
+  set('st-const-proj', fd(constProj)); set('st-const-dev', fd(constDev)); set('st-const-bank', fd(constBank));
+  set('st-prof-proj', fd(profProj)); set('st-prof-dev', fd(profDev)); set('st-prof-bank', fd(profBank));
+  set('ct-total-proj', fd(totalProj)); set('ct-total-dev', fd(totalDev)); set('ct-total-bank', fd(totalBank));
+
+  var totalDevCost = totalProj;
+  var facility = totalBank; // bank funds = total project - dev equity
+  var equity = totalDev;
+
   var rate = n('i-rate') / 100;
   var lineFeePct = n('i-linefee') / 100;
   var devMonths = n('i-devmonths');
 
-  var facility = totalDevCost * lvr;
-  var equity = totalDevCost - facility;
   var lineFeeAmt = facility * lineFeePct;
   var avgDrawn = facility * 0.55;
   var interestCost = avgDrawn * rate * (devMonths / 12);
   var totalFinanceCosts = interestCost + lineFeeAmt;
   var totalProjectCost = totalDevCost + totalFinanceCosts;
-  var devMargin = grv - totalProjectCost;
-  var marginPct = totalProjectCost > 0 ? devMargin / totalProjectCost : 0;
+  var lvr = totalDevCost > 0 ? facility / totalDevCost : 0;
 
-  // Update feasibility outputs
-  set('o-proffees', fd(profFeesAmt));
-  set('o-contingency', fd(contAmt));
-  set('o-hardcosts', fd(totalHardCosts));
+  // Update cost outputs
   set('o-facility', fd(facility));
   set('o-equity', fd(equity));
+  set('o-lvr', fp(lvr));
   set('o-linefeeamt', fd(lineFeeAmt));
   set('o-interest', fd(interestCost));
   set('o-financecosts', fd(totalFinanceCosts));
+
+  // Presales coverage (resi mode — needs facility)
+  if(MODE === 'resi'){
+    var presalesGross = n('i-presales');
+    var presalesCov = facility > 0 ? presalesGross / facility : 0;
+    set('o-presales-cov', fp(presalesCov) + ' of debt');
+  }
   set('o-tdc', fd(totalDevCost));
   set('o-tfc', fd(totalFinanceCosts));
   set('o-tpc', fd(totalProjectCost));
+
+  // Update flow banners (visible when on Tab 2/3)
+  var modeLabel = MODE === 'commercial' ? 'commercial cap val' : MODE === 'resi' ? 'residential GRV' : 'strata mixed use';
+  set('flow-grv-val', fd(grv));
+  set('flow-grv-mode', '(' + modeLabel + ')');
+  set('flow-res-grv', fd(grv));
+  set('flow-res-tpc', fd(totalProjectCost));
+
+  // ─────────────────────────────────
+  // STEP 3: RESULTS (Tab 3)
+  // ─────────────────────────────────
+  var devMargin = grv - totalProjectCost;
+  var marginPct = totalProjectCost > 0 ? devMargin / totalProjectCost : 0;
+
   set('o-grv2', fd(grv));
 
   var mEl = document.getElementById('o-margin');
-  if(mEl){mEl.textContent = fd(devMargin); mEl.className = 'row-value ' + (devMargin >= 0 ? 'green' : 'red');}
+  if(mEl){
+    mEl.textContent = fd(devMargin);
+    mEl.className = 'row-value ' + (devMargin >= 0 ? 'green' : 'red');
+  }
 
   var mpEl = document.getElementById('o-marginpct');
-  if(mpEl){mpEl.textContent = fp(marginPct); mpEl.className = 'row-value ' + (marginPct >= 0.20 ? 'green' : marginPct >= 0.15 ? 'amber' : 'red');}
+  if(mpEl){
+    mpEl.textContent = fp(marginPct);
+    mpEl.className = 'row-value ' + (marginPct >= 0.20 ? 'green' : marginPct >= 0.15 ? 'amber' : 'red');
+  }
 
   // Credit box
   var cb = document.getElementById('credit-box');
   if(cb){
-    if(marginPct >= 0.20){cb.className='credit-box ok';cb.textContent='✓ Strong margin — bankable';}
-    else if(marginPct >= 0.15){cb.className='credit-box warn';cb.textContent='⚠ Marginal — lender dependent';}
-    else{cb.className='credit-box bad';cb.textContent='✗ Insufficient margin — requires restructure';}
+    if(marginPct >= 0.20){ cb.className = 'credit-box ok'; cb.textContent = '✓ Strong margin — bankable'; }
+    else if(marginPct >= 0.15){ cb.className = 'credit-box warn'; cb.textContent = '⚠ Marginal — lender dependent'; }
+    else{ cb.className = 'credit-box bad'; cb.textContent = '✗ Insufficient margin — requires restructure'; }
   }
 
-  // ── CASH FLOW ──
-  buildCashFlow(constCost, profFeesAmt, contAmt, landValue, stamp, legal, lvr, rate, devMonths, facility);
-
-  // ── RETURNS ──
+  // Returns cards
   buildReturns(grv, totalProjectCost, devMargin, marginPct, equity, facility, totalFinanceCosts, netIncome, passingYield, capRate, rate, interestCost);
 
-  // ── SENSITIVITY ──
-  buildSensitivity(netIncome, totalBTL, totalProjectCost, capRate);
-} // end calcInner
+  // Sensitivity (commercial only)
+  if(MODE === 'commercial'){
+    buildSensitivity(netIncome, totalBTL, totalProjectCost, capRate);
+  }
+
+  // ─────────────────────────────────
+  // STEP 4: CASH FLOW (Tab 4)
+  // ─────────────────────────────────
+  buildCashFlow(constProj, profProj, 0, costs.land.proj, costs.stamp.proj, costs.legal.proj, lvr, rate, devMonths, facility);
+}
 
 // ══════════════════════════════════════════
 // CASH FLOW BUILDER
 // ══════════════════════════════════════════
 function buildCashFlow(constCost, profFees, contingency, land, stamp, legal, lvr, rate, months, facility){
-  // S-curve profile
+  if(months <= 0) months = 1;
+
   var raw = [];
-  for(var i=0;i<months;i++){
-    var t = (i+0.5)/months;
-    raw.push(Math.pow(Math.sin(t*Math.PI/2),1.5));
+  for(var i = 0; i < months; i++){
+    var t = (i + 0.5) / months;
+    raw.push(Math.pow(Math.sin(t * Math.PI / 2), 1.5));
   }
-  var sum = raw.reduce(function(a,b){return a+b},0);
-  var profile = raw.map(function(r){return r/sum});
+  var sum = raw.reduce(function(a, b){ return a + b; }, 0);
+  var profile = raw.map(function(r){ return r / sum; });
 
   var rows = [];
-  var cumDebt = 0, cumEquity = 0, cumInterest = 0;
+  var cumDebt = 0, cumEquity = 0;
   var monthlyRate = rate / 12;
 
   // M0 — settlement
   var landEquity = land + stamp + legal;
   cumEquity = landEquity;
-  rows.push({month:0,label:'Settle',construction:0,drawdown:0,equity:landEquity,interest:0,cumDebt:0,cumEquity:landEquity});
+  rows.push({month:0, label:'Settle', construction:0, drawdown:0, equity:landEquity, interest:0, cumDebt:0, cumEquity:landEquity});
 
-  for(var m=0;m<months;m++){
+  for(var m = 0; m < months; m++){
     var pct = profile[m];
     var mConst = constCost * pct;
     var mProf = profFees * pct;
@@ -664,34 +1041,33 @@ function buildCashFlow(constCost, profFees, contingency, land, stamp, legal, lvr
     cumDebt += draw;
     cumEquity += eq;
     var interest = cumDebt * monthlyRate;
-    cumInterest += interest;
-    rows.push({month:m+1,label:'M'+(m+1),construction:mConst,drawdown:draw,equity:eq,interest:interest,cumDebt:cumDebt,cumEquity:cumEquity});
+    rows.push({month:m+1, label:'M'+(m+1), construction:mConst, drawdown:draw, equity:eq, interest:interest, cumDebt:cumDebt, cumEquity:cumEquity});
   }
 
-  var peakDebt = Math.max.apply(null, rows.map(function(r){return r.cumDebt}));
-  var totalInterest = rows.reduce(function(s,r){return s+r.interest},0);
-  var totalEquity = rows[rows.length-1].cumEquity;
+  var peakDebt = Math.max.apply(null, rows.map(function(r){ return r.cumDebt; }));
+  var totalInterest = rows.reduce(function(s, r){ return s + r.interest; }, 0);
+  var totalEquity = rows[rows.length - 1].cumEquity;
 
   // Cards
   document.getElementById('cf-cards').innerHTML =
-    '<div class="scard bad"><div class="sc-label">Peak Debt</div><div class="sc-value bad">'+fd(peakDebt)+'</div></div>'
-    +'<div class="scard warn"><div class="sc-label">Total Interest</div><div class="sc-value warn">'+fd(totalInterest)+'</div></div>'
-    +'<div class="scard neutral"><div class="sc-label">Total Equity</div><div class="sc-value teal">'+fd(totalEquity)+'</div></div>'
-    +'<div class="scard neutral"><div class="sc-label">Months</div><div class="sc-value">'+months+'</div></div>';
+    '<div class="scard bad"><div class="sc-label">Peak Debt</div><div class="sc-value bad">' + fd(peakDebt) + '</div></div>'
+    + '<div class="scard warn"><div class="sc-label">Total Interest</div><div class="sc-value warn">' + fd(totalInterest) + '</div></div>'
+    + '<div class="scard neutral"><div class="sc-label">Total Equity</div><div class="sc-value teal">' + fd(totalEquity) + '</div></div>'
+    + '<div class="scard neutral"><div class="sc-label">Months</div><div class="sc-value">' + months + '</div></div>';
 
   // Bar chart
   var maxVal = peakDebt + totalEquity;
   var barsHtml = '';
   rows.forEach(function(r){
-    var dH = maxVal > 0 ? (r.cumDebt/maxVal)*140 : 0;
-    var eH = maxVal > 0 ? (r.cumEquity/maxVal)*140 : 0;
+    var dH = maxVal > 0 ? (r.cumDebt / maxVal) * 140 : 0;
+    var eH = maxVal > 0 ? (r.cumEquity / maxVal) * 140 : 0;
     barsHtml += '<div class="bar-col">'
-      +'<div style="display:flex;flex-direction:column-reverse;height:140px;gap:1px;width:100%">'
-      +'<div class="bar-debt" style="height:'+dH+'px" title="Debt: '+fd(r.cumDebt)+'"></div>'
-      +'<div class="bar-equity" style="height:'+eH+'px" title="Equity: '+fd(r.cumEquity)+'"></div>'
-      +'</div>'
-      +'<span class="bar-label">'+r.label+'</span>'
-      +'</div>';
+      + '<div style="display:flex;flex-direction:column-reverse;height:140px;gap:1px;width:100%">'
+      + '<div class="bar-debt" style="height:' + dH + 'px" title="Debt: ' + fd(r.cumDebt) + '"></div>'
+      + '<div class="bar-equity" style="height:' + eH + 'px" title="Equity: ' + fd(r.cumEquity) + '"></div>'
+      + '</div>'
+      + '<span class="bar-label">' + r.label + '</span>'
+      + '</div>';
   });
   document.getElementById('cf-bars').innerHTML = barsHtml;
 
@@ -702,14 +1078,14 @@ function buildCashFlow(constCost, profFees, contingency, land, stamp, legal, lvr
   var tbody = '';
   rows.forEach(function(r){
     tbody += '<tr>'
-      +'<td style="font-weight:600;color:var(--grey700)">'+r.label+'</td>'
-      +'<td>'+fd(r.construction)+'</td>'
-      +'<td style="color:var(--red)">'+fd(r.drawdown)+'</td>'
-      +'<td style="color:var(--teal)">'+fd(r.equity)+'</td>'
-      +'<td style="color:var(--amber)">'+fd(r.interest)+'</td>'
-      +'<td style="color:var(--red);font-weight:600">'+fd(r.cumDebt)+'</td>'
-      +'<td style="color:var(--teal);font-weight:600">'+fd(r.cumEquity)+'</td>'
-      +'</tr>';
+      + '<td style="font-weight:600;color:var(--grey700)">' + r.label + '</td>'
+      + '<td>' + fd(r.construction) + '</td>'
+      + '<td style="color:var(--red)">' + fd(r.drawdown) + '</td>'
+      + '<td style="color:var(--teal)">' + fd(r.equity) + '</td>'
+      + '<td style="color:var(--amber)">' + fd(r.interest) + '</td>'
+      + '<td style="color:var(--red);font-weight:600">' + fd(r.cumDebt) + '</td>'
+      + '<td style="color:var(--teal);font-weight:600">' + fd(r.cumEquity) + '</td>'
+      + '</tr>';
   });
   document.getElementById('cf-tbody').innerHTML = tbody;
 }
@@ -717,27 +1093,27 @@ function buildCashFlow(constCost, profFees, contingency, land, stamp, legal, lvr
 // ══════════════════════════════════════════
 // RETURNS BUILDER
 // ══════════════════════════════════════════
-function buildReturns(grv, tpc, margin, marginPct, equity, facility, finCosts, netIncome, yield, capRate, rate, interest){
+function buildReturns(grv, tpc, margin, marginPct, equity, facility, finCosts, netIncome, yld, capRate, rate, interest){
   var roc = equity > 0 ? margin / equity : 0;
   var dscr = facility > 0 && rate > 0 ? netIncome / (facility * rate) : 0;
 
   var cards = [
-    {label:'Dev Margin', value:fd(margin), sub:fp(marginPct)+' on cost', cls:marginPct>=0.20?'ok':marginPct>=0.15?'warn':'bad'},
-    {label:'Return on Equity', value:fp(roc), sub:'on '+fd(equity)+' equity', cls:'neutral'},
-    {label:'GRV (Cap Val)', value:fd(grv), sub:'at '+fp(capRate)+' cap rate', cls:'neutral'},
-    {label:'Total Project Cost', value:fd(tpc), sub:'incl. '+fd(finCosts)+' finance', cls:'neutral'},
-    {label:'Peak Debt', value:fd(facility), sub:fp(n('i-lvr')/100)+' LVR', cls:'bad'},
-    {label:'Total Interest', value:fd(interest), sub:fp(rate)+' p.a.', cls:'warn'},
-    {label:'Net Income', value:fd(netIncome), sub:'yield '+fp(yield), cls:'ok'},
-    {label:'Debt Coverage', value:dscr>0?dscr.toFixed(2)+'x':'—', sub:'net income / annual interest', cls:dscr>=1.5?'ok':dscr>=1.2?'warn':'bad'}
+    {label:'Dev Margin', value:fd(margin), sub:fp(marginPct) + ' on cost', cls:marginPct >= 0.20 ? 'ok' : marginPct >= 0.15 ? 'warn' : 'bad'},
+    {label:'Return on Equity', value:fp(roc), sub:'on ' + fd(equity) + ' equity', cls:'neutral'},
+    {label:'GRV (Adopted)', value:fd(grv), sub: MODE === 'commercial' ? 'at ' + fp(capRate) + ' cap rate' : MODE === 'resi' ? 'units × avg price' : 'combined strata', cls:'neutral'},
+    {label:'Total Project Cost', value:fd(tpc), sub:'incl. ' + fd(finCosts) + ' finance', cls:'neutral'},
+    {label:'Peak Debt', value:fd(facility), sub:fp(tpc > 0 ? facility/tpc : 0) + ' LVR', cls:'bad'},
+    {label:'Total Interest', value:fd(interest), sub:fp(rate) + ' p.a.', cls:'warn'},
+    {label:'Net Income', value:fd(netIncome), sub: MODE === 'commercial' ? 'yield ' + fp(yld) : 'n/a for resi', cls: netIncome > 0 ? 'ok' : 'neutral'},
+    {label:'Debt Coverage', value:dscr > 0 ? dscr.toFixed(2) + 'x' : '—', sub:'net income / annual interest', cls:dscr >= 1.5 ? 'ok' : dscr >= 1.2 ? 'warn' : 'bad'}
   ];
 
   document.getElementById('ret-cards').innerHTML = cards.map(function(c){
-    return '<div class="scard '+c.cls+'">'
-      +'<div class="sc-label">'+c.label+'</div>'
-      +'<div class="sc-value '+c.cls+'">'+c.value+'</div>'
-      +'<div class="sc-sub">'+c.sub+'</div>'
-      +'</div>';
+    return '<div class="scard ' + c.cls + '">'
+      + '<div class="sc-label">' + c.label + '</div>'
+      + '<div class="sc-value ' + c.cls + '">' + c.value + '</div>'
+      + '<div class="sc-sub">' + c.sub + '</div>'
+      + '</div>';
   }).join('');
 }
 
@@ -748,28 +1124,26 @@ function buildSensitivity(netIncome, totalBTL, totalProjectCost, currentCap){
   var rates = [0.050, 0.055, 0.060, 0.065, 0.070, 0.075, 0.080];
   var html = '';
   rates.forEach(function(cr){
-    var cv = netIncome / cr - totalBTL;
+    var cv = cr > 0 ? netIncome / cr - totalBTL : 0;
     var margin = cv - totalProjectCost;
     var marginPct = totalProjectCost > 0 ? margin / totalProjectCost : 0;
     var active = Math.abs(cr - currentCap) < 0.001;
-    html += '<tr'+(active?' class="active"':'')+'>'
-      +'<td style="text-align:left">'+(cr*100).toFixed(1)+'%'+(active?' ◄':'')+'</td>'
-      +'<td>'+fd(cv)+'</td>'
-      +'<td style="color:'+(margin>=0?'var(--green)':'var(--red)')+'">'+fd(margin)+'</td>'
-      +'<td style="color:'+(marginPct>=0.20?'var(--green)':marginPct>=0.15?'var(--amber)':'var(--red)')+'">'+fp(marginPct)+'</td>'
-      +'</tr>';
+    html += '<tr' + (active ? ' class="active"' : '') + '>'
+      + '<td style="text-align:left">' + (cr * 100).toFixed(1) + '%' + (active ? ' ◄' : '') + '</td>'
+      + '<td>' + fd(cv) + '</td>'
+      + '<td style="color:' + (margin >= 0 ? 'var(--green)' : 'var(--red)') + '">' + fd(margin) + '</td>'
+      + '<td style="color:' + (marginPct >= 0.20 ? 'var(--green)' : marginPct >= 0.15 ? 'var(--amber)' : 'var(--red)') + '">' + fp(marginPct) + '</td>'
+      + '</tr>';
   });
   document.getElementById('sens-tbody').innerHTML = html;
 }
 
 // ── INIT ──
 window.addEventListener('load', function(){
-  // Format all dollar inputs on load
-  document.querySelectorAll('.edit-input.dollar').forEach(function(el){
-    var raw = parseFloat(el.value.replace(/[$,\s]/g,''))||0;
+  document.querySelectorAll('.edit-input.dollar, .ct-input.dollar').forEach(function(el){
+    var raw = parseFloat(String(el.value).replace(/[$,\s]/g, '')) || 0;
     el.value = raw === 0 ? '$0' : '$' + raw.toLocaleString('en-AU');
   });
-  // Set initial mode and calc
   setMode('commercial');
   calc();
 });
