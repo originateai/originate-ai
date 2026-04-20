@@ -27,6 +27,10 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 .nav{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:10}
 .nav-logo{font-family:'Source Serif 4',serif;font-size:21px;font-weight:700;color:var(--grey900);text-decoration:none}
 .nav-logo span{color:var(--teal)}
+.nav-links{display:flex;gap:4px;align-items:center}
+.nav-links a{font-size:13px;color:var(--grey600);text-decoration:none;font-weight:500;padding:7px 12px;border-radius:var(--radius);transition:all 0.15s}
+.nav-links a:hover{color:var(--teal);background:var(--teal-bg)}
+.nav-links a.active{color:var(--teal-dark);background:var(--teal-subtle);font-weight:600}
 .nav-right{display:flex;gap:16px;align-items:center}
 .nav-user{font-size:13px;color:var(--grey600)}
 .nav-link{font-size:13px;color:var(--grey500);text-decoration:none;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);transition:all 0.15s;background:var(--white)}
@@ -136,11 +140,18 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 <body>
 
 <nav class="nav">
-  <a class="nav-logo" href="index.html">get<span>kredit.ai</span></a>
+  <a href="index.html" class="nav-logo">getkredit<span>.ai</span></a>
+  <div class="nav-links">
+    <a href="admin.html" id="nav-admin" style="display:none">Admin</a>
+    <a href="portal.html" class="active">My Deals</a>
+    <a href="settlement.html">Settlement</a>
+    <a href="feasibility-capval.html">Feasibility</a>
+    <a href="credit-paper.html">Credit Paper</a>
+    <a href="development-chat.html">+ New Deal</a>
+  </div>
   <div class="nav-right">
-    <span class="nav-user" id="user-name"></span>
-    <a class="nav-link" href="development-chat.html">+ New Deal</a>
-    <a class="nav-link logout" href="#" onclick="doLogout()">Sign Out</a>
+    <span id="nav-user" style="font-size:12px;color:var(--muted);padding:7px 8px"></span>
+    <a href="#" class="nav-link logout" onclick="doLogout()">Sign Out</a>
   </div>
 </nav>
 

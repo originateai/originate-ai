@@ -130,13 +130,18 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 <body>
 
 <nav class="nav">
-  <a class="nav-logo" href="index.html">get<span>kredit.ai</span></a>
-  <div style="display:flex;gap:6px;align-items:center">
-    <a class="nav-link" href="admin.html">Admin</a>
-    <a class="nav-link" href="portal.html">My Deals</a>
-    <a class="nav-link" href="settlement.html">Settlement</a>
-    <a class="nav-link" href="credit-paper.html">Credit Paper</a>
-    <a class="nav-link" href="development-chat.html" style="background:var(--teal);color:white;border-color:var(--teal)">+ New Deal</a>
+  <a class="nav-logo" href="index.html">getkredit<span>.ai</span></a>
+  <div class="nav-links">
+    <a href="admin.html" id="nav-admin" style="display:none">Admin</a>
+    <a href="portal.html">My Deals</a>
+    <a href="settlement.html">Settlement</a>
+    <a href="feasibility-capval.html" class="active">Feasibility</a>
+    <a href="credit-paper.html">Credit Paper</a>
+    <a href="development-chat.html">+ New Deal</a>
+  </div>
+  <div class="nav-right">
+    <span id="nav-user" style="font-size:12px;color:var(--muted);padding:7px 8px"></span>
+    <a href="portal.html" class="nav-link">← Portal</a>
   </div>
 </nav>
 

@@ -2,52 +2,60 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Originate.ai — Development Feasibility Calculator</title>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<title>getkredit.ai — Development Feasibility Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --navy:#0a1628;--navy2:#112240;
-  --white:#fff;--off:#f8f6f2;--cream:#edece8;
-  --gold:#b8912e;--gold2:#d4aa50;--gold-lt:rgba(184,145,46,0.08);
-  --text:#0d1520;--muted:#7a7a7a;--faint:#c8c4bc;--border:#e8e4de;
-  --green:#15803d;--green-lt:rgba(21,128,61,0.08);
-  --red:#b91c1c;--red-lt:rgba(185,28,28,0.08);
-  --amber:#b45309;--amber-lt:rgba(180,83,9,0.08);
+  --teal:#0D9488;--teal-light:#14B8A6;--teal-dark:#0F766E;--teal-bg:#F0FDFA;--teal-subtle:#CCFBF1;
+  --navy:#0f172a;--navy2:#1e293b;
+  --white:#fff;--off:#f8fafc;--cream:#f1f5f9;
+  --gold:#0D9488;--gold2:#14B8A6;--gold-lt:rgba(13,148,136,0.08);
+  --text:#0f172a;--muted:#64748b;--faint:#cbd5e1;--border:#e2e8f0;
+  --green:#059669;--green-lt:rgba(5,150,105,0.08);
+  --red:#dc2626;--red-lt:rgba(220,38,38,0.08);
+  --amber:#d97706;--amber-lt:rgba(217,119,6,0.08);
+  --radius:8px;--radius-lg:12px;
 }
 html{scroll-behavior:smooth}
 body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);min-height:100vh}
 
-/* TOP BAR */
-.topbar{background:var(--navy);padding:16px 40px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
-.tb-logo{font-family:'Libre Baskerville',serif;font-size:18px;font-weight:700;color:white;cursor:pointer;display:flex;align-items:baseline;gap:1px}
-.tb-logo span{color:var(--gold)}
-.tb-title{font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.4)}
-.tb-actions{display:flex;gap:10px;align-items:center}
-.tb-btn{padding:9px 20px;border-radius:2px;font-size:12px;font-weight:600;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;letter-spacing:0.5px;text-transform:uppercase;transition:all 0.2s}
-.tb-btn.primary{background:var(--gold);color:white}
-.tb-btn.primary:hover{background:var(--gold2)}
-.tb-btn.ghost{background:rgba(255,255,255,0.06);color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.12)}
-.tb-btn.ghost:hover{background:rgba(255,255,255,0.1);color:white}
+/* NAV */
+.nav{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:100}
+.nav-logo{font-family:'Source Serif 4',serif;font-size:21px;font-weight:700;color:var(--text);text-decoration:none;cursor:pointer}
+.nav-logo span{color:var(--teal)}
+.nav-links{display:flex;gap:4px;align-items:center}
+.nav-links a{font-size:13px;color:var(--muted);text-decoration:none;font-weight:500;padding:7px 12px;border-radius:var(--radius);transition:all 0.15s}
+.nav-links a:hover{color:var(--teal);background:var(--teal-bg)}
+.nav-links a.active{color:var(--teal-dark);background:var(--teal-subtle);font-weight:600}
+.nav-right{display:flex;gap:10px;align-items:center}
+.nav-btn{padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--white);font-size:13px;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;transition:all 0.15s}
+.nav-btn:hover{border-color:var(--teal);color:var(--teal)}
+.nav-btn.primary{background:var(--teal);color:white;border-color:var(--teal)}
+.nav-btn.primary:hover{background:var(--teal-dark)}
 
 /* LAYOUT */
-.calc-wrap{display:grid;grid-template-columns:420px 1fr;min-height:calc(100vh - 57px);gap:0}
+.calc-wrap{display:grid;grid-template-columns:420px 1fr;min-height:calc(100vh - 64px);gap:0}
 
 /* LEFT — INPUTS */
-.inputs-col{background:white;border-right:1px solid var(--border);overflow-y:auto;height:calc(100vh - 57px);position:sticky;top:57px}
+.inputs-col{background:white;border-right:1px solid var(--border);overflow-y:auto;height:calc(100vh - 64px);position:sticky;top:64px}
 .inputs-col::-webkit-scrollbar{width:4px}
 .inputs-col::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 
 .input-section{padding:24px 28px;border-bottom:1px solid var(--border)}
-.is-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:18px;display:flex;align-items:center;gap:10px}
-.is-title::before{content:'';display:block;width:18px;height:1px;background:var(--gold);opacity:0.6}
+.is-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.is-title::before{content:'';display:block;width:18px;height:1px;background:var(--teal);opacity:0.6}
 
 .field{margin-bottom:14px}
 .field:last-child{margin-bottom:0}
 .field label{display:block;font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
 .field input,.field select{width:100%;background:var(--off);border:1px solid var(--border);border-radius:2px;padding:9px 11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;transition:border-color 0.2s;-webkit-appearance:none;appearance:none}
-.field input:focus,.field select:focus{border-color:var(--navy);background:white}
+.field input:focus,.field select:focus{border-color:var(--grey900);background:white}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .field-hint{font-size:11px;color:var(--muted);margin-top:4px}
 
@@ -58,14 +66,14 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
 .cost-table td{padding:5px 8px;border-bottom:1px solid var(--cream);vertical-align:middle}
 .cost-table td:first-child{color:var(--text);font-weight:400;font-size:12px}
 .cost-table td input{width:100%;background:var(--off);border:1px solid transparent;border-radius:2px;padding:5px 7px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12.5px;outline:none;text-align:right;transition:all 0.2s}
-.cost-table td input:focus{border-color:var(--navy);background:white}
+.cost-table td input:focus{border-color:var(--grey900);background:white}
 .cost-table .subtotal td{background:var(--cream);font-weight:600;font-size:12px}
 .cost-table .subtotal td:not(:first-child){text-align:right}
 .ct-label{color:var(--muted);font-size:11px}
 .ct-calc{color:var(--muted);font-size:11px;text-align:right;padding:5px 8px}
 
 /* RIGHT — RESULTS */
-.results-col{padding:32px 36px;overflow-y:auto;height:calc(100vh - 57px)}
+.results-col{padding:32px 36px;overflow-y:auto;height:calc(100vh - 64px)}
 .results-col::-webkit-scrollbar{width:4px}
 .results-col::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
 
@@ -76,9 +84,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
 .scard.ok::before{background:var(--green)}
 .scard.warn::before{background:var(--amber)}
 .scard.bad::before{background:var(--red)}
-.scard.neutral::before{background:var(--navy)}
+.scard.neutral::before{background:var(--grey900)}
 .sc-label{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.sc-value{font-family:'Libre Baskerville',serif;font-size:28px;font-weight:400;line-height:1;color:var(--text)}
+.sc-value{font-family:'Source Serif 4',serif;font-size:28px;font-weight:400;line-height:1;color:var(--text)}
 .sc-value.ok{color:var(--green)}
 .sc-value.warn{color:var(--amber)}
 .sc-value.bad{color:var(--red)}
@@ -91,7 +99,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
 /* Funding table output */
 .result-block{background:white;border:1px solid var(--border);border-radius:3px;margin-bottom:20px;overflow:hidden}
 .rb-head{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.rb-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--navy)}
+.rb-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal)}
 .rb-badge{padding:4px 11px;border-radius:2px;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase}
 .rb-badge.ok{background:var(--green-lt);color:var(--green);border:1px solid rgba(21,128,61,0.2)}
 .rb-badge.warn{background:var(--amber-lt);color:var(--amber);border:1px solid rgba(180,83,9,0.2)}
@@ -106,9 +114,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
 .ft-out td:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
 .ft-out .group-head td{background:var(--off);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:8px 20px}
 .ft-out .subtot td{background:var(--cream);font-weight:600;border-top:2px solid var(--border)}
-.ft-out .total td{background:var(--navy);color:white;font-weight:600;font-size:13.5px}
-.ft-out .total td:first-child{font-family:'Libre Baskerville',serif;font-size:14px}
-.bank{color:var(--navy);font-weight:600}
+.ft-out .total td{background:var(--grey900);color:white;font-weight:600;font-size:13.5px}
+.ft-out .total td:first-child{font-family:'Source Serif 4',serif;font-size:14px}
+.bank{color:var(--grey900);font-weight:600}
 .dev{color:var(--muted)}
 .int{color:var(--amber)}
 
@@ -130,25 +138,25 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
 .cf-table th:first-child{text-align:left;position:sticky;left:0;background:var(--off);z-index:1}
 .cf-table td{padding:7px 10px;border-bottom:1px solid var(--cream);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .cf-table td:first-child{text-align:left;position:sticky;left:0;background:white;z-index:1;font-size:11px;color:var(--muted)}
-.cf-table .cf-section td:first-child{background:var(--off);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--navy);padding:7px 10px}
-.cf-table .cf-total td{background:var(--navy);color:white;font-weight:600}
-.cf-table .cf-total td:first-child{background:var(--navy);color:rgba(255,255,255,0.7)}
+.cf-table .cf-section td:first-child{background:var(--off);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--grey900);padding:7px 10px}
+.cf-table .cf-total td{background:var(--grey900);color:white;font-weight:600}
+.cf-table .cf-total td:first-child{background:var(--grey900);color:rgba(255,255,255,0.7)}
 .cf-pos{color:var(--green)}.cf-neg{color:var(--red)}.cf-zero{color:var(--faint)}
 
 /* Loan covenants */
 .cov-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:22px}
 .cov-item{background:var(--off);border:1px solid var(--border);border-radius:3px;padding:16px}
 .cov-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-.cov-value{font-family:'Libre Baskerville',serif;font-size:24px;font-weight:400;color:var(--text)}
+.cov-value{font-family:'Source Serif 4',serif;font-size:24px;font-weight:400;color:var(--text)}
 .cov-value.ok{color:var(--green)}.cov-value.warn{color:var(--amber)}.cov-value.bad{color:var(--red)}
 .cov-check{font-size:11px;font-weight:600;margin-top:4px}
 .cov-check.ok{color:var(--green)}.cov-check.warn{color:var(--amber)}.cov-check.bad{color:var(--red)}
 
 /* Term sheet section */
 .term-sheet{background:white;border:1px solid var(--border);border-radius:3px;padding:28px;margin-bottom:20px}
-.ts-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid var(--navy)}
-.ts-logo{font-family:'Libre Baskerville',serif;font-size:20px;font-weight:700;color:var(--navy)}
-.ts-logo span{color:var(--gold)}
+.ts-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid var(--grey900)}
+.ts-logo{font-family:'Source Serif 4',serif;font-size:20px;font-weight:700;color:var(--teal)}
+.ts-logo span{color:var(--teal)}
 .ts-meta{text-align:right}
 .ts-meta div{font-size:11.5px;color:var(--muted);margin-bottom:3px}
 .ts-meta strong{color:var(--text)}
@@ -157,12 +165,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
 .ts-row:last-child{border-bottom:none}
 .ts-k{color:var(--muted);font-size:12px}
 .ts-v{font-weight:600;color:var(--text)}
-.ts-section-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--navy);padding:10px 16px;background:var(--off);border-bottom:1px solid var(--border);grid-column:1/-1}
+.ts-section-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey900);padding:10px 16px;background:var(--off);border-bottom:1px solid var(--border);grid-column:1/-1}
 .ts-disclaimer{font-size:11px;color:var(--muted);line-height:1.65;padding:16px;background:var(--off);border-radius:2px;border:1px solid var(--border)}
 
 /* Print */
 @media print{
-  .topbar,.inputs-col{display:none}
+  .inputs-col{display:none}
   .calc-wrap{display:block}
   .results-col{height:auto;overflow:visible;padding:20px}
 }
@@ -178,17 +186,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
 <body>
 
 <!-- TOP BAR -->
-<div class="topbar">
-  <div class="tb-logo" onclick="window.location='index.html'">getkredit<span>.ai</span></div>
-  <div class="tb-title">Development Feasibility Calculator</div>
-  <div class="tb-actions">
-    <button class="tb-btn ghost" onclick="window.location='admin.html'">← Admin</button>
-    <button class="tb-btn ghost" onclick="window.location='feasibility-capval.html'">Cap Val</button>
-    <button class="tb-btn ghost" onclick="resetForm()">Reset</button>
-    <button class="tb-btn ghost" onclick="loadExample()">Load Example</button>
-    <button class="tb-btn primary" onclick="window.print()">Print Term Sheet</button>
+<nav class="nav">
+  <a class="nav-logo" href="index.html">getkredit<span>.ai</span></a>
+  <div class="nav-links">
+    <a href="admin.html" id="nav-admin" style="display:none">Admin</a>
+    <a href="portal.html">My Deals</a>
+    <a href="settlement.html">Settlement</a>
+    <a href="feasibility-capval.html">Cap Val</a>
+    <a href="feasibility.html" class="active">Dev Feasibility</a>
+    <a href="credit-paper.html">Credit Paper</a>
+    <a href="development-chat.html">+ New Deal</a>
   </div>
-</div>
+  <div class="nav-right">
+    <button class="nav-btn" onclick="resetForm()">Reset</button>
+    <button class="nav-btn" onclick="loadExample()">Example</button>
+    <button class="nav-btn primary" onclick="window.print()">Print</button>
+  </div>
+</nav>
 
 <div class="calc-wrap">
 
@@ -344,7 +358,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
           <div class="feas-row"><span class="feas-k">Less: Sales Commission</span><span class="feas-v" id="f-comm" style="color:var(--red)">—</span></div>
           <div class="feas-row"><span class="feas-k">Net Realisation</span><span class="feas-v" id="f-nrv" style="font-weight:700">—</span></div>
           <div class="feas-row"><span class="feas-k">Less: Total Development Cost</span><span class="feas-v" id="f-tdc" style="color:var(--red)">—</span></div>
-          <div class="feas-total"><span>Gross Profit Margin</span><span id="f-profit" style="font-family:'Libre Baskerville',serif;font-size:18px">—</span></div>
+          <div class="feas-total"><span>Gross Profit Margin</span><span id="f-profit" style="font-family:'Source Serif 4',serif;font-size:18px">—</span></div>
         </div>
         <div style="border-left:1px solid var(--border)">
           <div class="feas-row"><span class="feas-k">Return on Cost</span><span class="feas-v" id="f-roc">—</span></div>
@@ -352,7 +366,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);mi
           <div class="feas-row"><span class="feas-k">Equity Required</span><span class="feas-v" id="f-equity">—</span></div>
           <div class="feas-row"><span class="feas-k">Interest (capitalised)</span><span class="feas-v" id="f-interest">—</span></div>
           <div class="feas-row"><span class="feas-k">Line Fee (capitalised)</span><span class="feas-v" id="f-linefee">—</span></div>
-          <div class="feas-total"><span>RLV at <span id="f-targetlabel">20%</span> Margin</span><span id="f-rlv" style="font-family:'Libre Baskerville',serif;font-size:18px">—</span></div>
+          <div class="feas-total"><span>RLV at <span id="f-targetlabel">20%</span> Margin</span><span id="f-rlv" style="font-family:'Source Serif 4',serif;font-size:18px">—</span></div>
         </div>
       </div>
     </div>
