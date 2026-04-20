@@ -109,6 +109,18 @@ html,body{height:100%;font-family:'DM Sans',sans-serif;color:var(--text);backgro
         <input type="password" class="form-input" id="signup-password" placeholder="Min 6 characters">
       </div>
       <div class="form-group">
+        <label class="form-label">Account type</label>
+        <select class="form-input" id="signup-entity-type" onchange="toggleCompanyField()">
+          <option value="individual">Individual</option>
+          <option value="company">Company</option>
+          <option value="trust">Trust</option>
+        </select>
+      </div>
+      <div class="form-group" id="company-name-group" style="display:none">
+        <label class="form-label">Company / Trust Name</label>
+        <input type="text" class="form-input" id="signup-company" placeholder="Acton Developments Pty Ltd">
+      </div>
+      <div class="form-group">
         <label class="form-label">I am a...</label>
         <select class="form-input" id="signup-role">
           <option value="borrower">Borrower / Developer</option>
@@ -204,23 +216,47 @@ async function doLogin() {
   }
 }
 
+function toggleCompanyField() {
+  var type = document.getElementById('signup-entity-type').value;
+  document.getElementById('company-name-group').style.display = (type === 'company' || type === 'trust') ? 'block' : 'none';
+}
+
+function generateClientNumber() {
+  var year = new Date().getFullYear();
+  var seq = String(Math.floor(Math.random() * 9000) + 1000);
+  return 'GK-CLIENT-' + year + '-' + seq;
+}
+
 async function doSignup() {
   var name = document.getElementById('signup-name').value.trim();
   var email = document.getElementById('signup-email').value.trim();
   var password = document.getElementById('signup-password').value;
   var role = document.getElementById('signup-role').value;
+  var entityType = document.getElementById('signup-entity-type').value;
+  var company = document.getElementById('signup-company').value.trim();
   var msg = document.getElementById('signup-msg');
   var btn = document.getElementById('signup-btn');
 
   if (!name || !email || !password) { msg.className = 'auth-msg error'; msg.textContent = 'Please fill in all fields.'; return; }
+  if ((entityType === 'company' || entityType === 'trust') && !company) { msg.className = 'auth-msg error'; msg.textContent = 'Please enter your company / trust name.'; return; }
   if (password.length < 6) { msg.className = 'auth-msg error'; msg.textContent = 'Password must be at least 6 characters.'; return; }
 
   btn.disabled = true; btn.textContent = 'Creating account...';
 
+  var clientNumber = generateClientNumber();
+
   var result = await sb.auth.signUp({
     email: email,
     password: password,
-    options: { data: { full_name: name, role: role } }
+    options: {
+      data: {
+        full_name: name,
+        role: role,
+        entity_type: entityType,
+        company_name: company || null,
+        client_number: clientNumber
+      }
+    }
   });
 
   if (result.error) {
@@ -231,7 +267,7 @@ async function doSignup() {
   }
 
   msg.className = 'auth-msg success';
-  msg.textContent = 'Account created! Check your email to confirm, then sign in.';
+  msg.textContent = 'Account created! Your client number is ' + clientNumber + '. Check your email to confirm, then sign in.';
   btn.disabled = false; btn.textContent = 'Create Account';
 }
 
