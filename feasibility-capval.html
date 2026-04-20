@@ -131,9 +131,12 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 
 <nav class="nav">
   <a class="nav-logo" href="index.html">get<span>kredit.ai</span></a>
-  <div class="nav-right">
+  <div style="display:flex;gap:6px;align-items:center">
+    <a class="nav-link" href="admin.html">Admin</a>
     <a class="nav-link" href="portal.html">My Deals</a>
-    <a class="nav-link" href="development-chat.html">+ New Deal</a>
+    <a class="nav-link" href="settlement.html">Settlement</a>
+    <a class="nav-link" href="credit-paper.html">Credit Paper</a>
+    <a class="nav-link" href="development-chat.html" style="background:var(--teal);color:white;border-color:var(--teal)">+ New Deal</a>
   </div>
 </nav>
 
@@ -761,6 +764,8 @@ window.addEventListener('load', function(){
     var raw = parseFloat(el.value.replace(/[$,\s]/g,''))||0;
     el.value = raw === 0 ? '$0' : '$' + raw.toLocaleString('en-AU');
   });
+  // Set initial mode and calc
+  setMode('commercial');
   calc();
 });
 </script>
