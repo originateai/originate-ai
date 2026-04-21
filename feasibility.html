@@ -198,14 +198,12 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
   <div id="sec-comm">
     <div class="section"><div class="section-head">Income</div>
       <div class="row"><span class="row-label">Tenant</span><input class="inp" id="i-tenant" value="Tenant" style="width:200px;text-align:left" onchange="calc()"></div>
-      <div class="row"><span class="row-label">Gross Income (p.a.)</span><input class="inp dollar" id="i-income" type="text" value="$492,000" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
+      <div class="row"><span class="row-label">Net Rent (p.a.)</span><input class="inp dollar" id="i-income" type="text" value="$492,000" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
+      <div class="row"><span class="row-label">Outgoings Recoveries</span><input class="inp dollar" id="i-recov" type="text" value="$0" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
+      <div class="row"><span class="row-label">Other Income</span><input class="inp dollar" id="i-otherinc" type="text" value="$0" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
       <div class="row"><span class="row-label">Vacancy Allowance</span><input class="inp" id="i-vacancy" type="number" value="0" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
       <div class="row"><span class="row-label">Less: Vacancy</span><span class="row-value" id="o-vac" style="color:var(--red)">—</span></div>
       <div class="row sub"><span class="row-label">Gross Income</span><span class="row-value" id="o-gi" style="color:var(--teal)">—</span></div>
-    </div>
-    <div class="section"><div class="section-head">Recoveries & Other Income</div>
-      <div class="row"><span class="row-label">Outgoings Recoveries</span><input class="inp dollar" id="i-recov" type="text" value="$0" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
-      <div class="row"><span class="row-label">Other Income</span><input class="inp dollar" id="i-otherinc" type="text" value="$0" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
     </div>
     <div class="section"><div class="section-head">Outgoings<button class="add-btn" onclick="addOG()">+ Add</button></div>
       <div id="og-list"></div>
@@ -323,19 +321,19 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
     <div class="ct-scroll"><table class="ct" id="fund-table">
       <thead><tr>
         <th style="min-width:170px">Cost Item</th><th>Project ($)</th><th>Ord. Equity ($)</th>
-        <th class="mezz-col hidden">Mezz ($)</th><th class="pref-col hidden">Pref Eq ($)</th>
+        <th class="pref-col hidden">Pref Eq ($)</th><th class="mezz-col hidden">Mezz ($)</th>
         <th>Senior ($)</th><th></th>
       </tr></thead>
       <tbody id="fund-body"></tbody>
       <tfoot>
         <tr class="ct-sub"><td>Total</td><td id="st-fund-proj">—</td><td id="st-eq">—</td>
-          <td class="mezz-col hidden" id="st-mezz">—</td><td class="pref-col hidden" id="st-pref">—</td>
+          <td class="pref-col hidden" id="st-pref">—</td><td class="mezz-col hidden" id="st-mezz">—</td>
           <td id="st-sr">—</td><td></td></tr>
         <tr class="ct-sub"><td>Finance Costs</td><td id="st-fin">—</td><td></td>
-          <td class="mezz-col hidden"></td><td class="pref-col hidden"></td>
+          <td class="pref-col hidden"></td><td class="mezz-col hidden"></td>
           <td id="st-fin-sr">—</td><td></td></tr>
         <tr class="ct-total"><td>Total Development Cost</td><td id="st-tdc">—</td><td id="st-tdc-eq">—</td>
-          <td class="mezz-col hidden" id="st-tdc-mezz">—</td><td class="pref-col hidden" id="st-tdc-pref">—</td>
+          <td class="pref-col hidden" id="st-tdc-pref">—</td><td class="mezz-col hidden" id="st-tdc-mezz">—</td>
           <td id="st-tdc-sr">—</td><td></td></tr>
       </tfoot>
     </table></div>
@@ -345,6 +343,26 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
     <div class="row sub"><span class="row-label">Debt Facility (Senior)</span><span class="row-value" id="o-fac" style="font-weight:700">—</span></div>
     <div class="row sub"><span class="row-label">Equity Required</span><span class="row-value" id="o-eq" style="color:var(--teal);font-weight:700">—</span></div>
     <div class="row sub"><span class="row-label">LTC</span><span class="row-value" id="o-ltc">—</span></div>
+  </div>
+
+  <!-- Capital stack toggles BELOW the funding table -->
+  <div class="section"><div class="section-head">Capital Stack — Add Tranches</div>
+    <div class="toggle-row">
+      <span class="toggle-label"><strong style="color:var(--teal-dark)">Ordinary Equity</strong> — sponsor equity</span>
+      <span style="font-size:11px;color:var(--green);font-weight:600">✓ Always on</span>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label"><strong style="color:var(--purple)">Preferred Equity</strong> — coupon + profit share</span>
+      <label class="toggle"><input type="checkbox" id="pref-on2" onchange="document.getElementById('pref-on').checked=this.checked;togglePref();calc()"><span class="toggle-track"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label"><strong style="color:var(--amber)">Mezzanine</strong> — second-ranking debt</span>
+      <label class="toggle"><input type="checkbox" id="mezz-on2" onchange="document.getElementById('mezz-on').checked=this.checked;toggleMezz();calc()"><span class="toggle-track"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span class="toggle-label"><strong style="color:var(--grey700)">Senior Debt</strong> — first-ranking secured</span>
+      <span style="font-size:11px;color:var(--green);font-weight:600">✓ Always on</span>
+    </div>
   </div>
 </div>
 
@@ -411,9 +429,13 @@ document.getElementById('sec-strata').classList.toggle('hidden',m!=='strata');
 document.getElementById('sec-sens').classList.toggle('hidden',m!=='commercial');calc();}
 
 // ── Toggles ──
-function toggleMezz(){MEZZ=document.getElementById('mezz-on').checked;document.getElementById('mezz-fields').classList.toggle('hidden',!MEZZ);
+function toggleMezz(){MEZZ=document.getElementById('mezz-on').checked;
+var m2=document.getElementById('mezz-on2');if(m2)m2.checked=MEZZ;
+document.getElementById('mezz-fields').classList.toggle('hidden',!MEZZ);
 document.querySelectorAll('.mezz-col,.mezz-legend').forEach(function(e){e.classList.toggle('hidden',!MEZZ);});}
-function togglePref(){PREF=document.getElementById('pref-on').checked;document.getElementById('pref-fields').classList.toggle('hidden',!PREF);
+function togglePref(){PREF=document.getElementById('pref-on').checked;
+var p2=document.getElementById('pref-on2');if(p2)p2.checked=PREF;
+document.getElementById('pref-fields').classList.toggle('hidden',!PREF);
 document.querySelectorAll('.pref-col,.pref-legend').forEach(function(e){e.classList.toggle('hidden',!PREF);});}
 
 // ── Unit type config ──
@@ -497,8 +519,8 @@ var fr=document.createElement('tr');fr.id='fr-'+id;fr.dataset.group=group||'Cons
 fr.innerHTML='<td class="fn-name" id="fn-name-'+id+'">'+d.name+'</td>'
 +'<td class="fn-proj" id="fn-proj-'+id+'">'+fd(d.proj)+'</td>'
 +'<td><input class="ct-inp dollar" value="$'+d.eq.toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
-+'<td class="mezz-col'+(MEZZ?'':' hidden')+'"><input class="ct-inp dollar" value="$'+(d.mezz||0).toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
 +'<td class="pref-col'+(PREF?'':' hidden')+'"><input class="ct-inp dollar" value="$'+(d.pref||0).toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
++'<td class="mezz-col'+(MEZZ?'':' hidden')+'"><input class="ct-inp dollar" value="$'+(d.mezz||0).toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
 +'<td class="ct-bank" id="fr-sr-'+id+'">—</td>'
 +'<td></td>';
 document.getElementById('fund-body').appendChild(fr);}
@@ -525,13 +547,14 @@ var ms=parseInt(inps[2].value)||0,sp=parseInt(inps[3].value)||1;
 var profile=sels[0]?sels[0].value:'straight';
 var escYN=sels[1]?sels[1].value:'N';var escInp=tr.querySelector('.ct-esc');
 var escRate=escYN==='Y'&&escInp?parseFloat(escInp.value)||0:0;
-// Get funding split from matching row
+// Get funding split from matching row — order: equity, pref, mezz
 var eq=0,mezz=0,pref=0;
 if(idx<fundTrs.length){var fi=fundTrs[idx].querySelectorAll('.ct-inp');
 eq=fi.length>0?pn(fi[0].value):0;
-var mezzIdx=MEZZ?1:-1,prefIdx=PREF?(MEZZ?2:1):-1;
-mezz=mezzIdx>=0&&fi.length>mezzIdx?pn(fi[mezzIdx].value):0;
-pref=prefIdx>=0&&fi.length>prefIdx?pn(fi[prefIdx].value):0;}
+// After equity: pref (if on), then mezz (if on)
+var nextIdx=1;
+if(PREF&&fi.length>nextIdx){pref=pn(fi[nextIdx].value);nextIdx++;}
+if(MEZZ&&fi.length>nextIdx){mezz=pn(fi[nextIdx].value);}}
 eq=Math.min(eq,proj);mezz=Math.min(mezz,proj-eq);pref=Math.min(pref,proj-eq-mezz);
 var sr=proj-eq-mezz-pref;
 // Update senior display on funding table
@@ -554,10 +577,11 @@ var pCoup=PREF?gv('p-coupon')/100:0;
 var grv=0,netIncome=0,capRate=0,totalBTL=0,grossIncome=0;
 
 if(MODE==='commercial'){
-  grossIncome=gv('i-income');var vacP=gv('i-vacancy')/100;var vacA=grossIncome*vacP;var gi=grossIncome-vacA;
+  grossIncome=gv('i-income');var recov=gv('i-recov');var otherInc=gv('i-otherinc');
+  var totalIncome=grossIncome+recov+otherInc;
+  var vacP=gv('i-vacancy')/100;var vacA=totalIncome*vacP;var gi=totalIncome-vacA;
   var ogTotal=0;document.querySelectorAll('#og-list .row').forEach(function(r){var v=r.querySelectorAll('.inp');if(v.length>=2)ogTotal+=pn(v[1].value);});
-  var recov=gv('i-recov'),otherInc=gv('i-otherinc');
-  netIncome=gi-ogTotal+recov+otherInc;
+  netIncome=gi-ogTotal;
   capRate=gv('i-caprate')/100;var capVal=capRate>0?netIncome/capRate:0;
   totalBTL=0;document.querySelectorAll('#btl-list .row').forEach(function(r){var v=r.querySelectorAll('.inp');if(v.length>=2)totalBTL+=pn(v[1].value);});
   var adopted=capVal-totalBTL;var yld=adopted>0?grossIncome/adopted:0;
