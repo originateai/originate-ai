@@ -5,1047 +5,745 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>getkredit.ai — Development Feasibility Calculator</title>
+<title>getkredit.ai — Feasibility</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --teal:#0D9488;--teal-light:#14B8A6;--teal-dark:#0F766E;--teal-bg:#F0FDFA;--teal-subtle:#CCFBF1;
-  --navy:#0f172a;--navy2:#1e293b;
-  --white:#fff;--off:#f8fafc;--cream:#f1f5f9;
-  --gold:#0D9488;--gold2:#14B8A6;--gold-lt:rgba(13,148,136,0.08);
-  --text:#0f172a;--muted:#64748b;--faint:#cbd5e1;--border:#e2e8f0;
-  --green:#059669;--green-lt:rgba(5,150,105,0.08);
-  --red:#dc2626;--red-lt:rgba(220,38,38,0.08);
-  --amber:#d97706;--amber-lt:rgba(217,119,6,0.08);
-  --radius:8px;--radius-lg:12px;
+--teal:#0D9488;--teal-light:#14B8A6;--teal-dark:#0F766E;--teal-bg:#F0FDFA;--teal-subtle:#CCFBF1;
+--white:#fff;--grey50:#f8fafc;--grey100:#f1f5f9;--grey200:#e2e8f0;
+--grey500:#64748b;--grey600:#475569;--grey700:#334155;--grey800:#1e293b;--grey900:#0f172a;
+--text:#0f172a;--muted:#64748b;--border:#e2e8f0;
+--green:#059669;--red:#dc2626;--amber:#d97706;
+--purple:#7c3aed;
+--radius:8px;--radius-lg:12px;
 }
-html{scroll-behavior:smooth}
-body{font-family:'DM Sans',sans-serif;background:var(--off);color:var(--text);min-height:100vh}
-
-/* NAV */
-.nav{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:100}
-.nav-logo{font-family:'Source Serif 4',serif;font-size:21px;font-weight:700;color:var(--text);text-decoration:none;cursor:pointer}
+body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50);min-height:100vh;font-size:13px}
+.nav{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:10}
+.nav-logo{font-family:'Source Serif 4',serif;font-size:21px;font-weight:700;color:var(--grey900);text-decoration:none}
 .nav-logo span{color:var(--teal)}
 .nav-links{display:flex;gap:4px;align-items:center}
-.nav-links a{font-size:13px;color:var(--muted);text-decoration:none;font-weight:500;padding:7px 12px;border-radius:var(--radius);transition:all 0.15s}
+.nav-links a{font-size:13px;color:var(--grey600);text-decoration:none;font-weight:500;padding:7px 12px;border-radius:var(--radius);transition:all 0.15s}
 .nav-links a:hover{color:var(--teal);background:var(--teal-bg)}
 .nav-links a.active{color:var(--teal-dark);background:var(--teal-subtle);font-weight:600}
-.nav-right{display:flex;gap:10px;align-items:center}
-.nav-btn{padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--white);font-size:13px;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;transition:all 0.15s}
-.nav-btn:hover{border-color:var(--teal);color:var(--teal)}
-.nav-btn.primary{background:var(--teal);color:white;border-color:var(--teal)}
-.nav-btn.primary:hover{background:var(--teal-dark)}
-
-/* LAYOUT */
-.calc-wrap{display:grid;grid-template-columns:420px 1fr;min-height:calc(100vh - 64px);gap:0}
-
-/* LEFT — INPUTS */
-.inputs-col{background:white;border-right:1px solid var(--border);overflow-y:auto;height:calc(100vh - 64px);position:sticky;top:64px}
-.inputs-col::-webkit-scrollbar{width:4px}
-.inputs-col::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-
-.input-section{padding:24px 28px;border-bottom:1px solid var(--border)}
-.is-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--teal);margin-bottom:18px;display:flex;align-items:center;gap:10px}
-.is-title::before{content:'';display:block;width:18px;height:1px;background:var(--teal);opacity:0.6}
-
-.field{margin-bottom:14px}
-.field:last-child{margin-bottom:0}
-.field label{display:block;font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
-.field input,.field select{width:100%;background:var(--off);border:1px solid var(--border);border-radius:2px;padding:9px 11px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13.5px;outline:none;transition:border-color 0.2s;-webkit-appearance:none;appearance:none}
-.field input:focus,.field select:focus{border-color:var(--grey900);background:white}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.field-hint{font-size:11px;color:var(--muted);margin-top:4px}
-
-/* Cost table inputs */
-.cost-table{width:100%;border-collapse:collapse;font-size:12.5px}
-.cost-table th{font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:6px 8px;border-bottom:2px solid var(--border);text-align:right}
-.cost-table th:first-child{text-align:left}
-.cost-table td{padding:5px 8px;border-bottom:1px solid var(--cream);vertical-align:middle}
-.cost-table td:first-child{color:var(--text);font-weight:400;font-size:12px}
-.cost-table td input{width:100%;background:var(--off);border:1px solid transparent;border-radius:2px;padding:5px 7px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12.5px;outline:none;text-align:right;transition:all 0.2s}
-.cost-table td input:focus{border-color:var(--grey900);background:white}
-.cost-table .subtotal td{background:var(--cream);font-weight:600;font-size:12px}
-.cost-table .subtotal td:not(:first-child){text-align:right}
-.ct-label{color:var(--muted);font-size:11px}
-.ct-calc{color:var(--muted);font-size:11px;text-align:right;padding:5px 8px}
-
-/* RIGHT — RESULTS */
-.results-col{padding:32px 36px;overflow-y:auto;height:calc(100vh - 64px)}
-.results-col::-webkit-scrollbar{width:4px}
-.results-col::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
-
-/* Summary cards */
-.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
-.scard{background:white;border:1px solid var(--border);border-radius:3px;padding:18px 20px;position:relative;overflow:hidden}
-.scard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
-.scard.ok::before{background:var(--green)}
-.scard.warn::before{background:var(--amber)}
-.scard.bad::before{background:var(--red)}
-.scard.neutral::before{background:var(--grey900)}
-.sc-label{font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
-.sc-value{font-family:'Source Serif 4',serif;font-size:28px;font-weight:400;line-height:1;color:var(--text)}
-.sc-value.ok{color:var(--green)}
-.sc-value.warn{color:var(--amber)}
-.sc-value.bad{color:var(--red)}
-.sc-sub{font-size:11px;color:var(--muted);margin-top:5px}
-.sc-flag{font-size:10.5px;font-weight:600;margin-top:5px}
-.sc-flag.ok{color:var(--green)}
-.sc-flag.warn{color:var(--amber)}
-.sc-flag.bad{color:var(--red)}
-
-/* Funding table output */
-.result-block{background:white;border:1px solid var(--border);border-radius:3px;margin-bottom:20px;overflow:hidden}
-.rb-head{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.rb-title{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal)}
-.rb-badge{padding:4px 11px;border-radius:2px;font-size:10px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase}
-.rb-badge.ok{background:var(--green-lt);color:var(--green);border:1px solid rgba(21,128,61,0.2)}
-.rb-badge.warn{background:var(--amber-lt);color:var(--amber);border:1px solid rgba(180,83,9,0.2)}
-.rb-badge.bad{background:var(--red-lt);color:var(--red);border:1px solid rgba(185,28,28,0.2)}
-.rb-body{padding:0}
-
-/* Output funding table */
-.ft-out{width:100%;border-collapse:collapse;font-size:13px}
-.ft-out th{font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:10px 20px;border-bottom:2px solid var(--border);text-align:right;background:var(--off)}
-.ft-out th:first-child{text-align:left}
-.ft-out td{padding:9px 20px;border-bottom:1px solid var(--cream);color:var(--text)}
-.ft-out td:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
-.ft-out .group-head td{background:var(--off);font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:8px 20px}
-.ft-out .subtot td{background:var(--cream);font-weight:600;border-top:2px solid var(--border)}
-.ft-out .total td{background:var(--grey900);color:white;font-weight:600;font-size:13.5px}
-.ft-out .total td:first-child{font-family:'Source Serif 4',serif;font-size:14px}
-.bank{color:var(--grey900);font-weight:600}
-.dev{color:var(--muted)}
-.int{color:var(--amber)}
-
-/* Feasibility summary */
-.feas-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--border)}
-.feas-row{display:flex;justify-content:space-between;align-items:center;padding:11px 22px;border-bottom:1px solid var(--cream);font-size:13px}
-.feas-row:last-child{border-bottom:none}
-.feas-k{color:var(--muted)}
-.feas-v{font-weight:600;color:var(--text)}
-.feas-v.ok{color:var(--green)}
-.feas-v.warn{color:var(--amber)}
-.feas-v.bad{color:var(--red)}
-.feas-total{display:flex;justify-content:space-between;align-items:center;padding:14px 22px;background:var(--off);border-top:2px solid var(--border);font-size:14px;font-weight:600}
-
-/* Cash flow table */
+.nav-right{display:flex;gap:12px;align-items:center}
+.nav-link{font-size:13px;color:var(--grey500);text-decoration:none;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);transition:all 0.15s;background:var(--white)}
+.nav-link:hover{border-color:var(--teal);color:var(--teal)}
+.tab-bar{background:var(--white);border-bottom:1px solid var(--border);display:flex;gap:0;padding:0 40px;overflow-x:auto}
+.tab{padding:14px 20px;font-size:13px;font-weight:500;color:var(--grey500);cursor:pointer;border-bottom:2.5px solid transparent;transition:all 0.2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.tab:hover{color:var(--teal)}
+.tab.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:600}
+.save-bar{background:var(--white);border-bottom:1px solid var(--border);padding:10px 40px;display:flex;align-items:center;gap:12px}
+.save-bar .mn{background:var(--grey50);border:1px solid var(--border);border-radius:4px;padding:6px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;width:220px}
+.save-bar .mn:focus{border-color:var(--teal);background:var(--white)}
+.sv-btn{padding:6px 16px;border-radius:var(--radius);border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.sv-p{background:var(--teal);color:white}.sv-p:hover{background:var(--teal-dark)}
+.sv-s{background:var(--white);color:var(--grey600);border:1px solid var(--border)!important}.sv-s:hover{border-color:var(--teal)!important;color:var(--teal)}
+.sv-status{font-size:11px;color:var(--muted);margin-left:auto}
+.ml-drop{position:relative;display:inline-block}
+.ml-list{position:absolute;top:100%;left:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:20;min-width:320px;max-height:300px;overflow-y:auto;margin-top:4px}
+.ml-item{padding:10px 14px;border-bottom:1px solid rgba(0,0,0,0.04);cursor:pointer;transition:background 0.1s;display:flex;justify-content:space-between;align-items:center}
+.ml-item:hover{background:var(--teal-bg)}.ml-item:last-child{border-bottom:none}
+.ml-nm{font-weight:600;font-size:13px}.ml-mt{font-size:11px;color:var(--muted)}
+.ml-del{color:var(--red);font-size:12px;cursor:pointer;padding:2px 6px;border-radius:4px;opacity:0.5;background:none;border:none}.ml-del:hover{opacity:1}
+.container{max-width:1500px;margin:0 auto;padding:24px 40px}
+.section{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:16px;overflow:hidden}
+.section-head{padding:14px 20px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);display:flex;align-items:center;justify-content:space-between}
+.row{display:flex;justify-content:space-between;align-items:center;padding:8px 20px;border-bottom:1px solid rgba(0,0,0,0.03);gap:10px}
+.row:last-child{border-bottom:none}
+.row.sub{background:var(--grey50);font-weight:600;border-top:1px solid var(--border)}
+.row.total-row{background:var(--grey900);color:white;font-weight:600;padding:12px 20px}
+.row-label{color:var(--grey600);flex:1;min-width:0}
+.row.sub .row-label,.row.total-row .row-label{color:inherit}
+.row-value{font-weight:500;font-variant-numeric:tabular-nums;text-align:right;flex-shrink:0}
+.inp{background:var(--grey50);border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);text-align:right;outline:none;font-variant-numeric:tabular-nums;transition:border-color 0.2s}
+.inp:focus{border-color:var(--teal);background:var(--white)}
+.inp.dollar{color:var(--teal-dark);font-weight:500}
+.inp.disabled{background:var(--grey200);color:var(--grey500);cursor:not-allowed}
+.sel{background:var(--grey50);border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;cursor:pointer}
+.sel:focus{border-color:var(--teal)}
+.pct{font-size:11px;color:var(--muted);margin-left:3px}
+.add-btn{padding:4px 12px;border-radius:4px;border:1px solid var(--teal-subtle);background:var(--teal-bg);color:var(--teal-dark);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.add-btn:hover{background:var(--teal);color:white;border-color:var(--teal)}
+.rm-btn{width:22px;height:22px;border-radius:4px;border:1px solid var(--border);background:var(--white);color:var(--red);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;line-height:1}
+.rm-btn:hover{background:rgba(220,38,38,0.06);border-color:var(--red)}
+.mode-toggle{display:flex;gap:8px;margin-bottom:20px}
+.mode-btn{padding:10px 20px;border-radius:var(--radius);border:1.5px solid var(--border);background:var(--white);color:var(--grey600);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+.mode-btn:hover{border-color:var(--teal);color:var(--teal)}
+.mode-btn.active{background:var(--teal-bg);border-color:var(--teal);color:var(--teal-dark);font-weight:600}
+/* Toggle switch */
+.toggle-row{display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid rgba(0,0,0,0.03)}
+.toggle-label{font-size:13px;color:var(--grey600);flex:1}
+.toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-track{position:absolute;cursor:pointer;inset:0;background:var(--grey200);border-radius:12px;transition:0.2s}
+.toggle-track:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.2s}
+.toggle input:checked+.toggle-track{background:var(--teal)}
+.toggle input:checked+.toggle-track:before{transform:translateX(20px)}
+/* Tables */
+.ct-scroll{overflow-x:auto}
+.ct{width:100%;border-collapse:collapse;font-size:12px}
+.ct th{font-size:9px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:var(--muted);padding:8px 8px;border-bottom:2px solid var(--border);text-align:right;background:var(--grey50);white-space:nowrap}
+.ct th:first-child{text-align:left}
+.ct td{padding:6px 8px;border-bottom:1px solid rgba(0,0,0,0.04);text-align:right;font-variant-numeric:tabular-nums}
+.ct td:first-child{text-align:left;color:var(--grey600)}
+.ct .ct-group td{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:10px 8px 4px;background:var(--grey50);border-bottom:1px solid var(--border)}
+.ct .ct-sub td{background:var(--grey50);font-weight:600;border-top:1px solid var(--border);color:var(--text)}
+.ct .ct-total td{background:var(--grey900);color:white;font-weight:700;padding:10px 8px}
+.ct-inp{background:var(--grey50);border:1px solid var(--border);border-radius:3px;padding:4px 6px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--teal-dark);text-align:right;width:100px;outline:none;font-variant-numeric:tabular-nums;font-weight:500}
+.ct-inp:focus{border-color:var(--teal);background:var(--white)}
+.ct-sel{background:var(--grey50);border:1px solid var(--border);border-radius:3px;padding:3px 4px;font-size:10px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;width:70px}
+.ct-esc{background:var(--grey50);border:1px solid var(--border);border-radius:3px;padding:4px 6px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--text);text-align:right;width:50px;outline:none}
+.ct-esc.disabled{background:var(--grey200);color:var(--grey500);cursor:not-allowed}
+.ct-bank{color:var(--grey700);font-weight:500}
+/* Unit table */
+.ut{width:100%;border-collapse:collapse;font-size:12px}
+.ut th{font-size:9px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:2px solid var(--border);text-align:right;background:var(--grey50)}
+.ut th:first-child{text-align:left}
+.ut td{padding:6px 10px;border-bottom:1px solid rgba(0,0,0,0.04);text-align:right;font-variant-numeric:tabular-nums}
+.ut td:first-child{text-align:left}
+.ut tfoot td{background:var(--grey900);color:white;font-weight:600;padding:10px}
+.ut-inp{background:var(--grey50);border:1px solid var(--border);border-radius:3px;padding:4px 6px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--teal-dark);text-align:right;outline:none;font-weight:500}
+.ut-inp:focus{border-color:var(--teal);background:var(--white)}
+.ut-sel{background:var(--grey50);border:1px solid var(--border);border-radius:3px;padding:3px 6px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none}
+/* Cashflow */
 .cf-scroll{overflow-x:auto}
-.cf-table{width:100%;border-collapse:collapse;font-size:11.5px;min-width:600px}
-.cf-table th{font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);padding:8px 10px;border-bottom:2px solid var(--border);text-align:right;background:var(--off);white-space:nowrap}
-.cf-table th:first-child{text-align:left;position:sticky;left:0;background:var(--off);z-index:1}
-.cf-table td{padding:7px 10px;border-bottom:1px solid var(--cream);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-.cf-table td:first-child{text-align:left;position:sticky;left:0;background:white;z-index:1;font-size:11px;color:var(--muted)}
-.cf-table .cf-section td:first-child{background:var(--off);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--grey900);padding:7px 10px}
-.cf-table .cf-total td{background:var(--grey900);color:white;font-weight:600}
-.cf-table .cf-total td:first-child{background:var(--grey900);color:rgba(255,255,255,0.7)}
-.cf-pos{color:var(--green)}.cf-neg{color:var(--red)}.cf-zero{color:var(--faint)}
-
-/* Loan covenants */
-.cov-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:22px}
-.cov-item{background:var(--off);border:1px solid var(--border);border-radius:3px;padding:16px}
-.cov-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
-.cov-value{font-family:'Source Serif 4',serif;font-size:24px;font-weight:400;color:var(--text)}
-.cov-value.ok{color:var(--green)}.cov-value.warn{color:var(--amber)}.cov-value.bad{color:var(--red)}
-.cov-check{font-size:11px;font-weight:600;margin-top:4px}
-.cov-check.ok{color:var(--green)}.cov-check.warn{color:var(--amber)}.cov-check.bad{color:var(--red)}
-
-/* Term sheet section */
-.term-sheet{background:white;border:1px solid var(--border);border-radius:3px;padding:28px;margin-bottom:20px}
-.ts-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid var(--grey900)}
-.ts-logo{font-family:'Source Serif 4',serif;font-size:20px;font-weight:700;color:var(--teal)}
-.ts-logo span{color:var(--teal)}
-.ts-meta{text-align:right}
-.ts-meta div{font-size:11.5px;color:var(--muted);margin-bottom:3px}
-.ts-meta strong{color:var(--text)}
-.ts-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:2px;overflow:hidden;margin-bottom:20px}
-.ts-row{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px}
-.ts-row:last-child{border-bottom:none}
-.ts-k{color:var(--muted);font-size:12px}
-.ts-v{font-weight:600;color:var(--text)}
-.ts-section-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--grey900);padding:10px 16px;background:var(--off);border-bottom:1px solid var(--border);grid-column:1/-1}
-.ts-disclaimer{font-size:11px;color:var(--muted);line-height:1.65;padding:16px;background:var(--off);border-radius:2px;border:1px solid var(--border)}
-
-/* Print */
-@media print{
-  .inputs-col{display:none}
-  .calc-wrap{display:block}
-  .results-col{height:auto;overflow:visible;padding:20px}
-}
-
-@media(max-width:900px){
-  .calc-wrap{grid-template-columns:1fr;height:auto}
-  .inputs-col{height:auto;position:static}
-  .results-col{height:auto}
-  .summary-grid{grid-template-columns:1fr 1fr}
-}
+.cf{width:100%;border-collapse:collapse;font-size:11px;min-width:800px}
+.cf th{font-size:8px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);padding:6px 6px;border-bottom:2px solid var(--border);text-align:right;background:var(--grey50);white-space:nowrap}
+.cf th:first-child{text-align:left;position:sticky;left:0;background:var(--grey50);z-index:2;min-width:140px}
+.cf td{padding:4px 6px;border-bottom:1px solid rgba(0,0,0,0.03);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cf td:first-child{text-align:left;position:sticky;left:0;background:var(--white);z-index:1;min-width:140px;color:var(--muted)}
+.cf .cf-sec td{background:var(--grey900);color:rgba(255,255,255,0.7);font-weight:700;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:8px 6px}
+.cf .cf-sec td:first-child{background:var(--grey900)}
+.cf .cf-sub td{background:var(--grey50);font-weight:600;border-top:1px solid var(--border)}
+.cf .cf-sub td:first-child{background:var(--grey50);color:var(--text)}
+/* Summary */
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.scard{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden}
+.scard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.scard.ok::before{background:var(--green)}.scard.warn::before{background:var(--amber)}.scard.bad::before{background:var(--red)}.scard.neutral::before{background:var(--teal)}
+.sc-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.sc-value{font-family:'Source Serif 4',serif;font-size:24px;font-weight:600;line-height:1}
+.sc-sub{font-size:11px;color:var(--muted);margin-top:5px}
+/* Banner */
+.adopted-banner{background:var(--grey900);border-radius:var(--radius-lg);padding:20px 24px;color:white;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.ab-label{font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;opacity:0.5;margin-bottom:4px}
+.ab-value{font-family:'Source Serif 4',serif;font-size:24px;font-weight:700}
+.ab-value.tl{color:var(--teal-light)}.ab-value.gn{color:#6ee7b7}.ab-value.rd{color:#fca5a5}
+/* Bar chart */
+.bar-chart{display:flex;align-items:flex-end;gap:2px;height:180px;padding-bottom:20px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center}
+.bar-seg{border-radius:2px 2px 0 0;transition:height 0.3s;min-width:3px;width:100%}
+.bar-label{font-size:8px;color:var(--muted);margin-top:3px}
+.bar-legend{display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:11px;color:var(--muted)}
+.bar-legend-dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
+/* Flow banner */
+.flow-banner{background:var(--teal-bg);border:1px solid var(--teal-subtle);border-radius:var(--radius);padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--teal-dark)}
+.flow-banner strong{font-weight:700;font-size:14px}
+/* Credit box */
+.credit-box{border-radius:var(--radius-lg);padding:16px;text-align:center;margin-top:16px;font-weight:600;font-size:15px}
+.credit-box.ok{background:rgba(5,150,105,0.08);border:1.5px solid var(--green);color:var(--green)}
+.credit-box.warn{background:rgba(217,119,6,0.08);border:1.5px solid var(--amber);color:var(--amber)}
+.credit-box.bad{background:rgba(220,38,38,0.06);border:1.5px solid var(--red);color:var(--red)}
+.hidden{display:none!important}
+@media(max-width:768px){.container{padding:16px}.nav{padding:0 16px}.tab-bar{padding:0 16px}.save-bar{padding:8px 16px;flex-wrap:wrap}.summary-grid{grid-template-columns:1fr 1fr}.adopted-banner{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
-
-<!-- TOP BAR -->
 <nav class="nav">
   <a class="nav-logo" href="index.html">getkredit<span>.ai</span></a>
   <div class="nav-links">
     <a href="admin.html" id="nav-admin" style="display:none">Admin</a>
     <a href="portal.html">My Deals</a>
     <a href="settlement.html">Settlement</a>
-    <a href="feasibility-capval.html">Cap Val</a>
-    <a href="feasibility.html" class="active">Dev Feasibility</a>
+    <a href="feasibility.html" class="active">Feasibility</a>
     <a href="credit-paper.html">Credit Paper</a>
-    <a href="development-chat.html">+ New Deal</a>
   </div>
   <div class="nav-right">
-    <button class="nav-btn" onclick="resetForm()">Reset</button>
-    <button class="nav-btn" onclick="loadExample()">Example</button>
-    <button class="nav-btn primary" onclick="window.print()">Print</button>
+    <span id="nav-user" style="font-size:12px;color:var(--muted);padding:7px 8px"></span>
+    <a href="portal.html" class="nav-link">← Portal</a>
   </div>
 </nav>
+<div class="tab-bar">
+  <button class="tab active" onclick="showTab('revenue')">① Revenue</button>
+  <button class="tab" onclick="showTab('costs')">② Costs & Funding</button>
+  <button class="tab" onclick="showTab('results')">③ Results</button>
+  <button class="tab" onclick="showTab('cashflow')">④ Cash Flow</button>
+</div>
+<div class="save-bar">
+  <input class="mn" id="model-name" placeholder="Model name..." value="Untitled Model">
+  <button class="sv-btn sv-p" onclick="saveModel()">💾 Save</button>
+  <div class="ml-drop">
+    <button class="sv-btn sv-s" onclick="toggleML()">📂 Load</button>
+    <div class="ml-list hidden" id="ml-list"></div>
+  </div>
+  <button class="sv-btn sv-s" onclick="newModel()">+ New</button>
+  <span class="sv-status" id="sv-status"></span>
+</div>
+<div class="container">
 
-<div class="calc-wrap">
+<!-- ═══════ TAB 1: REVENUE ═══════ -->
+<div id="tab-revenue">
+  <div class="mode-toggle">
+    <button class="mode-btn active" onclick="setMode('commercial')">Commercial — Cap Val</button>
+    <button class="mode-btn" onclick="setMode('resi')">Residential — Development</button>
+    <button class="mode-btn" onclick="setMode('strata')">Strata — Mixed Use</button>
+  </div>
 
-  <!-- ══ INPUTS ══ -->
-  <div class="inputs-col">
-
-    <!-- PROJECT INFO -->
-    <div class="input-section">
-      <div class="is-title">Project Details</div>
-      <div class="field"><label>Project Address</label><input type="text" id="i-address" placeholder="[Project Address]" oninput="calc()"></div>
-      <div class="field-row">
-        <div class="field"><label>No. of Residential Units</label><input type="number" id="i-units" value="2" min="0" oninput="calc()"></div>
-        <div class="field"><label>Avg Unit Sale Price ($)</label><input type="text" id="i-avgprice" value="2,750,000" oninput="calc()"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>No. of Commercial Units</label><input type="number" id="i-cunits" value="0" min="0" oninput="calc()"></div>
-        <div class="field"><label>Avg Commercial Price ($)</label><input type="text" id="i-cavgprice" value="0" oninput="calc()"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>GST Method</label>
-          <select id="i-gst" onchange="calc()">
-            <option value="margin">Margin Scheme (residential)</option>
-            <option value="standard">Standard (÷11)</option>
-            <option value="none">No GST</option>
-          </select>
-        </div>
-        <div class="field"><label>Sales Commission (%)</label><input type="number" id="i-commission" value="1.5" step="0.1" min="0" oninput="calc()"></div>
-      </div>
+  <!-- COMMERCIAL -->
+  <div id="sec-comm">
+    <div class="section"><div class="section-head">Income</div>
+      <div class="row"><span class="row-label">Tenant</span><input class="inp" id="i-tenant" value="Tenant" style="width:200px;text-align:left" onchange="calc()"></div>
+      <div class="row"><span class="row-label">Gross Income (p.a.)</span><input class="inp dollar" id="i-income" type="text" value="$492,000" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
+      <div class="row"><span class="row-label">Vacancy Allowance</span><input class="inp" id="i-vacancy" type="number" value="0" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+      <div class="row"><span class="row-label">Less: Vacancy</span><span class="row-value" id="o-vac" style="color:var(--red)">—</span></div>
+      <div class="row sub"><span class="row-label">Gross Income</span><span class="row-value" id="o-gi" style="color:var(--teal)">—</span></div>
     </div>
-
-    <!-- LOAN PARAMETERS -->
-    <div class="input-section">
-      <div class="is-title">Loan Parameters</div>
-      <div class="field-row">
-        <div class="field"><label>Loan Term (months)</label><input type="number" id="i-loanterm" value="18" min="1" max="60" oninput="calc()"></div>
-        <div class="field"><label>Construction Term (months)</label><input type="number" id="i-constterm" value="15" min="1" max="48" oninput="calc()"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Construction Start (mths delay)</label><input type="number" id="i-constdelay" value="0" min="0" oninput="calc()"></div>
-        <div class="field"><label>Sales Lag (mths after completion)</label><input type="number" id="i-saleslag" value="2" min="0" oninput="calc()"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Interest Rate (% p.a.)</label><input type="number" id="i-rate" value="6.5" step="0.1" min="0" oninput="calc()"></div>
-        <div class="field"><label>Line Fee (% p.a.)</label><input type="number" id="i-linefee" value="1.0" step="0.1" min="0" oninput="calc()"></div>
-      </div>
-      <div class="field-row">
-        <div class="field"><label>Application Fee (%)</label><input type="number" id="i-appfee" value="0.5" step="0.1" min="0" oninput="calc()"></div>
-        <div class="field"><label>Target Profit Margin (%)</label><input type="number" id="i-targetmargin" value="20" step="1" min="0" oninput="calc()"></div>
-      </div>
+    <div class="section"><div class="section-head">Outgoings<button class="add-btn" onclick="addOG()">+ Add</button></div>
+      <div id="og-list"></div>
+      <div class="row sub"><span class="row-label">Total Outgoings</span><span class="row-value" id="o-og" style="color:var(--red)">—</span></div>
     </div>
-
-    <!-- PRESALES -->
-    <div class="input-section">
-      <div class="is-title">Presales</div>
-      <div class="field-row">
-        <div class="field"><label>Unconditional Presales ($)</label><input type="text" id="i-presales" value="0" oninput="calc()"></div>
-        <div class="field"><label>Presales Commission (%)</label><input type="number" id="i-presalescomm" value="2.5" step="0.1" oninput="calc()"></div>
-      </div>
+    <div class="section"><div class="section-head">Recoveries & Other Income</div>
+      <div class="row"><span class="row-label">Outgoings Recoveries</span><input class="inp dollar" id="i-recov" type="text" value="$0" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
+      <div class="row"><span class="row-label">Other Income</span><input class="inp dollar" id="i-otherinc" type="text" value="$0" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
+      <div class="row sub"><span class="row-label">Net Income</span><span class="row-value" id="o-ni" style="color:var(--teal);font-size:16px;font-weight:700">—</span></div>
     </div>
-
-    <!-- COST TABLE -->
-    <div class="input-section">
-      <div class="is-title">Project Costs — Developer Equity Split</div>
-      <p style="font-size:11.5px;color:var(--muted);margin-bottom:14px;line-height:1.6">Enter total project cost. Then enter what the <strong>developer is funding</strong> — bank funds the rest.</p>
-      <table class="cost-table">
-        <thead>
-          <tr>
-            <th style="text-align:left">Cost Item</th>
-            <th>Project ($)</th>
-            <th>Dev. Equity ($)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td colspan="3" style="font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:8px 8px 4px;background:var(--off)">Land & Acquisition</td></tr>
-          <tr><td>Land Purchase</td><td><input type="text" id="c-land" value="2,200,000" oninput="calc()"></td><td><input type="text" id="e-land" value="2,200,000" oninput="calc()"></td></tr>
-          <tr><td>Stamp Duty <span class="ct-label">(5.7%)</span></td><td><input type="text" id="c-stamp" value="125,400" oninput="calc()"></td><td><input type="text" id="e-stamp" value="125,400" oninput="calc()"></td></tr>
-          <tr><td>Acquisition Legals</td><td><input type="text" id="c-legals" value="5,000" oninput="calc()"></td><td><input type="text" id="e-legals" value="5,000" oninput="calc()"></td></tr>
-          <tr><td>Conveyancing</td><td><input type="text" id="c-conv" value="3,000" oninput="calc()"></td><td><input type="text" id="e-conv" value="3,000" oninput="calc()"></td></tr>
-          <tr><td>Valuer</td><td><input type="text" id="c-val" value="10,000" oninput="calc()"></td><td><input type="text" id="e-val" value="10,000" oninput="calc()"></td></tr>
-          <tr><td>Statutory Authority Fees</td><td><input type="text" id="c-stat" value="50,000" oninput="calc()"></td><td><input type="text" id="e-stat" value="0" oninput="calc()"></td></tr>
-          <tr class="subtotal"><td>Subtotal — Land & Acquisition</td><td id="st-land-proj" style="text-align:right">—</td><td id="st-land-dev" style="text-align:right">—</td></tr>
-
-          <tr><td colspan="3" style="font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:8px 8px 4px;background:var(--off)">Construction & Development</td></tr>
-          <tr><td>Construction Contract</td><td><input type="text" id="c-const" value="2,000,000" oninput="calc()"></td><td><input type="text" id="e-const" value="0" oninput="calc()"></td></tr>
-          <tr><td>Contingency <span class="ct-label">(5%)</span></td><td><input type="text" id="c-cont" value="100,000" oninput="calc()"></td><td><input type="text" id="e-cont" value="0" oninput="calc()"></td></tr>
-          <tr><td>Demolition</td><td><input type="text" id="c-demo" value="50,000" oninput="calc()"></td><td><input type="text" id="e-demo" value="0" oninput="calc()"></td></tr>
-          <tr><td>Excavation</td><td><input type="text" id="c-excav" value="275,000" oninput="calc()"></td><td><input type="text" id="e-excav" value="0" oninput="calc()"></td></tr>
-          <tr><td>Dev. Management Fee <span class="ct-label">(5%)</span></td><td><input type="text" id="c-devmgmt" value="0" oninput="calc()"></td><td><input type="text" id="e-devmgmt" value="0" oninput="calc()"></td></tr>
-          <tr><td>Marketing</td><td><input type="text" id="c-mktg" value="15,000" oninput="calc()"></td><td><input type="text" id="e-mktg" value="0" oninput="calc()"></td></tr>
-          <tr><td>Holding Costs</td><td><input type="text" id="c-hold" value="20,000" oninput="calc()"></td><td><input type="text" id="e-hold" value="20,000" oninput="calc()"></td></tr>
-          <tr><td>Overheads</td><td><input type="text" id="c-overhead" value="0" oninput="calc()"></td><td><input type="text" id="e-overhead" value="0" oninput="calc()"></td></tr>
-          <tr class="subtotal"><td>Subtotal — Construction</td><td id="st-const-proj" style="text-align:right">—</td><td id="st-const-dev" style="text-align:right">—</td></tr>
-
-          <tr><td colspan="3" style="font-size:9.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:8px 8px 4px;background:var(--off)">Professional Fees</td></tr>
-          <tr><td>Architect <span class="ct-label">(1%)</span></td><td><input type="text" id="c-arch" value="20,000" oninput="calc()"></td><td><input type="text" id="e-arch" value="20,000" oninput="calc()"></td></tr>
-          <tr><td>Structural / Hydraulic <span class="ct-label">(0.5%)</span></td><td><input type="text" id="c-struct" value="10,000" oninput="calc()"></td><td><input type="text" id="e-struct" value="10,000" oninput="calc()"></td></tr>
-          <tr><td>Mechanical / Electrical <span class="ct-label">(0.5%)</span></td><td><input type="text" id="c-mech" value="10,000" oninput="calc()"></td><td><input type="text" id="e-mech" value="10,000" oninput="calc()"></td></tr>
-          <tr><td>Quantity Surveyors</td><td><input type="text" id="c-qs" value="10,000" oninput="calc()"></td><td><input type="text" id="e-qs" value="10,000" oninput="calc()"></td></tr>
-          <tr><td>Project Manager <span class="ct-label">(2%)</span></td><td><input type="text" id="c-pm" value="40,000" oninput="calc()"></td><td><input type="text" id="e-pm" value="0" oninput="calc()"></td></tr>
-          <tr><td>Consultant Contingency <span class="ct-label">(10%)</span></td><td><input type="text" id="c-consult" value="10,000" oninput="calc()"></td><td><input type="text" id="e-consult" value="0" oninput="calc()"></td></tr>
-          <tr class="subtotal"><td>Subtotal — Professional Fees</td><td id="st-prof-proj" style="text-align:right">—</td><td id="st-prof-dev" style="text-align:right">—</td></tr>
-        </tbody>
-      </table>
+    <div class="section"><div class="section-head">Capitalisation</div>
+      <div class="row"><span class="row-label">Cap Rate</span><input class="inp" id="i-caprate" type="number" value="6.0" step="0.25" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+      <div class="row sub"><span class="row-label">Capitalised Value</span><span class="row-value" id="o-capval" style="color:var(--teal);font-size:18px;font-weight:700">—</span></div>
+    </div>
+    <div class="section"><div class="section-head" style="color:var(--red)">Below the Line Adjustments<button class="add-btn" onclick="addBTL()">+ Add</button></div>
+      <div id="btl-list"></div>
+      <div class="row sub"><span class="row-label">Total BTL</span><span class="row-value" id="o-btl" style="color:var(--red)">—</span></div>
+    </div>
+    <div class="adopted-banner" style="grid-template-columns:1fr 1fr">
+      <div><div class="ab-label">Adopted Value</div><div class="ab-value" id="o-adopted">—</div></div>
+      <div style="text-align:right"><div class="ab-label">Passing Yield</div><div class="ab-value tl" id="o-yield">—</div></div>
     </div>
   </div>
 
-  <!-- ══ RESULTS ══ -->
-  <div class="results-col" id="results">
-
-    <!-- SUMMARY METRICS -->
-    <div class="summary-grid">
-      <div class="scard neutral"><div class="sc-label">Facility Limit</div><div class="sc-value" id="r-facility">—</div><div class="sc-sub" id="r-facility-sub">Calculating...</div></div>
-      <div class="scard" id="sc-lvr"><div class="sc-label">LVR</div><div class="sc-value" id="r-lvr">—</div><div class="sc-flag" id="r-lvr-flag">—</div></div>
-      <div class="scard" id="sc-poc"><div class="sc-label">Profit on Cost</div><div class="sc-value" id="r-poc">—</div><div class="sc-flag" id="r-poc-flag">—</div></div>
-      <div class="scard" id="sc-dc"><div class="sc-label">Presales Cover</div><div class="sc-value" id="r-dc">—</div><div class="sc-flag" id="r-dc-flag">—</div></div>
+  <!-- RESIDENTIAL -->
+  <div id="sec-resi" class="hidden">
+    <div class="section"><div class="section-head">Unit Schedule<button class="add-btn" onclick="addUnit()">+ Add Unit Type</button></div>
+      <div class="ct-scroll"><table class="ut" id="unit-table">
+        <thead><tr><th style="min-width:140px">Unit Type</th><th>Size Range</th><th>Qty</th><th>Avg Price</th><th>Line Total</th><th></th></tr></thead>
+        <tbody id="unit-body"></tbody>
+        <tfoot><tr><td colspan="2">GRV (Gross Realisable Value)</td><td id="ut-qty">—</td><td></td><td id="ut-grv">—</td><td></td></tr></tfoot>
+      </table></div>
     </div>
-
-    <!-- FUNDING TABLE -->
-    <div class="result-block">
-      <div class="rb-head">
-        <div class="rb-title">Indicative Funding Table</div>
-        <span class="rb-badge neutral" id="ft-badge">Calculating...</span>
-      </div>
-      <div class="rb-body">
-        <table class="ft-out">
-          <thead>
-            <tr>
-              <th style="text-align:left;min-width:220px">Cost Item</th>
-              <th>Project Total</th>
-              <th>Developer</th>
-              <th>Bank</th>
-              <th>Interest</th>
-              <th>Facility</th>
-            </tr>
-          </thead>
-          <tbody id="ft-body">
-            <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--muted);font-size:13px">Enter project details to generate funding table</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <div class="section"><div class="section-head">GST & Selling Costs</div>
+      <div class="row"><span class="row-label">GST Method</span><select class="sel" id="rv-gst" onchange="calc()" style="width:150px"><option value="margin">Margin Scheme</option><option value="standard">Standard (÷11)</option><option value="none">No GST</option></select></div>
+      <div class="row"><span class="row-label">Sales Commission</span><input class="inp" id="rv-comm" type="number" value="2.0" step="0.1" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+      <div class="row"><span class="row-label">Marketing Budget</span><input class="inp dollar" id="rv-mktg" type="text" value="$50,000" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
+      <div class="row sub"><span class="row-label">GST</span><span class="row-value" id="o-gst" style="color:var(--red)">—</span></div>
+      <div class="row sub"><span class="row-label">Commission</span><span class="row-value" id="o-comm" style="color:var(--red)">—</span></div>
+      <div class="row sub"><span class="row-label">Total Selling Costs</span><span class="row-value" id="o-sellcost" style="color:var(--red)">—</span></div>
     </div>
-
-    <!-- PROJECT FEASIBILITY -->
-    <div class="result-block">
-      <div class="rb-head">
-        <div class="rb-title">Project Feasibility</div>
-        <span class="rb-badge" id="feas-badge">—</span>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr">
-        <div>
-          <div class="feas-row"><span class="feas-k">Estimated GRV (inc. GST)</span><span class="feas-v" id="f-grv">—</span></div>
-          <div class="feas-row"><span class="feas-k">Less: GST</span><span class="feas-v" id="f-gst" style="color:var(--red)">—</span></div>
-          <div class="feas-row"><span class="feas-k">Less: Sales Commission</span><span class="feas-v" id="f-comm" style="color:var(--red)">—</span></div>
-          <div class="feas-row"><span class="feas-k">Net Realisation</span><span class="feas-v" id="f-nrv" style="font-weight:700">—</span></div>
-          <div class="feas-row"><span class="feas-k">Less: Total Development Cost</span><span class="feas-v" id="f-tdc" style="color:var(--red)">—</span></div>
-          <div class="feas-total"><span>Gross Profit Margin</span><span id="f-profit" style="font-family:'Source Serif 4',serif;font-size:18px">—</span></div>
-        </div>
-        <div style="border-left:1px solid var(--border)">
-          <div class="feas-row"><span class="feas-k">Return on Cost</span><span class="feas-v" id="f-roc">—</span></div>
-          <div class="feas-row"><span class="feas-k">Developer IRR (p.a.)</span><span class="feas-v" id="f-irr">—</span></div>
-          <div class="feas-row"><span class="feas-k">Equity Required</span><span class="feas-v" id="f-equity">—</span></div>
-          <div class="feas-row"><span class="feas-k">Interest (capitalised)</span><span class="feas-v" id="f-interest">—</span></div>
-          <div class="feas-row"><span class="feas-k">Line Fee (capitalised)</span><span class="feas-v" id="f-linefee">—</span></div>
-          <div class="feas-total"><span>RLV at <span id="f-targetlabel">20%</span> Margin</span><span id="f-rlv" style="font-family:'Source Serif 4',serif;font-size:18px">—</span></div>
-        </div>
-      </div>
+    <div class="section"><div class="section-head">Presales</div>
+      <div class="row"><span class="row-label">Unconditional Presales</span><input class="inp dollar" id="i-presales" type="text" value="$0" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
+      <div class="row"><span class="row-label">Presales Coverage (of debt)</span><span class="row-value" id="o-precov">—</span></div>
     </div>
-
-    <!-- LOAN COVENANTS -->
-    <div class="result-block">
-      <div class="rb-head"><div class="rb-title">Loan Covenants</div></div>
-      <div class="cov-grid">
-        <div class="cov-item"><div class="cov-label">Value on Completion (net GST)</div><div class="cov-value" id="cov-nrv">—</div></div>
-        <div class="cov-item"><div class="cov-label">Facility Limit</div><div class="cov-value" id="cov-facility">—</div></div>
-        <div class="cov-item"><div class="cov-label">LVR — On Completion</div><div class="cov-value" id="cov-lvr">—</div><div class="cov-check" id="cov-lvr-check">—</div></div>
-        <div class="cov-item"><div class="cov-label">LTC — On Cost</div><div class="cov-value" id="cov-ltc">—</div><div class="cov-check" id="cov-ltc-check">—</div></div>
-        <div class="cov-item"><div class="cov-label">Presales Coverage</div><div class="cov-value" id="cov-presales">—</div><div class="cov-check" id="cov-presales-check">—</div></div>
-        <div class="cov-item"><div class="cov-label">Equity Contribution</div><div class="cov-value" id="cov-equity">—</div><div class="cov-check" id="cov-equity-check">—</div></div>
-      </div>
+    <div class="adopted-banner" style="grid-template-columns:1fr 1fr">
+      <div><div class="ab-label">GRV</div><div class="ab-value" id="o-grv-ban">—</div></div>
+      <div style="text-align:right"><div class="ab-label">Net GRV (after costs)</div><div class="ab-value tl" id="o-netgrv">—</div></div>
     </div>
+  </div>
 
-    <!-- MONTH BY MONTH CASH FLOW -->
-    <div class="result-block">
-      <div class="rb-head"><div class="rb-title">Month-by-Month Cash Flow</div><span class="rb-badge neutral" id="cf-badge">S-Curve Drawdown</span></div>
-      <div class="cf-scroll">
-        <table class="cf-table" id="cf-table">
-          <thead id="cf-head"></thead>
-          <tbody id="cf-body"></tbody>
-        </table>
-      </div>
+  <!-- STRATA -->
+  <div id="sec-strata" class="hidden">
+    <div class="section"><div class="section-head">Revenue (Strata — Mixed Use)</div>
+      <div class="row"><span class="row-label">Commercial Component</span><input class="inp dollar" id="i-str-comm" type="text" value="$0" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
+      <div class="row"><span class="row-label">Residential Component</span><input class="inp dollar" id="i-str-resi" type="text" value="$0" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
+      <div class="row sub"><span class="row-label">Combined GRV</span><span class="row-value" id="o-str-grv" style="color:var(--teal);font-size:18px;font-weight:700">—</span></div>
     </div>
-
-    <!-- INDICATIVE TERM SHEET -->
-    <div class="term-sheet" id="term-sheet">
-      <div class="ts-header">
-        <div>
-          <div class="ts-logo">Originate<span>.ai</span></div>
-          <div style="font-size:12px;color:var(--muted);margin-top:4px">Indicative Term Sheet — Subject to Credit Approval</div>
-        </div>
-        <div class="ts-meta">
-          <div>Date: <strong id="ts-date">—</strong></div>
-          <div>Project: <strong id="ts-project">—</strong></div>
-          <div>Ref: <strong id="ts-ref">OAI-2025-001</strong></div>
-        </div>
-      </div>
-      <div class="ts-grid">
-        <div class="ts-section-title">Borrower & Project</div>
-        <div class="ts-row"><span class="ts-k">Project Address</span><span class="ts-v" id="ts-address">—</span></div>
-        <div class="ts-row"><span class="ts-k">Development Type</span><span class="ts-v" id="ts-type">—</span></div>
-        <div class="ts-row"><span class="ts-k">No. of Units</span><span class="ts-v" id="ts-units">—</span></div>
-        <div class="ts-row"><span class="ts-k">Est. Gross Realization</span><span class="ts-v" id="ts-grv">—</span></div>
-        <div class="ts-section-title">Facility Terms</div>
-        <div class="ts-row"><span class="ts-k">Facility Limit</span><span class="ts-v" id="ts-facility">—</span></div>
-        <div class="ts-row"><span class="ts-k">Facility Type</span><span class="ts-v">Construction — Progressive Drawdown</span></div>
-        <div class="ts-row"><span class="ts-k">Loan Term</span><span class="ts-v" id="ts-term">—</span></div>
-        <div class="ts-row"><span class="ts-k">Interest Rate</span><span class="ts-v" id="ts-rate">—</span></div>
-        <div class="ts-row"><span class="ts-k">Line Fee</span><span class="ts-v" id="ts-linefee">—</span></div>
-        <div class="ts-row"><span class="ts-k">Application Fee</span><span class="ts-v" id="ts-appfee">—</span></div>
-        <div class="ts-section-title">Key Metrics & Covenants</div>
-        <div class="ts-row"><span class="ts-k">LVR (on completion, net GST)</span><span class="ts-v" id="ts-lvr">—</span></div>
-        <div class="ts-row"><span class="ts-k">LTC (on total dev. cost)</span><span class="ts-v" id="ts-ltc">—</span></div>
-        <div class="ts-row"><span class="ts-k">Equity Required</span><span class="ts-v" id="ts-equity">—</span></div>
-        <div class="ts-row"><span class="ts-k">Presales Coverage</span><span class="ts-v" id="ts-presales">—</span></div>
-        <div class="ts-row"><span class="ts-k">Profit on Cost</span><span class="ts-v" id="ts-poc">—</span></div>
-        <div class="ts-row"><span class="ts-k">Developer IRR</span><span class="ts-v" id="ts-irr">—</span></div>
-        <div class="ts-section-title">Indicative Conditions</div>
-        <div class="ts-row"><span class="ts-k">Presales Requirement</span><span class="ts-v">Min. 100% of facility in unconditional presales</span></div>
-        <div class="ts-row"><span class="ts-k">Drawdown</span><span class="ts-v">Progressive — S-curve construction drawdown</span></div>
-        <div class="ts-row"><span class="ts-k">Interest</span><span class="ts-v">Capitalised monthly to facility</span></div>
-        <div class="ts-row"><span class="ts-k">Repayment</span><span class="ts-v">Bullet repayment from sales proceeds</span></div>
-      </div>
-      <div class="ts-disclaimer">
-        <strong>Important Notice:</strong> This indicative term sheet is provided by Originate.ai for discussion purposes only and does not constitute an offer of finance. All terms are indicative and subject to formal credit approval, satisfactory due diligence, valuation and execution of facility documentation. Originate.ai is not a credit provider. Finance is arranged through licensed lenders on our panel.
-      </div>
-    </div>
-
   </div>
 </div>
 
+<!-- ═══════ TAB 2: COSTS & FUNDING ═══════ -->
+<div id="tab-costs" class="hidden">
+  <div class="flow-banner">← Revenue: <strong id="flow-grv">—</strong> <span style="margin-left:8px;opacity:0.6" id="flow-mode">(commercial)</span></div>
+
+  <div class="section"><div class="section-head">Global Assumptions</div>
+    <div class="row"><span class="row-label">Project Months</span><input class="inp" id="g-months" type="number" value="36" min="1" max="120" style="width:80px" onchange="calc()"><span class="pct">mths</span></div>
+    <div class="row"><span class="row-label">Cost Escalation (p.a.)</span><input class="inp" id="g-costesc" type="number" value="3.0" step="0.1" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+  </div>
+
+  <!-- CAPITAL STACK TOGGLES -->
+  <div class="section"><div class="section-head">Capital Stack</div>
+    <div class="row sub"><span class="row-label">Senior Debt</span><span style="font-size:11px;color:var(--green)">Always active</span></div>
+    <div class="row"><span class="row-label">Interest Rate</span><input class="inp" id="s-rate" type="number" value="9.5" step="0.25" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+    <div class="row"><span class="row-label">Estab Fee</span><input class="inp" id="s-estab" type="number" value="1.65" step="0.05" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+    <div class="row"><span class="row-label">Line Fee (p.a.)</span><input class="inp" id="s-linefee" type="number" value="2.25" step="0.25" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+    <div class="row"><span class="row-label">Line Fee Frequency</span><select class="sel" id="s-linefreq" onchange="calc()"><option value="3">Quarterly</option><option value="1">Monthly</option><option value="6">Semi-Annual</option></select></div>
+
+    <div class="toggle-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:12px">
+      <span class="toggle-label" style="font-weight:600;color:var(--amber)">Mezzanine</span>
+      <label class="toggle"><input type="checkbox" id="mezz-on" onchange="toggleMezz();calc()"><span class="toggle-track"></span></label>
+    </div>
+    <div id="mezz-fields" class="hidden">
+      <div class="row"><span class="row-label">Mezz Interest Rate</span><input class="inp" id="m-rate" type="number" value="14" step="0.25" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+      <div class="row"><span class="row-label">Mezz Term</span><input class="inp" id="m-term" type="number" value="24" style="width:80px" onchange="calc()"><span class="pct">mths</span></div>
+    </div>
+
+    <div class="toggle-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:12px">
+      <span class="toggle-label" style="font-weight:600;color:var(--purple)">Preferred Equity</span>
+      <label class="toggle"><input type="checkbox" id="pref-on" onchange="togglePref();calc()"><span class="toggle-track"></span></label>
+    </div>
+    <div id="pref-fields" class="hidden">
+      <div class="row"><span class="row-label">Pref Coupon (p.a.)</span><input class="inp" id="p-coupon" type="number" value="12" step="0.25" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+      <div class="row"><span class="row-label">Profit Share</span><input class="inp" id="p-profshare" type="number" value="20" step="1" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+    </div>
+  </div>
+
+  <!-- COST TABLE -->
+  <div class="section"><div class="section-head">Project Costs & Funding Split<button class="add-btn" onclick="addCost()">+ Add Line</button></div>
+    <div class="ct-scroll"><table class="ct" id="cost-table">
+      <thead><tr>
+        <th style="min-width:170px">Cost Item</th><th>Project ($)</th><th>Ord. Equity ($)</th>
+        <th class="mezz-col hidden">Mezz ($)</th><th class="pref-col hidden">Pref Eq ($)</th>
+        <th>Senior ($)</th><th>Mth Start</th><th>Span</th><th>Profile</th><th>Esc.</th><th>Rate</th><th></th>
+      </tr></thead>
+      <tbody id="cost-body"></tbody>
+      <tfoot>
+        <tr class="ct-sub"><td>Total</td><td id="st-proj">—</td><td id="st-eq">—</td>
+          <td class="mezz-col hidden" id="st-mezz">—</td><td class="pref-col hidden" id="st-pref">—</td>
+          <td id="st-sr">—</td><td colspan="6"></td></tr>
+        <tr class="ct-sub"><td>Finance Costs</td><td id="st-fin">—</td><td></td>
+          <td class="mezz-col hidden"></td><td class="pref-col hidden"></td>
+          <td id="st-fin-sr">—</td><td colspan="6"></td></tr>
+        <tr class="ct-total"><td>Total Development Cost</td><td id="st-tdc">—</td><td id="st-tdc-eq">—</td>
+          <td class="mezz-col hidden" id="st-tdc-mezz">—</td><td class="pref-col hidden" id="st-tdc-pref">—</td>
+          <td id="st-tdc-sr">—</td><td colspan="6"></td></tr>
+      </tfoot>
+    </table></div>
+  </div>
+</div>
+
+<!-- ═══════ TAB 3: RESULTS ═══════ -->
+<div id="tab-results" class="hidden">
+  <div class="flow-banner">Revenue: <strong id="flow2-grv">—</strong> &nbsp;|&nbsp; TPC: <strong id="flow2-tpc">—</strong></div>
+  <div class="summary-grid" id="ret-cards"></div>
+  <div class="section"><div class="section-head">Feasibility</div>
+    <div class="row sub"><span class="row-label">GRV</span><span class="row-value" id="o-r-grv" style="color:var(--teal);font-size:16px;font-weight:700">—</span></div>
+    <div class="row sub"><span class="row-label">Development Margin</span><span class="row-value" id="o-r-margin">—</span></div>
+    <div class="row sub"><span class="row-label">Margin on Cost</span><span class="row-value" id="o-r-marpct">—</span></div>
+  </div>
+  <div id="credit-box" class="credit-box ok">—</div>
+  <div class="section" style="margin-top:16px" id="sec-sens"><div class="section-head">Cap Rate Sensitivity</div>
+    <div style="padding:0"><table class="ct" id="sens-table"><thead><tr><th style="text-align:left">Cap Rate</th><th>Cap Value</th><th>Dev Margin</th><th>Margin %</th></tr></thead><tbody id="sens-tbody"></tbody></table></div>
+  </div>
+  <div class="section" style="margin-top:16px"><div class="section-head">Reconciliation Waterfall</div><div id="ret-waterfall"></div></div>
+</div>
+
+<!-- ═══════ TAB 4: CASH FLOW ═══════ -->
+<div id="tab-cashflow" class="hidden">
+  <div class="summary-grid" id="cf-cards"></div>
+  <div class="section"><div class="section-head">Cumulative Capital Stack</div>
+    <div style="padding:20px"><div class="bar-chart" id="cf-bars"></div>
+      <div class="bar-legend">
+        <span><span class="bar-legend-dot" style="background:var(--teal)"></span>Equity</span>
+        <span class="mezz-legend hidden"><span class="bar-legend-dot" style="background:var(--amber)"></span>Mezz</span>
+        <span class="pref-legend hidden"><span class="bar-legend-dot" style="background:var(--purple)"></span>Pref Eq</span>
+        <span><span class="bar-legend-dot" style="background:var(--grey700)"></span>Senior</span>
+      </div>
+    </div>
+  </div>
+  <div class="section"><div class="section-head">Monthly Cash Flow</div>
+    <div class="cf-scroll"><table class="cf"><thead id="cf-thead"></thead><tbody id="cf-tbody"></tbody></table></div>
+  </div>
+</div>
+
+</div>
+
 <script>
-// ════════════════════════════════════════════════
-// S-CURVE TABLE (from Book 2 — % time → % work)
-// ════════════════════════════════════════════════
-const S_CURVE = [
-  [0,0],[1,0.10],[2,0.25],[3,0.45],[4,0.80],[5,1.20],[6,1.70],[7,2.30],[8,3.00],
-  [9,3.80],[10,4.70],[11,5.80],[12,7.00],[13,8.40],[14,9.90],[15,11.50],[16,13.20],
-  [17,15.00],[18,16.80],[19,18.70],[20,20.60],[21,22.50],[22,24.50],[23,26.40],
-  [24,28.30],[25,30.20],[26,32.10],[27,34.00],[28,35.80],[29,37.60],[30,39.40],
-  [31,41.10],[32,42.80],[33,44.50],[34,46.10],[35,47.70],[36,49.30],[37,50.80],
-  [38,52.30],[39,53.80],[40,55.20],[41,56.60],[42,57.90],[43,59.20],[44,60.50],
-  [45,61.70],[46,62.90],[47,64.10],[48,65.20],[49,66.30],[50,67.30],[51,68.30],
-  [52,69.30],[53,70.20],[54,71.10],[55,72.00],[56,72.80],[57,73.60],[58,74.40],
-  [59,75.10],[60,75.80],[61,76.50],[62,77.20],[63,77.80],[64,78.40],[65,79.00],
-  [66,79.60],[67,80.10],[68,80.60],[69,81.10],[70,81.60],[71,82.10],[72,82.50],
-  [73,83.00],[74,83.40],[75,83.90],[76,84.30],[77,84.80],[78,85.20],[79,85.70],
-  [80,86.20],[81,86.70],[82,87.20],[83,87.70],[84,88.30],[85,88.80],[86,89.40],
-  [87,90.00],[88,90.60],[89,91.20],[90,91.80],[91,92.50],[92,93.10],[93,93.80],
-  [94,94.50],[95,95.20],[96,95.90],[97,96.60],[98,97.40],[99,98.20],[100,100]
+"use strict";
+var MODE="commercial",MEZZ=false,PREF=false;
+
+// ── Formatters ──
+function fd(v){if(v==null||isNaN(v))return"—";return new Intl.NumberFormat("en-AU",{style:"currency",currency:"AUD",minimumFractionDigits:0,maximumFractionDigits:0}).format(v);}
+function fp(v,d){if(v==null||isNaN(v))return"—";return(v*100).toFixed(d||1)+"%";}
+function pn(s){return parseFloat(String(s).replace(/[$,\s]/g,''))||0;}
+function gv(id){var e=document.getElementById(id);return e?pn(e.value):0;}
+function sv(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
+function dfoc(el){var r=String(el.value).replace(/[$,\s]/g,'');el.value=r==='0'?'':r;el.select();}
+function dblr(el){var r=parseFloat(String(el.value).replace(/[$,\s]/g,''))||0;el.value=r===0?'$0':'$'+r.toLocaleString('en-AU');calc();}
+
+// ── Tabs ──
+var TABS=['revenue','costs','results','cashflow'];
+function showTab(t){TABS.forEach(function(id){document.getElementById('tab-'+id).classList.toggle('hidden',id!==t);});
+document.querySelectorAll('.tab').forEach(function(b,i){b.classList.toggle('active',TABS[i]===t);});calc();}
+
+// ── Mode ──
+function setMode(m){MODE=m;document.querySelectorAll('.mode-btn').forEach(function(b){b.classList.toggle('active',
+(m==='commercial'&&b.textContent.indexOf('Commercial')>-1)||(m==='resi'&&b.textContent.indexOf('Residential')>-1)||(m==='strata'&&b.textContent.indexOf('Strata')>-1));});
+document.getElementById('sec-comm').classList.toggle('hidden',m!=='commercial');
+document.getElementById('sec-resi').classList.toggle('hidden',m!=='resi');
+document.getElementById('sec-strata').classList.toggle('hidden',m!=='strata');
+document.getElementById('sec-sens').classList.toggle('hidden',m!=='commercial');calc();}
+
+// ── Toggles ──
+function toggleMezz(){MEZZ=document.getElementById('mezz-on').checked;document.getElementById('mezz-fields').classList.toggle('hidden',!MEZZ);
+document.querySelectorAll('.mezz-col,.mezz-legend').forEach(function(e){e.classList.toggle('hidden',!MEZZ);});}
+function togglePref(){PREF=document.getElementById('pref-on').checked;document.getElementById('pref-fields').classList.toggle('hidden',!PREF);
+document.querySelectorAll('.pref-col,.pref-legend').forEach(function(e){e.classList.toggle('hidden',!PREF);});}
+
+// ── Unit type config ──
+var UNIT_TYPES={
+'1-Bed Apartment':['40-50m²','50-60m²','60-70m²'],
+'2-Bed Apartment':['60-70m²','70-80m²','80-90m²'],
+'3-Bed Apartment':['85-95m²','95-110m²','110-130m²'],
+'Studio':['25-35m²','35-45m²'],
+'Townhouse':['100-120m²','120-150m²','150-180m²'],
+'Villa':['120-150m²','150-200m²','200-250m²'],
+'Duplex':['100-130m²','130-160m²','160-200m²'],
+'House & Land':['150-200m²','200-250m²','250-300m²','300-400m²'],
+'Penthouse':['100-150m²','150-200m²','200-300m²'],
+'Commercial':['50-100m²','100-200m²','200-500m²']
+};
+
+var unitId=0;
+function initUnits(){document.getElementById('unit-body').innerHTML='';unitId=0;
+[{type:'2-Bed Apartment',size:'70-80m²',qty:6,price:850000},{type:'3-Bed Apartment',size:'95-110m²',qty:4,price:1100000}].forEach(function(u){addUnit(u);});}
+
+function addUnit(data){unitId++;var d=data||{type:'2-Bed Apartment',size:'70-80m²',qty:1,price:0};var id=unitId;
+var typeOpts=Object.keys(UNIT_TYPES).map(function(t){return'<option value="'+t+'"'+(t===d.type?' selected':'')+'>'+t+'</option>';}).join('');
+var sizeOpts=(UNIT_TYPES[d.type]||[]).map(function(s){return'<option value="'+s+'"'+(s===d.size?' selected':'')+'>'+s+'</option>';}).join('');
+var tr=document.createElement('tr');tr.id='ur-'+id;
+tr.innerHTML='<td><select class="ut-sel" onchange="updateSizeOpts('+id+',this.value);calc()">'+typeOpts+'</select></td>'
++'<td><select class="ut-sel" id="ur-size-'+id+'" onchange="calc()">'+sizeOpts+'</select></td>'
++'<td><input class="ut-inp" type="number" value="'+d.qty+'" min="0" style="width:50px" onchange="calc()"></td>'
++'<td><input class="ut-inp dollar" type="text" value="$'+d.price.toLocaleString('en-AU')+'" style="width:110px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
++'<td class="ut-total" id="ur-tot-'+id+'" style="font-weight:600;color:var(--teal)">—</td>'
++'<td><button class="rm-btn" onclick="document.getElementById(\'ur-'+id+'\').remove();calc()">×</button></td>';
+document.getElementById('unit-body').appendChild(tr);}
+
+function updateSizeOpts(id,type){var sel=document.getElementById('ur-size-'+id);if(!sel)return;
+sel.innerHTML=(UNIT_TYPES[type]||[]).map(function(s){return'<option value="'+s+'">'+s+'</option>';}).join('');}
+
+// ── Dynamic outgoings ──
+var ogId=0;
+function initOG(){document.getElementById('og-list').innerHTML='';ogId=0;
+['Statutory','Recoverable','Non-Recoverable'].forEach(function(n){addOG(n,0);});}
+function addOG(name,val){ogId++;var id=ogId;var div=document.createElement('div');div.className='row';div.id='og-'+id;
+div.innerHTML='<input class="inp" style="width:180px;text-align:left;flex:1" value="'+(name||'')+'" placeholder="Outgoing...">'
++'<input class="inp dollar" type="text" value="$'+((val||0).toLocaleString('en-AU'))+'" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()">'
++'<button class="rm-btn" onclick="document.getElementById(\'og-'+id+'\').remove();calc()">×</button>';
+document.getElementById('og-list').appendChild(div);}
+
+// ── Dynamic BTL ──
+var btlId=0;
+function initBTL(){document.getElementById('btl-list').innerHTML='';btlId=0;
+[{n:'Capex / Leasing Costs',v:50000},{n:'Outstanding Lease Incentives',v:0},{n:'Make-Good Provisions',v:0}].forEach(function(b){addBTL(b.n,b.v);});}
+function addBTL(name,val){btlId++;var id=btlId;var div=document.createElement('div');div.className='row';div.id='btl-'+id;
+div.innerHTML='<input class="inp" style="width:200px;text-align:left;flex:1" value="'+(name||'')+'" placeholder="Adjustment...">'
++'<input class="inp dollar" type="text" value="$'+((val||0).toLocaleString('en-AU'))+'" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()">'
++'<button class="rm-btn" onclick="document.getElementById(\'btl-'+id+'\').remove();calc()">×</button>';
+document.getElementById('btl-list').appendChild(div);}
+
+// ── Cost table ──
+var costId=0;
+var defaultCosts=[
+{grp:'Land & Acquisition',items:[{name:'Land Settlement',proj:5300000,eq:1900000,mezz:0,pref:0,ms:1,sp:1},{name:'Stamp Duty',proj:311183,eq:311183,mezz:0,pref:0,ms:1,sp:1},{name:'Legal / Setups',proj:35000,eq:35000,mezz:0,pref:0,ms:1,sp:1}]},
+{grp:'Construction',items:[{name:'Construction',proj:14358190,eq:2100000,mezz:0,pref:0,ms:8,sp:21},{name:'Building & Dev',proj:627000,eq:627000,mezz:0,pref:0,ms:8,sp:21},{name:'Professional Fees',proj:855250,eq:855250,mezz:0,pref:0,ms:8,sp:21},{name:'Council / S94',proj:286770,eq:286770,mezz:0,pref:0,ms:8,sp:21},{name:'Marketing',proj:734250,eq:734250,mezz:0,pref:0,ms:8,sp:21},{name:'Contingency',proj:1435819,eq:1435819,mezz:0,pref:0,ms:8,sp:21}]}
 ];
+function initCosts(){var b=document.getElementById('cost-body');b.innerHTML='';costId=0;
+defaultCosts.forEach(function(g){var gr=document.createElement('tr');gr.className='ct-group';gr.innerHTML='<td colspan="12">'+g.grp+'</td>';b.appendChild(gr);
+g.items.forEach(function(it){addCost(it,g.grp);});});}
 
-function sCurveWork(pctTime) {
-  if (pctTime <= 0) return 0;
-  if (pctTime >= 100) return 100;
-  const pt = Math.floor(pctTime);
-  const row = S_CURVE.find(r => r[0] === pt);
-  return row ? row[1] : 0;
-}
+function addCost(data,group){costId++;var d=data||{name:'',proj:0,eq:0,mezz:0,pref:0,ms:1,sp:1};var id=costId;
+var tr=document.createElement('tr');tr.id='cr-'+id;tr.dataset.group=group||'Construction';
+tr.innerHTML='<td><input class="ct-inp" style="width:150px;text-align:left" value="'+d.name+'" onchange="calc()"></td>'
++'<td><input class="ct-inp dollar" value="$'+d.proj.toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
++'<td><input class="ct-inp dollar" value="$'+d.eq.toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
++'<td class="mezz-col'+(MEZZ?'':' hidden')+'"><input class="ct-inp dollar" value="$'+(d.mezz||0).toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
++'<td class="pref-col'+(PREF?'':' hidden')+'"><input class="ct-inp dollar" value="$'+(d.pref||0).toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
++'<td class="ct-bank" id="cr-sr-'+id+'">—</td>'
++'<td><input class="ct-inp" type="number" value="'+d.ms+'" min="0" max="120" style="width:45px" onchange="calc()"></td>'
++'<td><input class="ct-inp" type="number" value="'+d.sp+'" min="1" max="120" style="width:45px" onchange="calc()"></td>'
++'<td><select class="ct-sel" onchange="calc()"><option value="straight">Straight</option><option value="scurve">S-Curve</option></select></td>'
++'<td><select class="ct-sel" style="width:40px" onchange="togEsc(this,'+id+');calc()"><option value="N">N</option><option value="Y">Y</option></select></td>'
++'<td><input class="ct-esc disabled" id="cr-esc-'+id+'" type="number" value="'+gv('g-costesc')+'" step="0.1" style="width:48px" disabled onchange="calc()"></td>'
++'<td><button class="rm-btn" onclick="document.getElementById(\'cr-'+id+'\').remove();calc()">×</button></td>';
+document.getElementById('cost-body').appendChild(tr);}
 
-// ════════════════════════════════════════════════
-// HELPERS
-// ════════════════════════════════════════════════
-const p = (id) => document.getElementById(id);
-const n = (id) => parseNum(p(id)?.value || '0');
-const parseNum = (s) => {
-  if (!s) return 0;
-  const v = parseFloat(String(s).replace(/[$,\s]/g,''));
-  return isNaN(v) ? 0 : v;
-};
-const f$ = (v, dec=0) => {
-  if (v === null || v === undefined || isNaN(v)) return '—';
-  const abs = Math.abs(v);
-  const fmt = new Intl.NumberFormat('en-AU',{style:'currency',currency:'AUD',minimumFractionDigits:dec,maximumFractionDigits:dec}).format(abs);
-  return v < 0 ? `(${fmt})` : fmt;
-};
-const fPct = (v, dec=1) => isNaN(v) || !isFinite(v) ? '—' : (v*100).toFixed(dec)+'%';
-const fRat = (v) => isNaN(v) || !isFinite(v) || v===0 ? '—' : v.toFixed(2)+'x';
+function togEsc(sel,id){var inp=document.getElementById('cr-esc-'+id);if(sel.value==='Y'){inp.disabled=false;inp.classList.remove('disabled');}else{inp.disabled=true;inp.classList.add('disabled');}}
 
-// Dollar input formatting
-function dollarFocus(el) {
-  const raw = parseNum(el.value);
-  el.value = raw === 0 ? '' : String(raw);
-  el.select();
-}
-function dollarBlur(el) {
-  const raw = parseNum(el.value);
-  el.value = raw === 0 ? '$0' : '$' + raw.toLocaleString('en-AU');
-  calc();
-}
-function fmtDollarInput(el) {
-  const raw = parseNum(el.value);
-  el.value = raw === 0 ? '$0' : '$' + raw.toLocaleString('en-AU');
-}
-function initDollarInputs() {
-  document.querySelectorAll('.cost-table td input[type="text"]').forEach(el => {
-    el.setAttribute('onfocus', 'dollarFocus(this)');
-    el.setAttribute('onblur', 'dollarBlur(this)');
-    fmtDollarInput(el);
+// ── Profiles ──
+function profStr(sp){var p=[];for(var i=0;i<sp;i++)p.push(1/sp);return p;}
+function profSC(sp){var r=[];for(var i=0;i<sp;i++){var t=(i+0.5)/sp;r.push(Math.pow(Math.sin(t*Math.PI/2),1.5));}var s=r.reduce(function(a,b){return a+b;},0);return r.map(function(v){return v/s;});}
+
+// ── Read cost table ──
+function readCosts(){var rows=[];document.querySelectorAll('#cost-body tr:not(.ct-group)').forEach(function(tr){
+var inps=tr.querySelectorAll('.ct-inp');var sels=tr.querySelectorAll('.ct-sel');if(inps.length<6)return;
+var proj=pn(inps[1].value),eq=pn(inps[2].value);
+var mezzIdx=MEZZ?3:-1,prefIdx=PREF?(MEZZ?4:3):-1;
+var baseIdx=MEZZ&&PREF?5:MEZZ?4:PREF?4:3;
+var mezz=mezzIdx>=0?pn(inps[mezzIdx].value):0;
+var pref=prefIdx>=0?pn(inps[prefIdx].value):0;
+eq=Math.min(eq,proj);mezz=Math.min(mezz,proj-eq);pref=Math.min(pref,proj-eq-mezz);
+var sr=proj-eq-mezz-pref;
+var ms=parseInt(inps[baseIdx].value)||0,sp=parseInt(inps[baseIdx+1].value)||1;
+var profile=sels[0]?sels[0].value:'straight';
+var escYN=sels[1]?sels[1].value:'N';var escInp=tr.querySelector('.ct-esc');
+var escRate=escYN==='Y'&&escInp?parseFloat(escInp.value)||0:0;
+var srCell=tr.querySelector('.ct-bank');if(srCell)srCell.textContent=fd(sr);
+rows.push({proj:proj,eq:eq,mezz:mezz,pref:pref,sr:sr,ms:ms,sp:sp,profile:profile,escYN:escYN,escRate:escRate,group:tr.dataset.group||'Construction'});});
+return rows;}
+
+// ══════════════════════════════════════════════════
+// MAIN CALC
+// ══════════════════════════════════════════════════
+function calc(){try{calcInner();}catch(e){console.warn('Calc:',e);}}
+
+function calcInner(){
+var months=Math.min(Math.max(gv('g-months'),1),120);
+var sRate=gv('s-rate')/100,sEstab=gv('s-estab')/100,sLine=gv('s-linefee')/100,sFreq=parseInt(document.getElementById('s-linefreq').value)||3;
+var mRate=MEZZ?gv('m-rate')/100:0;
+var pCoup=PREF?gv('p-coupon')/100:0;
+
+// ── REVENUE ──
+var grv=0,netIncome=0,capRate=0,totalBTL=0,grossIncome=0;
+
+if(MODE==='commercial'){
+  grossIncome=gv('i-income');var vacP=gv('i-vacancy')/100;var vacA=grossIncome*vacP;var gi=grossIncome-vacA;
+  var ogTotal=0;document.querySelectorAll('#og-list .row').forEach(function(r){var v=r.querySelectorAll('.inp');if(v.length>=2)ogTotal+=pn(v[1].value);});
+  var recov=gv('i-recov'),otherInc=gv('i-otherinc');
+  netIncome=gi-ogTotal+recov+otherInc;
+  capRate=gv('i-caprate')/100;var capVal=capRate>0?netIncome/capRate:0;
+  totalBTL=0;document.querySelectorAll('#btl-list .row').forEach(function(r){var v=r.querySelectorAll('.inp');if(v.length>=2)totalBTL+=pn(v[1].value);});
+  var adopted=capVal-totalBTL;var yld=adopted>0?grossIncome/adopted:0;
+  grv=adopted;
+  sv('o-vac','-'+fd(vacA));sv('o-gi',fd(gi));sv('o-og','-'+fd(ogTotal));sv('o-ni',fd(netIncome));
+  sv('o-capval',fd(capVal));sv('o-btl','-'+fd(totalBTL));sv('o-adopted',fd(adopted));sv('o-yield',fp(yld));
+} else if(MODE==='resi'){
+  var totalQty=0;grv=0;
+  document.querySelectorAll('#unit-body tr').forEach(function(tr){
+    var inps=tr.querySelectorAll('.ut-inp');if(inps.length<2)return;
+    var qty=parseInt(inps[0].value)||0;var price=pn(inps[1].value);var line=qty*price;
+    totalQty+=qty;grv+=line;
+    var totEl=tr.querySelector('.ut-total');if(totEl)totEl.textContent=fd(line);
   });
+  sv('ut-qty',totalQty);sv('ut-grv',fd(grv));
+  var gstM=document.getElementById('rv-gst').value;var commP=gv('rv-comm')/100;var mktg=gv('rv-mktg');
+  var gstA=0;if(gstM==='margin'){gstA=Math.max(0,(grv-gv('i-landval'))/11);}else if(gstM==='standard'){gstA=grv/11;}
+  var commA=grv*commP;var sellCost=gstA+commA+mktg;
+  sv('o-gst','-'+fd(gstA));sv('o-comm','-'+fd(commA));sv('o-sellcost','-'+fd(sellCost));
+  var netGRV=grv-sellCost;
+  sv('o-grv-ban',fd(grv));sv('o-netgrv',fd(netGRV));
+  grv=netGRV;
+} else if(MODE==='strata'){
+  grv=gv('i-str-comm')+gv('i-str-resi');sv('o-str-grv',fd(grv));
 }
 
-// XIRR — Newton-Raphson (from Java XirrService)
-function xirr(flows) {
-  if (!flows || flows.length < 2) return 0;
-  const first = flows[0].month;
-  const f = flows.map(cf => ({ a: cf.amount, t: (cf.month - first) / 12 }));
-  let r = 0.10;
-  for (let i = 0; i < 200; i++) {
-    let npv = 0, dnpv = 0;
-    for (const cf of f) {
-      const fac = Math.pow(1 + r, cf.t);
-      npv += cf.a / fac;
-      if (cf.t !== 0) dnpv -= cf.t * cf.a / (fac * (1 + r));
-    }
-    if (Math.abs(dnpv) < 1e-10) break;
-    const nr = r - npv / dnpv;
-    if (Math.abs(nr - r) < 1e-10) return nr;
-    r = nr;
-    if (r < -0.999) r = -0.5;
-  }
-  return r;
+// ── COSTS ──
+var costs=readCosts();
+var totProj=0,totEq=0,totMezz=0,totPref=0,totSr=0;
+costs.forEach(function(c){totProj+=c.proj;totEq+=c.eq;totMezz+=c.mezz;totPref+=c.pref;totSr+=c.sr;});
+sv('st-proj',fd(totProj));sv('st-eq',fd(totEq));sv('st-mezz',fd(totMezz));sv('st-pref',fd(totPref));sv('st-sr',fd(totSr));
+
+// Flow banners
+sv('flow-grv',fd(grv));sv('flow-mode','('+MODE+')');sv('flow2-grv',fd(grv));
+
+// ── MONTHLY ARRAYS ──
+var mExp=new Array(months+1).fill(0),mEq=new Array(months+1).fill(0),mMz=new Array(months+1).fill(0),mPr=new Array(months+1).fill(0),mSr=new Array(months+1).fill(0);
+costs.forEach(function(c){if(c.sp<=0||c.proj<=0)return;var prof=c.profile==='scurve'?profSC(c.sp):profStr(c.sp);
+var mEsc=c.escYN==='Y'?Math.pow(1+c.escRate/100,1/12)-1:0;
+for(var i=0;i<c.sp;i++){var m=c.ms+i;if(m<0||m>months)continue;var esc=c.escYN==='Y'?Math.pow(1+mEsc,m):1;
+mExp[m]+=c.proj*prof[i]*esc;mEq[m]+=c.eq*prof[i]*esc;mMz[m]+=c.mezz*prof[i]*esc;mPr[m]+=c.pref*prof[i]*esc;mSr[m]+=Math.max(0,(c.sr)*prof[i]*esc);}});
+
+// Revenue per month (spread evenly over last 6 months for resi, immediate for commercial)
+var mRev=new Array(months+1).fill(0);
+if(MODE==='commercial'){mRev[months]=grv;}
+else{var saleStart=Math.max(1,months-5);var salePer=grv/Math.min(6,months-saleStart+1);for(var m=saleStart;m<=months;m++)mRev[m]=salePer;}
+
+// ── SENIOR DEBT ──
+var srO=new Array(months+1).fill(0),srD=new Array(months+1).fill(0),srR=new Array(months+1).fill(0);
+var srEst=new Array(months+1).fill(0),srLn=new Array(months+1).fill(0),srI=new Array(months+1).fill(0),srC=new Array(months+1).fill(0);
+srEst[0]=totSr*sEstab;var lnPer=totSr*sLine/(12/sFreq);
+for(var m=0;m<=months;m++){if(m%sFreq===0)srLn[m]=lnPer;}
+var totSrI=0,totSrF=0;
+for(var m=0;m<=months;m++){srO[m]=m>0?srC[m-1]:0;srD[m]=mSr[m];
+var bal=srO[m]+srD[m]+srEst[m]+srLn[m];srI[m]=bal*(sRate/12);totSrI+=srI[m];totSrF+=srEst[m]+srLn[m];
+var avail=mRev[m];srR[m]=avail>0?Math.min(avail,bal+srI[m]):0;
+srC[m]=bal+srI[m]-srR[m];if(srC[m]<1)srC[m]=0;}
+var finCosts=totSrI+totSrF;
+sv('st-fin',fd(finCosts));sv('st-fin-sr',fd(finCosts));
+sv('st-tdc',fd(totProj+finCosts));sv('st-tdc-eq',fd(totEq));sv('st-tdc-mezz',fd(totMezz));sv('st-tdc-pref',fd(totPref));sv('st-tdc-sr',fd(totSr+finCosts));
+
+// ── MEZZ ──
+var mzO=new Array(months+1).fill(0),mzD=new Array(months+1).fill(0),mzI=new Array(months+1).fill(0),mzR=new Array(months+1).fill(0),mzC=new Array(months+1).fill(0);
+if(MEZZ){for(var m=0;m<=months;m++){mzO[m]=m>0?mzC[m-1]:0;mzD[m]=mMz[m];mzI[m]=(mzO[m]+mzD[m])*(mRate/12);
+var av=mRev[m]-srR[m];mzR[m]=av>0?Math.min(av,mzO[m]+mzD[m]+mzI[m]):0;mzC[m]=mzO[m]+mzD[m]+mzI[m]-mzR[m];if(mzC[m]<1)mzC[m]=0;}}
+
+// ── PREF EQUITY ──
+var prO=new Array(months+1).fill(0),prD=new Array(months+1).fill(0),prI=new Array(months+1).fill(0),prR=new Array(months+1).fill(0),prC=new Array(months+1).fill(0);
+if(PREF){for(var m=0;m<=months;m++){prO[m]=m>0?prC[m-1]:0;prD[m]=mPr[m];prI[m]=(prO[m]+prD[m])*(pCoup/12);
+var av=mRev[m]-srR[m]-mzR[m];prR[m]=av>0?Math.min(av,prO[m]+prD[m]+prI[m]):0;prC[m]=prO[m]+prD[m]+prI[m]-prR[m];if(prC[m]<1)prC[m]=0;}}
+
+// ── EQUITY ──
+var eqO=new Array(months+1).fill(0),eqD=new Array(months+1).fill(0),eqR=new Array(months+1).fill(0),eqC=new Array(months+1).fill(0);
+for(var m=0;m<=months;m++){eqO[m]=m>0?eqC[m-1]:0;eqD[m]=mEq[m];
+var av=mRev[m]-srR[m]-mzR[m]-prR[m];eqR[m]=av>0?Math.min(av,eqO[m]+eqD[m]):0;eqC[m]=eqO[m]+eqD[m]-eqR[m];if(eqC[m]<1)eqC[m]=0;}
+
+// Profit
+var profitArr=new Array(months+1).fill(0),totalProfit=0;
+for(var m=0;m<=months;m++){var rem=mRev[m]-srR[m]-mzR[m]-prR[m]-eqR[m];profitArr[m]=Math.max(0,rem);totalProfit+=profitArr[m];}
+
+var totalProjectCost=totProj+finCosts;
+var devMargin=grv-totalProjectCost;var marginPct=totalProjectCost>0?devMargin/totalProjectCost:0;
+var peakDebt=Math.max.apply(null,srC);var ltc=totalProjectCost>0?totSr/totalProjectCost:0;
+var roc=totalProjectCost>0?totalProfit/totalProjectCost:0;
+var eqMoic=totEq>0?(totEq+totalProfit)/totEq:0;
+
+sv('flow2-tpc',fd(totalProjectCost));sv('o-r-grv',fd(grv));
+var mEl=document.getElementById('o-r-margin');if(mEl){mEl.textContent=fd(devMargin);mEl.style.color=devMargin>=0?'var(--green)':'var(--red)';}
+var mpEl=document.getElementById('o-r-marpct');if(mpEl){mpEl.textContent=fp(marginPct);mpEl.style.color=marginPct>=0.2?'var(--green)':marginPct>=0.15?'var(--amber)':'var(--red)';}
+var cb=document.getElementById('credit-box');
+if(cb){if(marginPct>=0.2){cb.className='credit-box ok';cb.textContent='✓ Strong margin — bankable';}
+else if(marginPct>=0.15){cb.className='credit-box warn';cb.textContent='⚠ Marginal — lender dependent';}
+else{cb.className='credit-box bad';cb.textContent='✗ Insufficient margin — requires restructure';}}
+
+// Presales coverage
+if(MODE==='resi'){var pre=gv('i-presales');sv('o-precov',totSr>0?fp(pre/totSr)+' of debt':'—');}
+
+// ── RESULTS CARDS ──
+document.getElementById('ret-cards').innerHTML=
+'<div class="scard '+(marginPct>=0.2?'ok':marginPct>=0.15?'warn':'bad')+'"><div class="sc-label">Margin on Cost</div><div class="sc-value">'+fp(marginPct)+'</div><div class="sc-sub">'+fd(devMargin)+'</div></div>'
++'<div class="scard neutral"><div class="sc-label">LTC (Senior)</div><div class="sc-value">'+fp(ltc)+'</div></div>'
++'<div class="scard neutral"><div class="sc-label">Equity MOIC</div><div class="sc-value">'+eqMoic.toFixed(2)+'x</div></div>'
++'<div class="scard neutral"><div class="sc-label">Peak Debt</div><div class="sc-value">'+fd(peakDebt)+'</div></div>'
++'<div class="scard neutral"><div class="sc-label">Total Interest</div><div class="sc-value">'+fd(totSrI)+'</div></div>'
++'<div class="scard neutral"><div class="sc-label">Total Fees</div><div class="sc-value">'+fd(totSrF)+'</div></div>'
++'<div class="scard neutral"><div class="sc-label">ROC</div><div class="sc-value">'+fp(roc)+'</div></div>'
++'<div class="scard neutral"><div class="sc-label">Months</div><div class="sc-value">'+months+'</div></div>';
+
+// Sensitivity
+if(MODE==='commercial'){var sRates=[0.05,0.055,0.06,0.065,0.07,0.075,0.08];var sHtml='';
+sRates.forEach(function(cr){var cv=cr>0?netIncome/cr-totalBTL:0;var mg=cv-totalProjectCost;var mp=totalProjectCost>0?mg/totalProjectCost:0;
+var act=Math.abs(cr-capRate)<0.001;
+sHtml+='<tr'+(act?' class="ct-sub"':'')+'><td style="text-align:left">'+(cr*100).toFixed(1)+'%'+(act?' ◄':'')+'</td><td>'+fd(cv)+'</td><td style="color:'+(mg>=0?'var(--green)':'var(--red)')+'">'+fd(mg)+'</td><td style="color:'+(mp>=0.2?'var(--green)':mp>=0.15?'var(--amber)':'var(--red)')+'">'+fp(mp)+'</td></tr>';});
+document.getElementById('sens-tbody').innerHTML=sHtml;}
+
+// Waterfall
+var wf=[{l:'Gross Realisation',v:MODE==='commercial'?grv+totalBTL:grv+(gv('rv-mktg')||0)+(grv>0?grv*gv('rv-comm')/100:0)},
+{l:'Less: Selling Costs',v:-(MODE==='resi'?pn(document.getElementById('o-sellcost').textContent.replace('-','')):0),c:'red'},
+{l:'Less: Senior Debt Principal',v:-totSr},{l:'Less: Senior Interest & Fees',v:-(totSrI+totSrF)},
+{l:'Less: Ordinary Equity',v:-totEq},{l:'Profit',v:totalProfit,c:'green',b:true}];
+if(MEZZ){wf.splice(4,0,{l:'Less: Mezz Principal',v:-totMezz});}
+if(PREF){wf.splice(MEZZ?5:4,0,{l:'Less: Pref Equity',v:-totPref});}
+document.getElementById('ret-waterfall').innerHTML=wf.map(function(w){
+var c=w.c==='green'?'var(--green)':w.c==='red'?'var(--red)':'var(--text)';
+return'<div class="row'+(w.b?' sub':'')+'"><span class="row-label">'+w.l+'</span><span class="row-value" style="color:'+c+';font-weight:'+(w.b?'700':'500')+'">'+fd(w.v)+'</span></div>';}).join('');
+
+// ── CASH FLOW CARDS ──
+document.getElementById('cf-cards').innerHTML=
+'<div class="scard neutral"><div class="sc-label">Peak Senior</div><div class="sc-value">'+fd(peakDebt)+'</div></div>'
++'<div class="scard neutral"><div class="sc-label">Total Equity</div><div class="sc-value" style="color:var(--teal)">'+fd(totEq)+'</div></div>'
++'<div class="scard '+(roc>=0.2?'ok':roc>=0.15?'warn':'bad')+'"><div class="sc-label">ROC</div><div class="sc-value">'+fp(roc)+'</div></div>'
++'<div class="scard neutral"><div class="sc-label">Net Realisation</div><div class="sc-value">'+fd(grv)+'</div></div>';
+
+// ── BAR CHART ──
+var maxStack=0,lastAct=0;
+for(var m=0;m<=months;m++){var st=srC[m]+mzC[m]+prC[m]+eqC[m];if(st>maxStack)maxStack=st;if(st>0||mRev[m]>0)lastAct=m;}
+var showM=Math.min(lastAct+2,months+1);
+var bHtml='';for(var m=0;m<showM;m++){var srH=maxStack>0?(srC[m]/maxStack)*160:0;var mzH=maxStack>0?(mzC[m]/maxStack)*160:0;
+var prH=maxStack>0?(prC[m]/maxStack)*160:0;var eqH=maxStack>0?(eqC[m]/maxStack)*160:0;
+bHtml+='<div class="bar-col"><div style="display:flex;flex-direction:column-reverse;height:160px;width:100%">'
++'<div class="bar-seg" style="height:'+srH+'px;background:var(--grey700)"></div>'
++(MEZZ?'<div class="bar-seg" style="height:'+mzH+'px;background:var(--amber)"></div>':'')
++(PREF?'<div class="bar-seg" style="height:'+prH+'px;background:var(--purple)"></div>':'')
++'<div class="bar-seg" style="height:'+eqH+'px;background:var(--teal)"></div>'
++'</div><span class="bar-label">'+(m===0?'S':'M'+m)+'</span></div>';}
+document.getElementById('cf-bars').innerHTML=bHtml;
+
+// ── CF TABLE ──
+var thH='<tr><th>Period</th>';for(var m=0;m<showM;m++)thH+='<th>'+(m===0?'Settle':'M'+m)+'</th>';thH+='<th>Total</th></tr>';
+document.getElementById('cf-thead').innerHTML=thH;
+var lines=[{l:'EXPENSES',sec:true},{l:'Total Expenses',d:mExp,c:'var(--text)',b:true},
+{l:'→ Equity',d:mEq,c:'var(--teal)'},{l:'→ Senior',d:mSr,c:'var(--grey700)'},
+{l:'SENIOR DEBT',sec:true},{l:'Opening',d:srO,c:'var(--grey600)'},{l:'Drawdown',d:srD,c:'var(--grey700)'},
+{l:'Estab Fee',d:srEst,c:'var(--muted)'},{l:'Line Fee',d:srLn,c:'var(--muted)'},
+{l:'Interest',d:srI,c:'var(--amber)'},{l:'Repayments',d:srR,c:'var(--green)',neg:true},{l:'Closing',d:srC,c:'var(--grey700)',b:true}];
+if(MEZZ){lines.push({l:'MEZZANINE',sec:true},{l:'Drawdown',d:mzD,c:'var(--amber)'},{l:'Interest',d:mzI,c:'var(--amber)'},
+{l:'Repayments',d:mzR,c:'var(--green)',neg:true},{l:'Closing',d:mzC,c:'var(--amber)',b:true});}
+if(PREF){lines.push({l:'PREF EQUITY',sec:true},{l:'Drawdown',d:prD,c:'var(--purple)'},{l:'Interest',d:prI,c:'var(--amber)'},
+{l:'Repayments',d:prR,c:'var(--green)',neg:true},{l:'Closing',d:prC,c:'var(--purple)',b:true});}
+lines.push({l:'EQUITY',sec:true},{l:'Drawdown',d:eqD,c:'var(--teal)'},{l:'Repayments',d:eqR,c:'var(--green)',neg:true},{l:'Closing',d:eqC,c:'var(--teal)',b:true});
+lines.push({l:'REVENUE & PROFIT',sec:true},{l:'Net Realisations',d:mRev,c:'var(--green)',b:true},{l:'Profit',d:profitArr,c:'var(--green)',b:true});
+
+var tbH='';lines.forEach(function(li){if(li.sec){tbH+='<tr class="cf-sec"><td>'+li.l+'</td>';for(var m=0;m<showM;m++)tbH+='<td></td>';tbH+='<td></td></tr>';return;}
+tbH+='<tr class="'+(li.b?'cf-sub':'')+'"><td style="font-weight:'+(li.b?'600':'400')+'">'+li.l+'</td>';
+var tot=0;for(var m=0;m<showM;m++){var v=li.d[m]||0;tot+=v;tbH+='<td style="color:'+li.c+'">'+(v===0?'—':(li.neg&&v>0?'-'+fd(v):fd(v)))+'</td>';}
+tbH+='<td style="color:'+li.c+';font-weight:700">'+(li.neg&&tot>0?'-'+fd(tot):fd(tot))+'</td></tr>';});
+document.getElementById('cf-tbody').innerHTML=tbH;
 }
 
-// ════════════════════════════════════════════════
-// MAIN CALCULATION ENGINE
-// ════════════════════════════════════════════════
-function calc() {
-  // ── INPUTS ──
-  const units     = n('i-units');
-  const avgPrice  = n('i-avgprice');
-  const cUnits    = n('i-cunits');
-  const cAvgPrice = n('i-cavgprice');
-  const gstMethod = p('i-gst').value;
-  const commRate  = n('i-commission') / 100;
-  const loanTerm  = Math.round(n('i-loanterm'));
-  const constTerm = Math.round(n('i-constterm'));
-  const constDelay= Math.round(n('i-constdelay'));
-  const salesLag  = Math.round(n('i-saleslag'));
-  const rate      = n('i-rate') / 100;
-  const lineFeeRate= n('i-linefee') / 100;
-  const appFeeRate = n('i-appfee') / 100;
-  const targetMargin = n('i-targetmargin') / 100;
-  const presalesGross = n('i-presales');
-  const presalesComm  = n('i-presalescomm') / 100;
+// ══════════════════════════════════════════════════
+// SAVE / LOAD
+// ══════════════════════════════════════════════════
+var currentModelId=null,currentUserId=null,sbC=null;
+function initAuth(){if(typeof SUPABASE_CONFIG==='undefined')return;
+sbC=supabase.createClient(SUPABASE_CONFIG.url,SUPABASE_CONFIG.key);
+sbC.auth.getSession().then(function(s){if(s.data.session)currentUserId=s.data.session.user.id;
+var p=new URLSearchParams(window.location.search);var lid=p.get('model');if(lid&&currentUserId)loadModel(lid);});}
 
-  // ── COST LINES ──
-  const costs = {
-    land:    { proj: n('c-land'),    dev: n('e-land') },
-    stamp:   { proj: n('c-stamp'),   dev: n('e-stamp') },
-    legals:  { proj: n('c-legals'),  dev: n('e-legals') },
-    conv:    { proj: n('c-conv'),    dev: n('e-conv') },
-    val:     { proj: n('c-val'),     dev: n('e-val') },
-    stat:    { proj: n('c-stat'),    dev: n('e-stat') },
-    const:   { proj: n('c-const'),   dev: n('e-const') },
-    cont:    { proj: n('c-cont'),    dev: n('e-cont') },
-    demo:    { proj: n('c-demo'),    dev: n('e-demo') },
-    excav:   { proj: n('c-excav'),   dev: n('e-excav') },
-    devmgmt: { proj: n('c-devmgmt'), dev: n('e-devmgmt') },
-    mktg:    { proj: n('c-mktg'),    dev: n('e-mktg') },
-    hold:    { proj: n('c-hold'),    dev: n('e-hold') },
-    overhead:{ proj: n('c-overhead'),dev: n('e-overhead') },
-    arch:    { proj: n('c-arch'),    dev: n('e-arch') },
-    struct:  { proj: n('c-struct'),  dev: n('e-struct') },
-    mech:    { proj: n('c-mech'),    dev: n('e-mech') },
-    qs:      { proj: n('c-qs'),      dev: n('e-qs') },
-    pm:      { proj: n('c-pm'),      dev: n('e-pm') },
-    consult: { proj: n('c-consult'), dev: n('e-consult') },
-  };
+function setSt(m){var e=document.getElementById('sv-status');if(e){e.textContent=m;setTimeout(function(){e.textContent='';},3000);}}
+function gatherData(){var d={mode:MODE,mezz:MEZZ,pref:PREF,inputs:{}};
+document.querySelectorAll('.inp,.ct-inp,.ut-inp,.ct-esc').forEach(function(e){if(e.id)d.inputs[e.id]=e.value;});
+document.querySelectorAll('select').forEach(function(e){if(e.id)d.inputs[e.id]=e.value;});
+d.outgoings=[];document.querySelectorAll('#og-list .row').forEach(function(r){var v=r.querySelectorAll('.inp');if(v.length>=2)d.outgoings.push({n:v[0].value,v:v[1].value});});
+d.btl=[];document.querySelectorAll('#btl-list .row').forEach(function(r){var v=r.querySelectorAll('.inp');if(v.length>=2)d.btl.push({n:v[0].value,v:v[1].value});});
+d.units=[];document.querySelectorAll('#unit-body tr').forEach(function(tr){var s=tr.querySelectorAll('select');var i=tr.querySelectorAll('.ut-inp');
+if(s.length>=2&&i.length>=2)d.units.push({type:s[0].value,size:s[1].value,qty:i[0].value,price:i[1].value});});
+d.costs=[];document.querySelectorAll('#cost-body tr:not(.ct-group)').forEach(function(tr){var i=tr.querySelectorAll('.ct-inp');var s=tr.querySelectorAll('.ct-sel');
+var vals=[];i.forEach(function(inp){vals.push(inp.value);});var svals=[];s.forEach(function(sel){svals.push(sel.value);});
+var esc=tr.querySelector('.ct-esc');d.costs.push({g:tr.dataset.group||'',v:vals,s:svals,e:esc?esc.value:'0'});});
+return d;}
 
-  // Add bank = project - dev for each line
-  for (const k in costs) {
-    costs[k].dev = Math.min(costs[k].dev, costs[k].proj);
-    costs[k].bank = costs[k].proj - costs[k].dev;
-  }
+async function saveModel(){if(!currentUserId){setSt('Please sign in');return;}setSt('Saving...');
+try{var r=await fetch('/.netlify/functions/feasibility-save',{method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({action:'save',user_id:currentUserId,model_id:currentModelId,
+model_name:document.getElementById('model-name').value||'Untitled',model_type:'unified',model_data:gatherData(),snapshot:{}})});
+var d=await r.json();if(d.success&&d.model){currentModelId=d.model.id;setSt('Saved ✓');}else setSt('Failed');}catch(e){setSt('Error');console.error(e);}}
 
-  // ── SUBTOTALS ──
-  const landKeys    = ['land','stamp','legals','conv','val','stat'];
-  const constKeys   = ['const','cont','demo','excav','devmgmt','mktg','hold','overhead'];
-  const profKeys    = ['arch','struct','mech','qs','pm','consult'];
+async function loadModel(mid){if(!currentUserId){setSt('Sign in');return;}setSt('Loading...');
+try{var r=await fetch('/.netlify/functions/feasibility-save',{method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({action:'load',user_id:currentUserId,model_id:mid})});var d=await r.json();
+if(d.model){currentModelId=d.model.id;document.getElementById('model-name').value=d.model.model_name||'';
+restoreData(d.model.model_data);setSt('Loaded ✓');hideML();}else setSt('Not found');}catch(e){setSt('Error');console.error(e);}}
 
-  const subLandProj = landKeys.reduce((s,k)=>s+costs[k].proj,0);
-  const subLandDev  = landKeys.reduce((s,k)=>s+costs[k].dev,0);
-  const subLandBank = subLandProj - subLandDev;
+function restoreData(d){if(!d)return;if(d.mode)setMode(d.mode);
+if(d.mezz){document.getElementById('mezz-on').checked=true;toggleMezz();}
+if(d.pref){document.getElementById('pref-on').checked=true;togglePref();}
+if(d.inputs)Object.keys(d.inputs).forEach(function(id){var e=document.getElementById(id);if(e)e.value=d.inputs[id];});
+if(d.outgoings){document.getElementById('og-list').innerHTML='';ogId=0;d.outgoings.forEach(function(o){addOG(o.n,pn(o.v));});}
+if(d.btl){document.getElementById('btl-list').innerHTML='';btlId=0;d.btl.forEach(function(b){addBTL(b.n,pn(b.v));});}
+if(d.units){document.getElementById('unit-body').innerHTML='';unitId=0;d.units.forEach(function(u){addUnit({type:u.type,size:u.size,qty:parseInt(u.qty)||1,price:pn(u.price)});});}
+if(d.costs){var b=document.getElementById('cost-body');b.innerHTML='';costId=0;var lg='';
+d.costs.forEach(function(c){if(c.g!==lg){var gr=document.createElement('tr');gr.className='ct-group';gr.innerHTML='<td colspan="12">'+c.g+'</td>';b.appendChild(gr);lg=c.g;}
+addCost({name:c.v[0]||'',proj:pn(c.v[1]),eq:pn(c.v[2]),mezz:MEZZ&&c.v.length>3?pn(c.v[3]):0,pref:PREF&&c.v.length>4?pn(c.v[4]):0,ms:parseInt(c.v[c.v.length-2])||0,sp:parseInt(c.v[c.v.length-1])||1},c.g);});}
+calc();}
 
-  const subConstProj = constKeys.reduce((s,k)=>s+costs[k].proj,0);
-  const subConstDev  = constKeys.reduce((s,k)=>s+costs[k].dev,0);
-  const subConstBank = subConstProj - subConstDev;
+async function deleteModel(mid,e){e.stopPropagation();if(!confirm('Delete?'))return;
+try{await fetch('/.netlify/functions/feasibility-save',{method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({action:'delete',user_id:currentUserId,model_id:mid})});if(currentModelId===mid)currentModelId=null;toggleML();}catch(e){console.error(e);}}
 
-  const subProfProj = profKeys.reduce((s,k)=>s+costs[k].proj,0);
-  const subProfDev  = profKeys.reduce((s,k)=>s+costs[k].dev,0);
-  const subProfBank = subProfProj - subProfDev;
+async function toggleML(){var l=document.getElementById('ml-list');if(!l.classList.contains('hidden')){l.classList.add('hidden');return;}
+if(!currentUserId){setSt('Sign in');return;}l.innerHTML='<div style="padding:12px;color:var(--muted)">Loading...</div>';l.classList.remove('hidden');
+try{var r=await fetch('/.netlify/functions/feasibility-save',{method:'POST',headers:{'Content-Type':'application/json'},
+body:JSON.stringify({action:'list',user_id:currentUserId})});var d=await r.json();
+if(!d.models||!d.models.length){l.innerHTML='<div style="padding:12px;color:var(--muted)">No saved models</div>';return;}
+l.innerHTML=d.models.map(function(m){var dt=new Date(m.updated_at).toLocaleDateString('en-AU',{day:'numeric',month:'short'});
+return'<div class="ml-item" onclick="loadModel(\''+m.id+'\')"><div><div class="ml-nm">'+(m.model_name||'Untitled')+'</div><div class="ml-mt">'+dt+' · '+m.model_type+'</div></div><button class="ml-del" onclick="deleteModel(\''+m.id+'\',event)">×</button></div>';}).join('');}
+catch(e){l.innerHTML='<div style="padding:12px;color:var(--red)">Error</div>';}}
+function hideML(){document.getElementById('ml-list').classList.add('hidden');}
+function newModel(){currentModelId=null;window.location.href=window.location.pathname;}
+document.addEventListener('click',function(e){if(!e.target.closest('.ml-drop'))hideML();});
 
-  const totalPreFinanceProj = subLandProj + subConstProj + subProfProj;
-  const totalPreFinanceDev  = subLandDev  + subConstDev  + subProfDev;
-  const totalPreFinanceBank = totalPreFinanceProj - totalPreFinanceDev;
-
-  // Update input subtotals
-  p('st-land-proj').textContent  = f$(subLandProj);
-  p('st-land-dev').textContent   = f$(subLandDev);
-  p('st-const-proj').textContent = f$(subConstProj);
-  p('st-const-dev').textContent  = f$(subConstDev);
-  p('st-prof-proj').textContent  = f$(subProfProj);
-  p('st-prof-dev').textContent   = f$(subProfDev);
-
-  // ── REVENUE ──
-  const grvResidential = units * avgPrice;
-  const grvCommercial  = cUnits * cAvgPrice;
-  const grv = grvResidential + grvCommercial;
-
-  // GST Calculation (Book 1 — exact formula)
-  let gst = 0;
-  if (gstMethod === 'margin' && grv > 0) {
-    // Margin scheme: -(Residential - (Residential/GRV * LandAtCost)) / 11
-    const landAtCost = costs.land.proj;
-    gst = (grvResidential - ((grvResidential / grv) * landAtCost)) / 11;
-  } else if (gstMethod === 'standard') {
-    gst = grvResidential / 11;
-  }
-
-  const salesComm    = grv * commRate;
-  const netSalesRev  = grv - salesComm;
-  const nrv          = netSalesRev - gst;
-
-  // ── FACILITY LIMIT ESTIMATION (2-pass like Java backend) ──
-  // Pass 1: estimate interest on pre-finance bank portion
-  const bankBase = totalPreFinanceBank;
-  const interestEst = bankBase * (rate / 12) * loanTerm * 0.6; // S-curve avg 60%
-  const lineFeeEst  = bankBase * lineFeeRate * (loanTerm / 12);
-  // Facility = (bank base costs + estimated interest + line fee) / (1 - lineFeeRate/12 * loanTerm)
-  // Circular reference workaround from Book 3
-  const facilityDenom = 1 - (lineFeeRate / 12 * loanTerm);
-  const facilityEst = facilityDenom > 0
-    ? (totalPreFinanceBank + interestEst) / facilityDenom
-    : totalPreFinanceBank + interestEst;
-
-  // Pass 2: recalculate with facility
-  const appFeeAmt    = facilityEst * appFeeRate;
-  const interestFinal = facilityEst * (rate / 12) * loanTerm * 0.6;
-  const lineFeeFinal  = facilityEst * lineFeeRate * (loanTerm / 12);
-  const facility     = facilityEst; // facility includes capitalised interest
-
-  const totalDevCost = totalPreFinanceProj + interestFinal + lineFeeFinal + appFeeAmt;
-  const equity       = Math.max(0, totalDevCost - facility);
-
-  // ── KEY RATIOS ──
-  const lvr   = nrv > 0 ? facility / nrv : 0;
-  const ltc   = totalDevCost > 0 ? facility / totalDevCost : 0;
-  const profit = nrv - totalDevCost;
-  const poc    = totalDevCost > 0 ? profit / totalDevCost : 0;
-
-  // Presales
-  const presalesNet  = presalesGross * (1 - presalesComm);
-  const presalesCoverage = facility > 0 ? presalesNet / facility : 0;
-
-  // RLV = NRV - TDC * (1 + target margin) ... or: RLV = (NRV - non-land costs) / (1 + target margin)
-  const nonLandCosts = totalDevCost - costs.land.proj - costs.stamp.proj;
-  const rlv = nonLandCosts > 0 ? (nrv - nonLandCosts * (1 + targetMargin)) : 0;
-
-  // Developer IRR — equity in at start, profit returned at end
-  const irrFlows = [
-    { month: 0, amount: -equity },
-    { month: loanTerm, amount: equity + profit }
-  ];
-  const devIRR = equity > 0 && profit > 0 ? xirr(irrFlows) : 0;
-
-  // ── MONTH BY MONTH CASH FLOW (Books 2 & 3) ──
-  const cfMonths = loanTerm + salesLag + 1;
-  const cf = [];
-
-  for (let m = 1; m <= cfMonths; m++) {
-    // % of total contract time (Book 2 formula — truncate)
-    const pctTime = Math.trunc((m - constDelay) / constTerm * 100);
-    const pctWork = sCurveWork(Math.max(0, pctTime));
-    const prevPctWork = m > 1 ? sCurveWork(Math.max(0, Math.trunc((m - 1 - constDelay) / constTerm * 100))) : 0;
-
-    // Land costs — month 1 only
-    const landCost = m === 1 ? subLandProj : 0;
-
-    // Construction draw this month (Book 2)
-    const constDraw = pctTime > 0
-      ? ((pctWork - prevPctWork) / 100) * costs.const.proj
-      : 0;
-
-    // Other construction costs — spread over construction term (Book 2)
-    const constStart = constDelay + 1;
-    const constEnd   = constDelay + constTerm;
-    const inConstPeriod = m >= constStart && m <= constEnd;
-    const otherConstPerMonth = inConstPeriod
-      ? (subConstProj - costs.const.proj) / constTerm
-      : 0;
-
-    // Professional fees — spread over construction term
-    const profPerMonth = inConstPeriod ? subProfProj / constTerm : 0;
-
-    // App fee — month 1
-    const appFeeMonth = m === 1 ? appFeeAmt : 0;
-
-    const totalCostThisMonth = landCost + constDraw + otherConstPerMonth + profPerMonth + appFeeMonth;
-
-    // Revenue — bullet payment at sales settlement month
-    const salesMonth = constDelay + constTerm + salesLag;
-    const revenue = m === salesMonth ? grv - salesComm - gst : 0;
-
-    // Project cash flow = revenue - costs
-    const projectCF = revenue - totalCostThisMonth;
-
-    cf.push({
-      month: m,
-      land: landCost,
-      construction: constDraw,
-      otherConst: otherConstPerMonth,
-      profFees: profPerMonth,
-      appFee: appFeeMonth,
-      totalCosts: totalCostThisMonth,
-      revenue,
-      projectCF,
-      pctWork: pctWork.toFixed(2),
-    });
-  }
-
-  // Running loan balance (Book 3)
-  let balance = 0;
-  let totalInterestPaid = 0;
-  let totalLineFeePaid = 0;
-
-  for (let i = 0; i < cf.length; i++) {
-    const row = cf[i];
-    // Progress payment = bank's share of this month's costs
-    const bankShareRatio = totalPreFinanceBank / (totalPreFinanceProj || 1);
-    const progressPayment = row.totalCosts * bankShareRatio;
-
-    // Loan repayment from sales
-    const repayment = i === cf.length - 1 ? balance : 0;
-
-    // Interest = balance * rate/12
-    const monthInterest = balance * (rate / 12);
-
-    // Line fee = facility * lineFeeRate/12
-    const monthLineFee = facility * (lineFeeRate / 12);
-
-    balance = balance + progressPayment + monthInterest + monthLineFee - row.revenue;
-    balance = Math.max(0, balance);
-    totalInterestPaid += monthInterest;
-    totalLineFeePaid += monthLineFee;
-
-    cf[i].loanDraw = progressPayment;
-    cf[i].interest = monthInterest;
-    cf[i].lineFee = monthLineFee;
-    cf[i].balance = balance;
-    cf[i].repayment = repayment;
-  }
-
-  // ══ UPDATE UI ══
-
-  // Summary cards
-  setCard('r-facility', f$(facility), `Bank funds ${fPct(ltc)} of total cost`, 'neutral', 'sc-lvr');
-  setMetric('r-lvr', 'sc-lvr', fPct(lvr), lvr <= 0.65 ? 'ok' : lvr <= 0.70 ? 'warn' : 'bad',
-    lvr <= 0.65 ? '✓ Within 65% max' : lvr <= 0.70 ? '⚠ Approaching limit' : '✗ Exceeds 70% max');
-  setMetric('r-poc', 'sc-poc', fPct(poc), poc >= 0.20 ? 'ok' : poc >= 0.15 ? 'warn' : 'bad',
-    poc >= 0.20 ? '✓ Strong return' : poc >= 0.15 ? '⚠ Acceptable' : '✗ Below 15% threshold');
-  setMetric('r-dc', 'sc-dc', fPct(presalesCoverage), presalesCoverage >= 1.0 ? 'ok' : presalesCoverage > 0 ? 'warn' : 'bad',
-    presalesCoverage >= 1.0 ? '✓ Fully covered' : presalesCoverage > 0 ? '⚠ Partial cover' : '✗ No presales');
-
-  p('r-facility').textContent = f$(facility);
-  p('r-facility-sub').textContent = `Equity required: ${f$(equity)}`;
-
-  // Feasibility
-  p('f-grv').textContent   = f$(grv);
-  p('f-gst').textContent   = `(${f$(gst)})`;
-  p('f-comm').textContent  = `(${f$(salesComm)})`;
-  p('f-nrv').textContent   = f$(nrv);
-  p('f-tdc').textContent   = `(${f$(totalDevCost)})`;
-  p('f-profit').textContent = f$(profit);
-  p('f-profit').className  = profit > 0 ? 'ok' : 'bad';
-  p('f-roc').textContent   = fPct(poc);
-  p('f-roc').className     = `feas-v ${poc >= 0.20 ? 'ok' : poc >= 0.15 ? 'warn' : 'bad'}`;
-  p('f-irr').textContent   = devIRR > 0 ? fPct(devIRR) : '—';
-  p('f-equity').textContent = f$(equity);
-  p('f-interest').textContent = f$(interestFinal);
-  p('f-linefee').textContent  = f$(lineFeeFinal);
-  p('f-targetlabel').textContent = Math.round(targetMargin*100)+'%';
-  p('f-rlv').textContent = f$(rlv);
-  p('feas-badge').textContent = profit > 0 ? 'Feasible' : 'Review Required';
-  p('feas-badge').className = `rb-badge ${profit > 0 ? 'ok' : 'bad'}`;
-
-  // Loan covenants
-  p('cov-nrv').textContent    = f$(nrv);
-  p('cov-facility').textContent = f$(facility);
-  setCov('cov-lvr', 'cov-lvr-check', fPct(lvr), lvr<=0.65?'ok':lvr<=0.70?'warn':'bad', lvr<=0.65?'✓ Within 65%':lvr<=0.70?'⚠ 65–70%':'✗ Exceeds 70%');
-  setCov('cov-ltc', 'cov-ltc-check', fPct(ltc), ltc<=0.70?'ok':ltc<=0.75?'warn':'bad', ltc<=0.70?'✓ Within 70%':ltc<=0.75?'⚠ 70–75%':'✗ Exceeds 75%');
-  setCov('cov-presales', 'cov-presales-check', fPct(presalesCoverage), presalesCoverage>=1?'ok':presalesCoverage>0?'warn':'bad', presalesCoverage>=1?'✓ Fully covered':'⚠ Partial / none');
-  setCov('cov-equity', 'cov-equity-check', f$(equity), equity>0?'ok':'bad', equity>0?'✓ Equity confirmed':'—');
-
-  // Funding table
-  buildFundingTable(costs, interestFinal, lineFeeFinal, appFeeAmt,
-    totalPreFinanceProj, totalPreFinanceDev, totalPreFinanceBank, totalDevCost, facility);
-
-  // Cash flow table
-  buildCashFlow(cf, loanTerm);
-
-  // Term sheet
-  const addr = p('i-address').value || '[Project Address]';
-  p('ts-date').textContent    = new Date().toLocaleDateString('en-AU');
-  p('ts-project').textContent = addr;
-  p('ts-address').textContent = addr;
-  p('ts-type').textContent    = `${units + cUnits} unit residential development`;
-  p('ts-units').textContent   = `${units} residential${cUnits>0?`, ${cUnits} commercial`:''}`;
-  p('ts-grv').textContent     = f$(grv);
-  p('ts-facility').textContent= f$(facility);
-  p('ts-term').textContent    = `${loanTerm} months`;
-  p('ts-rate').textContent    = `${(rate*100).toFixed(2)}% p.a. (capitalised)`;
-  p('ts-linefee').textContent = `${(lineFeeRate*100).toFixed(2)}% p.a.`;
-  p('ts-appfee').textContent  = `${(appFeeRate*100).toFixed(2)}% of facility = ${f$(appFeeAmt)}`;
-  p('ts-lvr').textContent     = `${fPct(lvr)} ${lvr<=0.65?'✓':'⚠'}`;
-  p('ts-ltc').textContent     = `${fPct(ltc)} ${ltc<=0.70?'✓':'⚠'}`;
-  p('ts-equity').textContent  = f$(equity);
-  p('ts-presales').textContent= presalesGross>0 ? `${f$(presalesGross)} gross / ${fPct(presalesCoverage)} cover` : 'No presales — required prior to drawdown';
-  p('ts-poc').textContent     = fPct(poc);
-  p('ts-irr').textContent     = devIRR>0 ? fPct(devIRR) : '—';
-  p('ts-ref').textContent     = 'OAI-' + new Date().getFullYear() + '-' + String(Math.floor(Math.random()*900)+100);
-}
-
-function setCard(valId, val, sub, status, cardId) {
-  p(valId).textContent = val;
-  if (sub && p(valId+'~')) return;
-}
-
-function setMetric(valId, cardId, val, status, flag) {
-  p(valId).textContent = val;
-  p(valId).className = `sc-value ${status}`;
-  p(valId+'-flag').textContent = flag;
-  p(valId+'-flag').className = `sc-flag ${status}`;
-  p(cardId).className = `scard ${status}`;
-}
-
-function setCov(valId, checkId, val, status, check) {
-  p(valId).textContent = val;
-  p(valId).className = `cov-value ${status}`;
-  p(checkId).textContent = check;
-  p(checkId).className = `cov-check ${status}`;
-}
-
-function buildFundingTable(costs, interest, lineFee, appFee, totalProj, totalDev, totalBank, totalDevCost, facility) {
-  const b = p('ft-body');
-
-  const rows = [
-    { group:'Land & Acquisition', items:[
-      ['Land Purchase',       costs.land.proj,    costs.land.dev,    costs.land.bank,    0, costs.land.bank],
-      ['Stamp Duty',          costs.stamp.proj,   costs.stamp.dev,   costs.stamp.bank,   0, costs.stamp.bank],
-      ['Acquisition Legals',  costs.legals.proj,  costs.legals.dev,  costs.legals.bank,  0, costs.legals.bank],
-      ['Conveyancing',        costs.conv.proj,    costs.conv.dev,    costs.conv.bank,    0, costs.conv.bank],
-      ['Valuer',              costs.val.proj,     costs.val.dev,     costs.val.bank,     0, costs.val.bank],
-      ['Statutory Fees',      costs.stat.proj,    costs.stat.dev,    costs.stat.bank,    0, costs.stat.bank],
-    ]},
-    { group:'Construction & Development', items:[
-      ['Construction Contract',costs.const.proj,  costs.const.dev,   costs.const.bank,   0, costs.const.bank],
-      ['Contingency',         costs.cont.proj,    costs.cont.dev,    costs.cont.bank,    0, costs.cont.bank],
-      ['Demolition',          costs.demo.proj,    costs.demo.dev,    costs.demo.bank,    0, costs.demo.bank],
-      ['Excavation',          costs.excav.proj,   costs.excav.dev,   costs.excav.bank,   0, costs.excav.bank],
-      ['Dev. Management',     costs.devmgmt.proj, costs.devmgmt.dev, costs.devmgmt.bank, 0, costs.devmgmt.bank],
-      ['Marketing',           costs.mktg.proj,    costs.mktg.dev,    costs.mktg.bank,    0, costs.mktg.bank],
-      ['Holding Costs',       costs.hold.proj,    costs.hold.dev,    costs.hold.bank,    0, costs.hold.bank],
-      ['Overheads',           costs.overhead.proj,costs.overhead.dev,costs.overhead.bank,0, costs.overhead.bank],
-    ]},
-    { group:'Professional Fees', items:[
-      ['Architect',           costs.arch.proj,    costs.arch.dev,    costs.arch.bank,    0, costs.arch.bank],
-      ['Structural/Hydraulic',costs.struct.proj,  costs.struct.dev,  costs.struct.bank,  0, costs.struct.bank],
-      ['Mechanical/Electrical',costs.mech.proj,   costs.mech.dev,    costs.mech.bank,    0, costs.mech.bank],
-      ['Quantity Surveyors',  costs.qs.proj,      costs.qs.dev,      costs.qs.bank,      0, costs.qs.bank],
-      ['Project Manager',     costs.pm.proj,      costs.pm.dev,      costs.pm.bank,      0, costs.pm.bank],
-      ['Consultant Contingency',costs.consult.proj,costs.consult.dev,costs.consult.bank, 0, costs.consult.bank],
-    ]},
-  ];
-
-  let html = '';
-
-  for (const g of rows) {
-    html += `<tr class="group-head"><td colspan="6">${g.group}</td></tr>`;
-    let gProj=0,gDev=0,gBank=0;
-    for (const [label,proj,dev,bank] of g.items) {
-      if (proj === 0 && dev === 0) continue;
-      gProj+=proj; gDev+=dev; gBank+=bank;
-      html += `<tr>
-        <td>${label}</td>
-        <td>${f$(proj)}</td>
-        <td class="dev">${f$(dev)}</td>
-        <td class="bank">${f$(bank)}</td>
-        <td>—</td>
-        <td class="bank">${f$(bank)}</td>
-      </tr>`;
-    }
-    html += `<tr class="subtot">
-      <td>Subtotal — ${g.group}</td>
-      <td>${f$(gProj)}</td>
-      <td class="dev">${f$(gDev)}</td>
-      <td class="bank">${f$(gBank)}</td>
-      <td>—</td>
-      <td class="bank">${f$(gBank)}</td>
-    </tr>`;
-  }
-
-  html += `<tr class="subtot">
-    <td>Total Dev. Costs (Pre-Finance)</td>
-    <td>${f$(totalProj)}</td>
-    <td class="dev">${f$(totalDev)}</td>
-    <td class="bank">${f$(totalBank)}</td>
-    <td>—</td>
-    <td class="bank">${f$(totalBank)}</td>
-  </tr>`;
-
-  html += `<tr class="group-head"><td colspan="6">Finance Costs (Capitalised)</td></tr>`;
-  html += `<tr><td>Interest (capitalised — S-curve)</td><td>${f$(interest)}</td><td class="dev">—</td><td class="bank">${f$(interest)}</td><td class="int">${f$(interest)}</td><td class="bank">${f$(interest)}</td></tr>`;
-  html += `<tr><td>Line Fee</td><td>${f$(lineFee)}</td><td class="dev">—</td><td class="bank">${f$(lineFee)}</td><td class="int">${f$(lineFee)}</td><td class="bank">${f$(lineFee)}</td></tr>`;
-  html += `<tr><td>Application Fee</td><td>${f$(appFee)}</td><td class="dev">—</td><td class="bank">${f$(appFee)}</td><td class="int">—</td><td class="bank">${f$(appFee)}</td></tr>`;
-
-  html += `<tr class="total">
-    <td>TOTAL DEVELOPMENT COSTS</td>
-    <td>${f$(totalDevCost)}</td>
-    <td>${f$(totalDev)}</td>
-    <td>${f$(totalDevCost - totalDev)}</td>
-    <td>${f$(interest + lineFee)}</td>
-    <td>${f$(facility)}</td>
-  </tr>`;
-
-  b.innerHTML = html;
-  p('ft-badge').textContent = `Facility: ${f$(facility)}`;
-  p('ft-badge').className = 'rb-badge ok';
-}
-
-function buildCashFlow(cf, loanTerm) {
-  const head = p('cf-head');
-  const body = p('cf-body');
-
-  // Header
-  let hHtml = '<tr><th style="text-align:left">Item</th>';
-  for (const row of cf) hHtml += `<th>Mth ${row.month}</th>`;
-  hHtml += '</tr>';
-  head.innerHTML = hHtml;
-
-  // Rows
-  const cfRows = [
-    { label:'Revenue', key:'revenue', class:'cf-pos' },
-    { label:'─ Land & Acquisition', key:'land', class:'cf-neg', fmt: v => v?`(${f$(v)})`:'' },
-    { label:'─ Construction Draw', key:'construction', class:'cf-neg', fmt: v => v?`(${f$(v)})`:'' },
-    { label:'─ Other Costs', key:'otherConst', class:'cf-neg', fmt: v => v?`(${f$(v)})`:'' },
-    { label:'─ Professional Fees', key:'profFees', class:'cf-neg', fmt: v => v?`(${f$(v)})`:'' },
-    { label:'─ Application Fee', key:'appFee', class:'cf-neg', fmt: v => v?`(${f$(v)})`:'' },
-    { label:'Project Cash Flow', key:'projectCF', bold:true },
-    { label: '── DEBT ──', section: true },
-    { label:'Loan Draw', key:'loanDraw', class:'cf-pos' },
-    { label:'Interest Charged', key:'interest', class:'cf-neg', fmt: v => v?`(${f$(v,0)})`:'' },
-    { label:'Line Fee Charged', key:'lineFee', class:'cf-neg', fmt: v => v?`(${f$(v,0)})`:'' },
-    { label:'Running Balance', key:'balance', bold:true },
-    { label:'S-Curve % Work', key:'pctWork', fmt: v => v>0?v+'%':'' },
-  ];
-
-  let bHtml = '';
-  for (const row of cfRows) {
-    if (row.section) {
-      bHtml += `<tr class="cf-section"><td>${row.label}</td>${cf.map(()=>'<td></td>').join('')}</tr>`;
-      continue;
-    }
-    bHtml += `<tr>`;
-    bHtml += `<td style="${row.bold?'font-weight:600;color:var(--text)':''}">${row.label}</td>`;
-    for (const m of cf) {
-      const v = m[row.key] || 0;
-      let display;
-      if (row.fmt) {
-        display = row.fmt(v);
-      } else if (row.key === 'projectCF' || row.key === 'balance') {
-        const cls = v > 0 ? 'cf-pos' : v < 0 ? 'cf-neg' : 'cf-zero';
-        display = `<span class="${cls}">${v < 0 ? `(${f$(Math.abs(v))})` : f$(v)}</span>`;
-      } else {
-        display = v > 0 ? `<span class="${row.class||''}">${f$(v)}</span>` : '';
-      }
-      bHtml += `<td>${display}</td>`;
-    }
-    bHtml += '</tr>';
-  }
-  body.innerHTML = bHtml;
-  p('cf-badge').textContent = `${cf.length} month cash flow — S-Curve drawdown`;
-}
-
-// ── UTILITIES ──
-function resetForm() {
-  if (!confirm('Reset all inputs to defaults?')) return;
-  loadExample();
-}
-
-function loadExample() {
-  // Duplex example from spreadsheet
-  p('i-address').value = '42 Example Street, Bondi NSW 2026';
-  p('i-units').value = 2;
-  p('i-avgprice').value = '2,750,000';
-  p('i-cunits').value = 0;
-  p('i-cavgprice').value = '0';
-  p('i-gst').value = 'margin';
-  p('i-commission').value = 1.5;
-  p('i-loanterm').value = 18;
-  p('i-constterm').value = 15;
-  p('i-constdelay').value = 0;
-  p('i-saleslag').value = 2;
-  p('i-rate').value = 6.5;
-  p('i-linefee').value = 1.0;
-  p('i-appfee').value = 0.5;
-  p('i-targetmargin').value = 20;
-  p('i-presales').value = '0';
-  p('i-presalescomm').value = 2.5;
-  // Costs
-  p('c-land').value='2,200,000'; p('e-land').value='2,200,000';
-  p('c-stamp').value='125,400'; p('e-stamp').value='125,400';
-  p('c-legals').value='5,000'; p('e-legals').value='5,000';
-  p('c-conv').value='3,000'; p('e-conv').value='3,000';
-  p('c-val').value='10,000'; p('e-val').value='10,000';
-  p('c-stat').value='50,000'; p('e-stat').value='0';
-  p('c-const').value='2,000,000'; p('e-const').value='0';
-  p('c-cont').value='100,000'; p('e-cont').value='0';
-  p('c-demo').value='50,000'; p('e-demo').value='0';
-  p('c-excav').value='275,000'; p('e-excav').value='0';
-  p('c-devmgmt').value='0'; p('e-devmgmt').value='0';
-  p('c-mktg').value='15,000'; p('e-mktg').value='0';
-  p('c-hold').value='20,000'; p('e-hold').value='20,000';
-  p('c-overhead').value='0'; p('e-overhead').value='0';
-  p('c-arch').value='20,000'; p('e-arch').value='20,000';
-  p('c-struct').value='10,000'; p('e-struct').value='10,000';
-  p('c-mech').value='10,000'; p('e-mech').value='10,000';
-  p('c-qs').value='10,000'; p('e-qs').value='10,000';
-  p('c-pm').value='40,000'; p('e-pm').value='0';
-  p('c-consult').value='10,000'; p('e-consult').value='0';
-  calc();
-}
-
-// Run on load with defaults
-window.addEventListener('load', () => { loadExample(); initDollarInputs(); });
+// ── INIT ──
+window.addEventListener('load',function(){initOG();initBTL();initUnits();initCosts();setMode('commercial');calc();initAuth();});
 </script>
 </body>
 </html>
