@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>getkredit.ai — Advanced Feasibility</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#0D9488;--teal-light:#14B8A6;--teal-dark:#0F766E;--teal-bg:#F0FDFA;--teal-subtle:#CCFBF1;
+  --white:#fff;--grey50:#f8fafc;--grey100:#f1f5f9;--grey200:#e2e8f0;
+  --grey500:#64748b;--grey600:#475569;--grey700:#334155;--grey800:#1e293b;--grey900:#0f172a;
+  --text:#0f172a;--muted:#64748b;--border:#e2e8f0;
+  --green:#059669;--red:#dc2626;--amber:#d97706;
+  --radius:8px;--radius-lg:12px;
+}
+body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50);min-height:100vh;font-size:13px}
+.nav{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:10}
+.nav-logo{font-family:'Source Serif 4',serif;font-size:21px;font-weight:700;color:var(--grey900);text-decoration:none}
+.nav-logo span{color:var(--teal)}
+.nav-links{display:flex;gap:4px;align-items:center}
+.nav-links a{font-size:13px;color:var(--grey600);text-decoration:none;font-weight:500;padding:7px 12px;border-radius:var(--radius);transition:all 0.15s}
+.nav-links a:hover{color:var(--teal);background:var(--teal-bg)}
+.nav-links a.active{color:var(--teal-dark);background:var(--teal-subtle);font-weight:600}
+.nav-right{display:flex;gap:12px;align-items:center}
+.nav-link{font-size:13px;color:var(--grey500);text-decoration:none;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);transition:all 0.15s;background:var(--white)}
+.nav-link:hover{border-color:var(--teal);color:var(--teal)}
+.tab-bar{background:var(--white);border-bottom:1px solid var(--border);display:flex;gap:0;padding:0 40px;overflow-x:auto}
+.tab{padding:14px 20px;font-size:13px;font-weight:500;color:var(--grey500);cursor:pointer;border-bottom:2.5px solid transparent;transition:all 0.2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.tab:hover{color:var(--teal)}
+.tab.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:600}
+.container{max-width:1500px;margin:0 auto;padding:24px 40px}
+.section{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:16px;overflow:hidden}
+.section-head{padding:14px 20px;border-bottom:1px solid var(--border);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--teal);display:flex;align-items:center;justify-content:space-between}
+.row{display:flex;justify-content:space-between;align-items:center;padding:8px 20px;border-bottom:1px solid rgba(0,0,0,0.03);gap:10px}
+.row:last-child{border-bottom:none}
+.row.sub{background:var(--grey50);font-weight:600;border-top:1px solid var(--border)}
+.row.total-row{background:var(--grey900);color:white;font-weight:600;padding:12px 20px}
+.row-label{color:var(--grey600);flex:1;min-width:0}
+.row.sub .row-label,.row.total-row .row-label{color:inherit}
+.inp{background:var(--grey50);border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-size:12px;font-family:'DM Sans',sans-serif;color:var(--text);text-align:right;outline:none;font-variant-numeric:tabular-nums;transition:border-color 0.2s}
+.inp:focus{border-color:var(--teal);background:var(--white)}
+.inp.w100{width:100px}.inp.w80{width:80px}.inp.w60{width:60px}.inp.w120{width:120px}.inp.w140{width:140px}
+.inp.dollar{color:var(--teal-dark);font-weight:500}
+.inp.disabled{background:var(--grey200);color:var(--grey500);cursor:not-allowed}
+.sel{background:var(--grey50);border:1px solid var(--border);border-radius:4px;padding:5px 8px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;cursor:pointer}
+.sel:focus{border-color:var(--teal)}
+.pct-suffix{font-size:11px;color:var(--muted);margin-left:3px}
+.add-btn{padding:4px 12px;border-radius:4px;border:1px solid var(--teal-subtle);background:var(--teal-bg);color:var(--teal-dark);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.add-btn:hover{background:var(--teal);color:white;border-color:var(--teal)}
+.rm-btn{width:22px;height:22px;border-radius:4px;border:1px solid var(--border);background:var(--white);color:var(--red);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;line-height:1}
+.rm-btn:hover{background:rgba(220,38,38,0.06);border-color:var(--red)}
+.summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.scard{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;position:relative;overflow:hidden}
+.scard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.scard.ok::before{background:var(--green)}.scard.warn::before{background:var(--amber)}.scard.bad::before{background:var(--red)}.scard.neutral::before{background:var(--teal)}
+.sc-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.sc-value{font-family:'Source Serif 4',serif;font-size:24px;font-weight:600;line-height:1}
+.sc-sub{font-size:11px;color:var(--muted);margin-top:5px}
+
+/* COST TABLE */
+.ct-scroll{overflow-x:auto}
+.ct{width:100%;border-collapse:collapse;font-size:12px}
+.ct th{font-size:9px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:var(--muted);padding:8px 8px;border-bottom:2px solid var(--border);text-align:right;background:var(--grey50);white-space:nowrap}
+.ct th:first-child{text-align:left}
+.ct td{padding:6px 8px;border-bottom:1px solid rgba(0,0,0,0.04);text-align:right;font-variant-numeric:tabular-nums}
+.ct td:first-child{text-align:left;color:var(--grey600)}
+.ct .ct-group td{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:10px 8px 4px;background:var(--grey50);border-bottom:1px solid var(--border)}
+.ct .ct-sub td{background:var(--grey50);font-weight:600;border-top:1px solid var(--border);color:var(--text)}
+.ct .ct-total td{background:var(--grey900);color:white;font-weight:700;padding:10px 8px}
+.ct-inp{background:var(--grey50);border:1px solid var(--border);border-radius:3px;padding:4px 6px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--teal-dark);text-align:right;width:100px;outline:none;font-variant-numeric:tabular-nums;font-weight:500}
+.ct-inp:focus{border-color:var(--teal);background:var(--white)}
+.ct-sel{background:var(--grey50);border:1px solid var(--border);border-radius:3px;padding:3px 4px;font-size:10px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;width:70px}
+.ct-esc{background:var(--grey50);border:1px solid var(--border);border-radius:3px;padding:4px 6px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--text);text-align:right;width:50px;outline:none}
+.ct-esc.disabled{background:var(--grey200);color:var(--grey500);cursor:not-allowed}
+.ct-bank{color:var(--grey700);font-weight:500}
+
+/* CASHFLOW TABLE */
+.cf-scroll{overflow-x:auto}
+.cf{width:100%;border-collapse:collapse;font-size:11px;min-width:800px}
+.cf th{font-size:8px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);padding:6px 6px;border-bottom:2px solid var(--border);text-align:right;background:var(--grey50);white-space:nowrap;position:relative}
+.cf th:first-child{text-align:left;position:sticky;left:0;background:var(--grey50);z-index:2;min-width:140px}
+.cf td{padding:4px 6px;border-bottom:1px solid rgba(0,0,0,0.03);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cf td:first-child{text-align:left;position:sticky;left:0;background:var(--white);z-index:1;font-size:11px;color:var(--muted);min-width:140px}
+.cf .cf-section td{background:var(--grey900);color:rgba(255,255,255,0.7);font-weight:700;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:8px 6px}
+.cf .cf-section td:first-child{background:var(--grey900)}
+.cf .cf-sub td{background:var(--grey50);font-weight:600;border-top:1px solid var(--border)}
+.cf .cf-sub td:first-child{background:var(--grey50);color:var(--text)}
+.cf .cf-total td{background:var(--grey800);color:white;font-weight:600}
+.cf .cf-total td:first-child{background:var(--grey800)}
+
+/* BAR CHART */
+.bar-chart{display:flex;align-items:flex-end;gap:2px;height:180px;padding-bottom:20px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center}
+.bar-seg{border-radius:2px 2px 0 0;transition:height 0.3s;min-width:3px;width:100%}
+.bar-label{font-size:8px;color:var(--muted);margin-top:3px;writing-mode:vertical-rl;text-orientation:mixed;height:40px;overflow:hidden}
+.bar-legend{display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:11px;color:var(--muted)}
+.bar-legend-dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:middle}
+
+/* ADOPTED BANNER */
+.adopted-banner{background:var(--grey900);border-radius:var(--radius-lg);padding:20px 24px;color:white;display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.ab-item{}.ab-label{font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;opacity:0.5;margin-bottom:4px}
+.ab-value{font-family:'Source Serif 4',serif;font-size:24px;font-weight:700}
+.ab-value.teal{color:var(--teal-light)}
+.ab-value.green{color:#6ee7b7}
+.ab-value.amber{color:#fbbf24}
+.ab-value.red{color:#fca5a5}
+
+.hidden{display:none!important}
+@media(max-width:768px){.container{padding:16px}.nav{padding:0 16px}.tab-bar{padding:0 16px}.summary-grid{grid-template-columns:1fr 1fr}.adopted-banner{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a class="nav-logo" href="index.html">getkredit<span>.ai</span></a>
+  <div class="nav-links">
+    <a href="feasibility-capval.html">Standard</a>
+    <a href="feasibility-advanced.html" class="active">Advanced</a>
+    <a href="admin.html">Admin</a>
+    <a href="portal.html">My Deals</a>
+    <a href="credit-paper.html">Credit Paper</a>
+  </div>
+  <div class="nav-right">
+    <a href="portal.html" class="nav-link">← Portal</a>
+  </div>
+</nav>
+<div class="tab-bar">
+  <button class="tab active" onclick="showTab('funding')">① Funding Table</button>
+  <button class="tab" onclick="showTab('revenue')">② Revenue</button>
+  <button class="tab" onclick="showTab('cashflow')">③ Cash Flow</button>
+  <button class="tab" onclick="showTab('returns')">④ Returns</button>
+</div>
+<div class="container">
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- TAB 1: FUNDING TABLE                          -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="tab-funding">
+
+  <!-- GLOBAL ASSUMPTIONS -->
+  <div class="section">
+    <div class="section-head">Global Assumptions</div>
+    <div class="row">
+      <span class="row-label">Model Start Date</span>
+      <input class="inp w140" id="g-start" type="month" value="2026-07" onchange="calc()">
+    </div>
+    <div class="row">
+      <span class="row-label">Total Project Months</span>
+      <input class="inp w80" id="g-months" type="number" value="36" min="1" max="120" onchange="calc()"> <span class="pct-suffix">mths</span>
+    </div>
+    <div class="row">
+      <span class="row-label">Global Cost Escalation (p.a.)</span>
+      <input class="inp w80" id="g-costesc" type="number" value="3.0" step="0.1" onchange="calc()"> <span class="pct-suffix">%</span>
+    </div>
+    <div class="row">
+      <span class="row-label">Global Revenue Escalation (p.a.)</span>
+      <input class="inp w80" id="g-revesc" type="number" value="0" step="0.1" onchange="calc()"> <span class="pct-suffix">%</span>
+    </div>
+  </div>
+
+  <!-- SENIOR DEBT TERMS -->
+  <div class="section">
+    <div class="section-head">Senior Debt Terms</div>
+    <div class="row"><span class="row-label">Facility Limit</span><span class="row-value" id="o-fac-limit" style="font-weight:700;color:var(--teal)">—</span></div>
+    <div class="row"><span class="row-label">Interest Rate (p.a.)</span><input class="inp w80" id="s-rate" type="number" value="9.5" step="0.25" onchange="calc()"><span class="pct-suffix">%</span></div>
+    <div class="row"><span class="row-label">Establishment Fee</span><input class="inp w80" id="s-estab" type="number" value="1.65" step="0.05" onchange="calc()"><span class="pct-suffix">%</span></div>
+    <div class="row"><span class="row-label">Line Fee (p.a.)</span><input class="inp w80" id="s-linefee" type="number" value="2.25" step="0.25" onchange="calc()"><span class="pct-suffix">%</span></div>
+    <div class="row"><span class="row-label">Line Fee Frequency</span>
+      <select class="sel" id="s-linefreq" onchange="calc()"><option value="3">Quarterly</option><option value="1">Monthly</option><option value="6">Semi-Annual</option><option value="12">Annual</option></select>
+    </div>
+  </div>
+
+  <!-- PREFERRED EQUITY TERMS -->
+  <div class="section">
+    <div class="section-head">Preferred Equity Terms</div>
+    <div class="row"><span class="row-label">Preferred Equity Coupon (p.a.)</span><input class="inp w80" id="p-coupon" type="number" value="0" step="0.25" onchange="calc()"><span class="pct-suffix">%</span></div>
+    <div class="row"><span class="row-label">Preferred Return Hurdle (p.a.)</span><input class="inp w80" id="p-hurdle" type="number" value="0" step="0.25" onchange="calc()"><span class="pct-suffix">%</span></div>
+    <div class="row"><span class="row-label">Profit Share to Preferred</span><input class="inp w80" id="p-profshare" type="number" value="0" step="1" onchange="calc()"><span class="pct-suffix">%</span></div>
+  </div>
+
+  <!-- COST TABLE -->
+  <div class="section">
+    <div class="section-head">Project Costs & Funding Split
+      <button class="add-btn" onclick="addCostRow()">+ Add Line</button>
+    </div>
+    <div class="ct-scroll">
+      <table class="ct" id="cost-table">
+        <thead>
+          <tr>
+            <th style="min-width:180px">Cost Item</th>
+            <th>Project ($)</th>
+            <th>Ord. Equity ($)</th>
+            <th>Pref. Equity ($)</th>
+            <th>Senior ($)</th>
+            <th>Mth Start</th>
+            <th>Span</th>
+            <th>Profile</th>
+            <th>Esc.</th>
+            <th>Rate</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="cost-body"></tbody>
+        <tfoot>
+          <tr class="ct-sub">
+            <td>Total Purchase Cost</td>
+            <td id="st-purch-proj">—</td><td id="st-purch-eq">—</td><td id="st-purch-pref">—</td><td id="st-purch-sr">—</td>
+            <td colspan="6"></td>
+          </tr>
+          <tr class="ct-sub">
+            <td>Total Construction Cost</td>
+            <td id="st-const-proj">—</td><td id="st-const-eq">—</td><td id="st-const-pref">—</td><td id="st-const-sr">—</td>
+            <td colspan="6"></td>
+          </tr>
+          <tr class="ct-sub">
+            <td>Total Project Cost (excl. finance)</td>
+            <td id="st-total-proj">—</td><td id="st-total-eq">—</td><td id="st-total-pref">—</td><td id="st-total-sr">—</td>
+            <td colspan="6"></td>
+          </tr>
+          <tr class="ct-sub">
+            <td>Finance Costs</td>
+            <td id="st-fin-proj">—</td><td></td><td></td><td id="st-fin-sr">—</td>
+            <td colspan="6"></td>
+          </tr>
+          <tr class="ct-total">
+            <td>Total Development Cost</td>
+            <td id="st-tdc-proj">—</td><td id="st-tdc-eq">—</td><td id="st-tdc-pref">—</td><td id="st-tdc-sr">—</td>
+            <td colspan="6"></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- TAB 2: REVENUE                                -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="tab-revenue" class="hidden">
+  <div class="section">
+    <div class="section-head">Revenue Schedule
+      <button class="add-btn" onclick="addRevRow()">+ Add Line</button>
+    </div>
+    <div class="ct-scroll">
+      <table class="ct" id="rev-table">
+        <thead>
+          <tr>
+            <th style="min-width:180px">Revenue Item</th>
+            <th>Amount ($)</th>
+            <th>Sale Month</th>
+            <th>Span</th>
+            <th>Esc.</th>
+            <th>Rate</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="rev-body"></tbody>
+        <tfoot>
+          <tr class="ct-sub"><td>Gross Realisation</td><td id="rv-gross">—</td><td colspan="5"></td></tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-head">Selling Costs</div>
+    <div class="row"><span class="row-label">GST Method</span>
+      <select class="sel" id="rv-gst" onchange="calc()" style="width:150px"><option value="margin">Margin Scheme</option><option value="standard">Standard (÷11)</option><option value="none">No GST</option></select>
+    </div>
+    <div class="row"><span class="row-label">Sales Commission</span><input class="inp w80" id="rv-comm" type="number" value="3.0" step="0.1" onchange="calc()"><span class="pct-suffix">%</span></div>
+    <div class="row sub"><span class="row-label">GST</span><span class="row-value" id="rv-gstamt" style="color:var(--red)">—</span></div>
+    <div class="row sub"><span class="row-label">Commission</span><span class="row-value" id="rv-commamt" style="color:var(--red)">—</span></div>
+    <div class="row total-row"><span class="row-label">Net Realisation</span><span class="row-value" id="rv-net">—</span></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- TAB 3: CASH FLOW                              -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="tab-cashflow" class="hidden">
+  <div class="summary-grid" id="cf-cards"></div>
+
+  <div class="section">
+    <div class="section-head">Cumulative Capital Stack</div>
+    <div style="padding:20px">
+      <div class="bar-chart" id="cf-bars"></div>
+      <div class="bar-legend">
+        <span><span class="bar-legend-dot" style="background:var(--teal)"></span>Ord. Equity</span>
+        <span><span class="bar-legend-dot" style="background:#7c3aed"></span>Pref. Equity</span>
+        <span><span class="bar-legend-dot" style="background:var(--grey700)"></span>Senior Debt</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">Monthly Cash Flow</div>
+    <div class="cf-scroll">
+      <table class="cf" id="cf-table">
+        <thead id="cf-thead"></thead>
+        <tbody id="cf-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ -->
+<!-- TAB 4: RETURNS                                -->
+<!-- ══════════════════════════════════════════════ -->
+<div id="tab-returns" class="hidden">
+  <div class="adopted-banner" id="ret-banner"></div>
+  <div class="summary-grid" id="ret-cards"></div>
+  <div class="section">
+    <div class="section-head">Reconciliation Waterfall</div>
+    <div id="ret-waterfall"></div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<script>
+"use strict";
+/* ═══════════════════════════════════════════════════
+   FORMATTERS & HELPERS
+   ═══════════════════════════════════════════════════ */
+function fd(v){if(v==null||isNaN(v))return"—";return new Intl.NumberFormat("en-AU",{style:"currency",currency:"AUD",minimumFractionDigits:0,maximumFractionDigits:0}).format(v);}
+function fp(v,d){if(v==null||isNaN(v))return"—";return(v*100).toFixed(d||1)+"%";}
+function pn(s){return parseFloat(String(s).replace(/[$,\s]/g,''))||0;}
+function gv(id){var el=document.getElementById(id);return el?pn(el.value):0;}
+function sv(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+function dollarFocus(el){var r=String(el.value).replace(/[$,\s]/g,'');el.value=r==='0'?'':r;el.select();}
+function dollarBlur(el){var r=parseFloat(String(el.value).replace(/[$,\s]/g,''))||0;el.value=r===0?'$0':'$'+r.toLocaleString('en-AU');calc();}
+
+/* ═══════════════════════════════════════════════════
+   TAB SWITCHING
+   ═══════════════════════════════════════════════════ */
+function showTab(t){
+  ['funding','revenue','cashflow','returns'].forEach(function(id){
+    document.getElementById('tab-'+id).classList.toggle('hidden',id!==t);
+  });
+  document.querySelectorAll('.tab').forEach(function(b,i){
+    b.classList.toggle('active',['funding','revenue','cashflow','returns'][i]===t);
+  });
+  calc();
+}
+
+/* ═══════════════════════════════════════════════════
+   DYNAMIC COST ROWS
+   ═══════════════════════════════════════════════════ */
+var costId=0;
+var defaultCosts=[
+  {grp:'Land & Acquisition',items:[
+    {name:'Land Settlement',proj:5300000,eq:1900000,pref:0,sr:3400000,ms:1,sp:1},
+    {name:'Stamp Duty',proj:311183,eq:311183,pref:0,sr:0,ms:1,sp:1},
+    {name:'Legal / Setups',proj:35000,eq:35000,pref:0,sr:0,ms:1,sp:1}
+  ]},
+  {grp:'Construction',items:[
+    {name:'Construction Contract',proj:14358190,eq:2100000,pref:0,sr:12258190,ms:8,sp:21},
+    {name:'Building & Dev Costs',proj:627000,eq:627000,pref:0,sr:0,ms:8,sp:21},
+    {name:'Professional Fees',proj:855250,eq:855250,pref:0,sr:0,ms:8,sp:21},
+    {name:'Council / S94',proj:286770,eq:286770,pref:0,sr:0,ms:8,sp:21},
+    {name:'Marketing',proj:734250,eq:734250,pref:0,sr:0,ms:8,sp:21},
+    {name:'Solicitor',proj:55000,eq:55000,pref:0,sr:0,ms:8,sp:21},
+    {name:'Rates & Taxes',proj:89357,eq:89357,pref:0,sr:0,ms:8,sp:21},
+    {name:'Contingency',proj:1435819,eq:1435819,pref:0,sr:0,ms:8,sp:21}
+  ]}
+];
+
+function initCosts(){
+  var body=document.getElementById('cost-body');
+  body.innerHTML='';
+  costId=0;
+  defaultCosts.forEach(function(g){
+    var gr=document.createElement('tr');gr.className='ct-group';
+    gr.innerHTML='<td colspan="11">'+g.grp+'</td>';
+    body.appendChild(gr);
+    g.items.forEach(function(it){addCostRow(it,g.grp);});
+  });
+}
+
+function addCostRow(data,group){
+  costId++;
+  var d=data||{name:'',proj:0,eq:0,pref:0,sr:0,ms:1,sp:1};
+  var id=costId;
+  var body=document.getElementById('cost-body');
+  var tr=document.createElement('tr');
+  tr.id='cr-'+id;
+  tr.dataset.group=group||'Construction';
+  tr.innerHTML=
+    '<td><input class="ct-inp" style="width:160px;text-align:left" value="'+d.name+'" onchange="calc()"></td>'
+    +'<td><input class="ct-inp dollar" value="$'+d.proj.toLocaleString('en-AU')+'" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>'
+    +'<td><input class="ct-inp dollar" value="$'+d.eq.toLocaleString('en-AU')+'" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>'
+    +'<td><input class="ct-inp dollar" value="$'+d.pref.toLocaleString('en-AU')+'" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>'
+    +'<td class="ct-bank" id="cr-sr-'+id+'">—</td>'
+    +'<td><input class="ct-inp" type="number" value="'+d.ms+'" min="0" max="120" style="width:45px" onchange="calc()"></td>'
+    +'<td><input class="ct-inp" type="number" value="'+d.sp+'" min="1" max="120" style="width:45px" onchange="calc()"></td>'
+    +'<td><select class="ct-sel" onchange="calc()"><option value="straight">Straight</option><option value="scurve">S-Curve</option><option value="custom">Custom</option></select></td>'
+    +'<td><select class="ct-sel" style="width:45px" onchange="toggleEsc(this,'+id+');calc()"><option value="N">N</option><option value="Y">Y</option></select></td>'
+    +'<td><input class="ct-esc disabled" id="cr-esc-'+id+'" type="number" value="'+gv('g-costesc')+'" step="0.1" style="width:50px" disabled onchange="calc()"></td>'
+    +'<td><button class="rm-btn" onclick="removeCostRow('+id+')">×</button></td>';
+  body.appendChild(tr);
+}
+
+function removeCostRow(id){var r=document.getElementById('cr-'+id);if(r)r.remove();calc();}
+function toggleEsc(sel,id){
+  var inp=document.getElementById('cr-esc-'+id);
+  if(sel.value==='Y'){inp.disabled=false;inp.classList.remove('disabled');inp.value=gv('g-costesc');}
+  else{inp.disabled=true;inp.classList.add('disabled');}
+}
+
+/* ═══════════════════════════════════════════════════
+   DYNAMIC REVENUE ROWS
+   ═══════════════════════════════════════════════════ */
+var revId=0;
+var defaultRevs=[
+  {name:'Settlement Tranche 1',amt:6051029,month:29,span:6},
+  {name:'Settlement Tranche 2',amt:6051029,month:29,span:6},
+  {name:'Settlement Tranche 3',amt:6051029,month:29,span:6},
+  {name:'Settlement Tranche 4',amt:6051029,month:29,span:6},
+  {name:'Settlement Tranche 5',amt:6051029,month:29,span:6},
+  {name:'Settlement Tranche 6',amt:6051029,month:29,span:6}
+];
+
+function initRevs(){
+  var body=document.getElementById('rev-body');
+  body.innerHTML='';
+  revId=0;
+  defaultRevs.forEach(function(r){addRevRow(r);});
+}
+
+function addRevRow(data){
+  revId++;
+  var d=data||{name:'',amt:0,month:29,span:1};
+  var id=revId;
+  var body=document.getElementById('rev-body');
+  var tr=document.createElement('tr');
+  tr.id='rv-'+id;
+  tr.innerHTML=
+    '<td><input class="ct-inp" style="width:180px;text-align:left" value="'+d.name+'" onchange="calc()"></td>'
+    +'<td><input class="ct-inp dollar" value="$'+d.amt.toLocaleString('en-AU')+'" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()"></td>'
+    +'<td><input class="ct-inp" type="number" value="'+d.month+'" min="1" max="120" style="width:50px" onchange="calc()"></td>'
+    +'<td><input class="ct-inp" type="number" value="'+d.span+'" min="1" max="120" style="width:50px" onchange="calc()"></td>'
+    +'<td><select class="ct-sel" style="width:45px" onchange="toggleRevEsc(this,'+id+');calc()"><option value="N">N</option><option value="Y">Y</option></select></td>'
+    +'<td><input class="ct-esc disabled" id="rv-esc-'+id+'" type="number" value="'+gv('g-revesc')+'" step="0.1" style="width:50px" disabled onchange="calc()"></td>'
+    +'<td><button class="rm-btn" onclick="removeRevRow('+id+')">×</button></td>';
+  body.appendChild(tr);
+}
+
+function removeRevRow(id){var r=document.getElementById('rv-'+id);if(r)r.remove();calc();}
+function toggleRevEsc(sel,id){
+  var inp=document.getElementById('rv-esc-'+id);
+  if(sel.value==='Y'){inp.disabled=false;inp.classList.remove('disabled');inp.value=gv('g-revesc');}
+  else{inp.disabled=true;inp.classList.add('disabled');}
+}
+
+/* ═══════════════════════════════════════════════════
+   DRAWDOWN PROFILE GENERATORS
+   ═══════════════════════════════════════════════════ */
+function profileStraight(span){
+  var p=[];for(var i=0;i<span;i++) p.push(1/span);return p;
+}
+function profileSCurve(span){
+  var raw=[];
+  for(var i=0;i<span;i++){var t=(i+0.5)/span;raw.push(Math.pow(Math.sin(t*Math.PI/2),1.5));}
+  var s=raw.reduce(function(a,b){return a+b;},0);
+  return raw.map(function(r){return r/s;});
+}
+function getProfile(type,span){
+  if(type==='scurve') return profileSCurve(span);
+  return profileStraight(span); // straight or custom (custom defaults to straight for now)
+}
+
+/* ═══════════════════════════════════════════════════
+   READ COST TABLE
+   ═══════════════════════════════════════════════════ */
+function readCosts(){
+  var rows=[];
+  var trs=document.querySelectorAll('#cost-body tr:not(.ct-group)');
+  trs.forEach(function(tr){
+    var inps=tr.querySelectorAll('.ct-inp');
+    var sels=tr.querySelectorAll('.ct-sel');
+    if(inps.length<7) return;
+    var proj=pn(inps[1].value);
+    var eq=pn(inps[2].value);
+    var pref=pn(inps[3].value);
+    eq=Math.min(eq,proj);
+    pref=Math.min(pref,proj-eq);
+    var sr=proj-eq-pref;
+    var ms=parseInt(inps[4].value)||0;
+    var sp=parseInt(inps[5].value)||1;
+    var profile=sels[0]?sels[0].value:'straight';
+    var escYN=sels[1]?sels[1].value:'N';
+    var escRate=0;
+    var escInp=tr.querySelector('.ct-esc');
+    if(escYN==='Y'&&escInp) escRate=parseFloat(escInp.value)||0;
+    var group=tr.dataset.group||'Construction';
+    // Update senior display
+    var srCell=tr.querySelector('.ct-bank');
+    if(srCell) srCell.textContent=fd(sr);
+    rows.push({name:inps[0].value,proj:proj,eq:eq,pref:pref,sr:sr,ms:ms,sp:sp,profile:profile,escYN:escYN,escRate:escRate,group:group});
+  });
+  return rows;
+}
+
+/* ═══════════════════════════════════════════════════
+   READ REVENUE TABLE
+   ═══════════════════════════════════════════════════ */
+function readRevs(){
+  var rows=[];
+  var trs=document.querySelectorAll('#rev-body tr');
+  trs.forEach(function(tr){
+    var inps=tr.querySelectorAll('.ct-inp');
+    var sels=tr.querySelectorAll('.ct-sel');
+    if(inps.length<4) return;
+    var amt=pn(inps[1].value);
+    var month=parseInt(inps[2].value)||29;
+    var span=parseInt(inps[3].value)||1;
+    var escYN=sels[0]?sels[0].value:'N';
+    var escRate=0;
+    var escInp=tr.querySelector('.ct-esc');
+    if(escYN==='Y'&&escInp) escRate=parseFloat(escInp.value)||0;
+    rows.push({name:inps[0].value,amt:amt,month:month,span:span,escYN:escYN,escRate:escRate});
+  });
+  return rows;
+}
+
+/* ═══════════════════════════════════════════════════
+   MAIN CALCULATION ENGINE
+   ═══════════════════════════════════════════════════ */
+function calc(){try{calcInner();}catch(e){console.warn('Calc error:',e);}}
+
+function calcInner(){
+  var months=parseInt(document.getElementById('g-months').value)||36;
+  if(months<1) months=1;
+  if(months>120) months=120;
+
+  var sRate=gv('s-rate')/100;
+  var sEstab=gv('s-estab')/100;
+  var sLineFee=gv('s-linefee')/100;
+  var sLineFreq=parseInt(document.getElementById('s-linefreq').value)||3;
+  var pCoupon=gv('p-coupon')/100;
+
+  var costs=readCosts();
+  var revs=readRevs();
+
+  // ── SUBTOTALS ──
+  var purchProj=0,purchEq=0,purchPref=0,purchSr=0;
+  var constProj=0,constEq=0,constPref=0,constSr=0;
+  costs.forEach(function(c){
+    if(c.group==='Land & Acquisition'){purchProj+=c.proj;purchEq+=c.eq;purchPref+=c.pref;purchSr+=c.sr;}
+    else{constProj+=c.proj;constEq+=c.eq;constPref+=c.pref;constSr+=c.sr;}
+  });
+  var totProj=purchProj+constProj, totEq=purchEq+constEq, totPref=purchPref+constPref, totSr=purchSr+constSr;
+
+  sv('st-purch-proj',fd(purchProj));sv('st-purch-eq',fd(purchEq));sv('st-purch-pref',fd(purchPref));sv('st-purch-sr',fd(purchSr));
+  sv('st-const-proj',fd(constProj));sv('st-const-eq',fd(constEq));sv('st-const-pref',fd(constPref));sv('st-const-sr',fd(constSr));
+  sv('st-total-proj',fd(totProj));sv('st-total-eq',fd(totEq));sv('st-total-pref',fd(totPref));sv('st-total-sr',fd(totSr));
+  sv('o-fac-limit',fd(totSr));
+
+  // Gross Rev
+  var grossRev=0;
+  revs.forEach(function(r){grossRev+=r.amt;});
+  sv('rv-gross',fd(grossRev));
+
+  // GST & Commission
+  var gstMethod=document.getElementById('rv-gst').value;
+  var commPct=gv('rv-comm')/100;
+  var gstAmt=0;
+  if(gstMethod==='margin'){
+    var landCost=purchProj;
+    gstAmt=grossRev>0?(grossRev-(grossRev>0?(grossRev/grossRev)*landCost:0))/11:0;
+    gstAmt=Math.max(0,(grossRev-landCost)/11);
+  } else if(gstMethod==='standard'){gstAmt=grossRev/11;}
+  var commAmt=grossRev*commPct;
+  var netRev=grossRev-gstAmt-commAmt;
+  sv('rv-gstamt','-'+fd(gstAmt));sv('rv-commamt','-'+fd(commAmt));sv('rv-net',fd(netRev));
+
+  // ── BUILD MONTHLY ARRAYS ──
+  // Cost drawdowns per month (total, equity, pref, senior)
+  var mExpTotal=new Array(months+1).fill(0);
+  var mExpEq=new Array(months+1).fill(0);
+  var mExpPref=new Array(months+1).fill(0);
+  var mExpSr=new Array(months+1).fill(0);
+
+  costs.forEach(function(c){
+    if(c.sp<=0||c.proj<=0) return;
+    var prof=getProfile(c.profile,c.sp);
+    var monthlyEscRate=c.escYN==='Y'?Math.pow(1+c.escRate/100,1/12)-1:0;
+    for(var i=0;i<c.sp;i++){
+      var m=c.ms+i;
+      if(m<0||m>months) continue;
+      var esc=c.escYN==='Y'?Math.pow(1+monthlyEscRate,m):1;
+      var draw=c.proj*prof[i]*esc;
+      var eqDraw=c.eq*prof[i]*esc;
+      var prefDraw=c.pref*prof[i]*esc;
+      var srDraw=draw-eqDraw-prefDraw;
+      mExpTotal[m]+=draw;
+      mExpEq[m]+=eqDraw;
+      mExpPref[m]+=prefDraw;
+      mExpSr[m]+=Math.max(0,srDraw);
+    }
+  });
+
+  // Revenue per month
+  var mRev=new Array(months+1).fill(0);
+  revs.forEach(function(r){
+    if(r.span<=0||r.amt<=0) return;
+    var perMonth=r.amt/r.span;
+    var monthlyEscRate=r.escYN==='Y'?Math.pow(1+r.escRate/100,1/12)-1:0;
+    for(var i=0;i<r.span;i++){
+      var m=r.month+i;
+      if(m<0||m>months) continue;
+      var esc=r.escYN==='Y'?Math.pow(1+monthlyEscRate,m):1;
+      mRev[m]+=perMonth*esc;
+    }
+  });
+
+  // ── SENIOR DEBT SCHEDULE ──
+  var srOpen=new Array(months+1).fill(0);
+  var srDraw=new Array(months+1).fill(0);
+  var srRepay=new Array(months+1).fill(0);
+  var srEstab=new Array(months+1).fill(0);
+  var srLine=new Array(months+1).fill(0);
+  var srInterest=new Array(months+1).fill(0);
+  var srClose=new Array(months+1).fill(0);
+
+  // Establishment fee at month 0
+  var estabAmt=totSr*sEstab;
+  srEstab[0]=estabAmt;
+
+  // Line fee — quarterly/periodic on facility limit
+  var lineFeeTotal=totSr*sLineFee;
+  var linePerPeriod=lineFeeTotal/(12/sLineFreq);
+  for(var m=0;m<=months;m++){
+    if(m%sLineFreq===0) srLine[m]=linePerPeriod;
+  }
+
+  // Build senior debt month by month
+  var totalSrInterest=0,totalSrFees=0;
+  for(var m=0;m<=months;m++){
+    srOpen[m]=m>0?srClose[m-1]:0;
+    srDraw[m]=mExpSr[m];
+
+    // Interest on opening + new draws
+    var balForInterest=srOpen[m]+srDraw[m]+srEstab[m]+srLine[m];
+    srInterest[m]=balForInterest*(sRate/12);
+    totalSrInterest+=srInterest[m];
+    totalSrFees+=srEstab[m]+srLine[m];
+
+    // Repayments from revenue
+    var avail=mRev[m]; // net rev available
+    var repay=Math.min(avail,srOpen[m]+srDraw[m]+srEstab[m]+srLine[m]+srInterest[m]);
+    srRepay[m]=mRev[m]>0?repay:0;
+
+    srClose[m]=srOpen[m]+srDraw[m]+srEstab[m]+srLine[m]+srInterest[m]-srRepay[m];
+    if(srClose[m]<0.01) srClose[m]=0;
+  }
+
+  var finCosts=totalSrInterest+totalSrFees;
+  sv('st-fin-proj',fd(finCosts));sv('st-fin-sr',fd(finCosts));
+  sv('st-tdc-proj',fd(totProj+finCosts));
+  sv('st-tdc-eq',fd(totEq));sv('st-tdc-pref',fd(totPref));
+  sv('st-tdc-sr',fd(totSr+finCosts));
+
+  // ── PREFERRED EQUITY SCHEDULE ──
+  var prefOpen=new Array(months+1).fill(0);
+  var prefDrawArr=new Array(months+1).fill(0);
+  var prefInterest=new Array(months+1).fill(0);
+  var prefClose=new Array(months+1).fill(0);
+  var prefRepay=new Array(months+1).fill(0);
+
+  for(var m=0;m<=months;m++){
+    prefOpen[m]=m>0?prefClose[m-1]:0;
+    prefDrawArr[m]=mExpPref[m];
+    prefInterest[m]=(prefOpen[m]+prefDrawArr[m])*(pCoupon/12);
+    // Pref repaid after senior from remaining revenue
+    var availPref=mRev[m]-srRepay[m];
+    prefRepay[m]=availPref>0?Math.min(availPref,prefOpen[m]+prefDrawArr[m]+prefInterest[m]):0;
+    prefClose[m]=prefOpen[m]+prefDrawArr[m]+prefInterest[m]-prefRepay[m];
+    if(prefClose[m]<0.01) prefClose[m]=0;
+  }
+
+  // ── EQUITY SCHEDULE ──
+  var eqOpen=new Array(months+1).fill(0);
+  var eqDrawArr=new Array(months+1).fill(0);
+  var eqRepay=new Array(months+1).fill(0);
+  var eqClose=new Array(months+1).fill(0);
+
+  for(var m=0;m<=months;m++){
+    eqOpen[m]=m>0?eqClose[m-1]:0;
+    eqDrawArr[m]=mExpEq[m];
+    var availEq=mRev[m]-srRepay[m]-prefRepay[m];
+    eqRepay[m]=availEq>0?Math.min(availEq,eqOpen[m]+eqDrawArr[m]):0;
+    eqClose[m]=eqOpen[m]+eqDrawArr[m]-eqRepay[m];
+    if(eqClose[m]<0.01) eqClose[m]=0;
+  }
+
+  // Profit = remaining revenue after all repayments
+  var profitArr=new Array(months+1).fill(0);
+  var totalProfit=0;
+  for(var m=0;m<=months;m++){
+    var remaining=mRev[m]-srRepay[m]-prefRepay[m]-eqRepay[m];
+    profitArr[m]=Math.max(0,remaining);
+    totalProfit+=profitArr[m];
+  }
+
+  // ── SUMMARY CARDS ──
+  var peakDebt=Math.max.apply(null,srClose);
+  var peakPref=Math.max.apply(null,prefClose);
+  var peakEq=Math.max.apply(null,eqClose);
+  var totalDevCost=totProj+finCosts;
+  var roc=totalDevCost>0?totalProfit/totalDevCost:0;
+  var ltc=totalDevCost>0?totSr/totalDevCost:0;
+  var ltv=grossRev>0?totSr/grossRev:0;
+  var eqMoic=totEq>0?(totEq+totalProfit)/totEq:0;
+
+  document.getElementById('cf-cards').innerHTML=
+    '<div class="scard neutral"><div class="sc-label">Peak Senior Debt</div><div class="sc-value">'+fd(peakDebt)+'</div><div class="sc-sub">LTC '+fp(ltc)+'</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Total Equity</div><div class="sc-value" style="color:var(--teal)">'+fd(totEq)+'</div><div class="sc-sub">MOIC '+eqMoic.toFixed(2)+'x</div></div>'
+    +'<div class="scard '+(roc>=0.2?'ok':roc>=0.15?'warn':'bad')+'"><div class="sc-label">Return on Cost</div><div class="sc-value '+(roc>=0.2?'':'')+'">'+fp(roc)+'</div><div class="sc-sub">'+fd(totalProfit)+' profit</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Net Realisation</div><div class="sc-value">'+fd(netRev)+'</div><div class="sc-sub">'+months+' months</div></div>';
+
+  // ── BAR CHART ──
+  var maxStack=0;
+  for(var m=0;m<=months;m++){
+    var stack=srClose[m]+prefClose[m]+eqClose[m];
+    if(stack>maxStack) maxStack=stack;
+  }
+  var barsHtml='';
+  // Show every month up to last active month
+  var lastActive=0;
+  for(var m=months;m>=0;m--){if(srClose[m]>0||prefClose[m]>0||eqClose[m]>0||mRev[m]>0){lastActive=m;break;}}
+  var showMonths=Math.min(lastActive+2,months+1);
+
+  for(var m=0;m<showMonths;m++){
+    var srH=maxStack>0?(srClose[m]/maxStack)*160:0;
+    var prH=maxStack>0?(prefClose[m]/maxStack)*160:0;
+    var eqH=maxStack>0?(eqClose[m]/maxStack)*160:0;
+    barsHtml+='<div class="bar-col">'
+      +'<div style="display:flex;flex-direction:column-reverse;height:160px;width:100%">'
+      +'<div class="bar-seg" style="height:'+srH+'px;background:var(--grey700)" title="Senior: '+fd(srClose[m])+'"></div>'
+      +'<div class="bar-seg" style="height:'+prH+'px;background:#7c3aed" title="Pref: '+fd(prefClose[m])+'"></div>'
+      +'<div class="bar-seg" style="height:'+eqH+'px;background:var(--teal)" title="Equity: '+fd(eqClose[m])+'"></div>'
+      +'</div>'
+      +'<span class="bar-label">'+(m===0?'S':'M'+m)+'</span>'
+      +'</div>';
+  }
+  document.getElementById('cf-bars').innerHTML=barsHtml;
+
+  // ── CASH FLOW TABLE (transposed: line items as rows, months as columns) ──
+  var thHtml='<tr><th>Period</th>';
+  for(var m=0;m<showMonths;m++) thHtml+='<th>'+(m===0?'Settle':'M'+m)+'</th>';
+  thHtml+='<th>Total</th></tr>';
+  document.getElementById('cf-thead').innerHTML=thHtml;
+
+  var cfLines=[
+    {label:'EXPENSES',section:true},
+    {label:'Total Expenses',data:mExpTotal,color:'var(--text)',bold:true},
+    {label:'→ Equity Funded',data:mExpEq,color:'var(--teal)'},
+    {label:'→ Pref Equity Funded',data:mExpPref,color:'#7c3aed'},
+    {label:'→ Senior Funded',data:mExpSr,color:'var(--grey700)'},
+    {label:'SENIOR DEBT',section:true},
+    {label:'Opening Balance',data:srOpen,color:'var(--grey600)'},
+    {label:'Drawdown',data:srDraw,color:'var(--grey700)'},
+    {label:'Estab. Fee',data:srEstab,color:'var(--muted)'},
+    {label:'Line Fee',data:srLine,color:'var(--muted)'},
+    {label:'Interest',data:srInterest,color:'var(--amber)'},
+    {label:'Repayments',data:srRepay,color:'var(--green)',negate:true},
+    {label:'Closing Balance',data:srClose,color:'var(--grey700)',bold:true},
+    {label:'PREFERRED EQUITY',section:true},
+    {label:'Drawdown',data:prefDrawArr,color:'#7c3aed'},
+    {label:'Interest',data:prefInterest,color:'var(--amber)'},
+    {label:'Repayments',data:prefRepay,color:'var(--green)',negate:true},
+    {label:'Closing Balance',data:prefClose,color:'#7c3aed',bold:true},
+    {label:'ORDINARY EQUITY',section:true},
+    {label:'Drawdown',data:eqDrawArr,color:'var(--teal)'},
+    {label:'Repayments',data:eqRepay,color:'var(--green)',negate:true},
+    {label:'Closing Balance',data:eqClose,color:'var(--teal)',bold:true},
+    {label:'REVENUE & PROFIT',section:true},
+    {label:'Net Realisations',data:mRev,color:'var(--green)',bold:true},
+    {label:'Profit',data:profitArr,color:'var(--green)',bold:true}
+  ];
+
+  var tbodyHtml='';
+  cfLines.forEach(function(line){
+    if(line.section){
+      tbodyHtml+='<tr class="cf-section"><td>'+line.label+'</td>';
+      for(var m=0;m<showMonths;m++) tbodyHtml+='<td></td>';
+      tbodyHtml+='<td></td></tr>';
+      return;
+    }
+    var cls=line.bold?'cf-sub':'';
+    tbodyHtml+='<tr class="'+cls+'">';
+    tbodyHtml+='<td style="font-weight:'+(line.bold?'600':'400')+'">'+line.label+'</td>';
+    var tot=0;
+    for(var m=0;m<showMonths;m++){
+      var v=line.data[m]||0;
+      tot+=v;
+      var display=v===0?'—':(line.negate&&v>0?'-'+fd(v):fd(v));
+      tbodyHtml+='<td style="color:'+line.color+'">'+display+'</td>';
+    }
+    tbodyHtml+='<td style="color:'+line.color+';font-weight:700">'+(line.negate&&tot>0?'-'+fd(tot):fd(tot))+'</td>';
+    tbodyHtml+='</tr>';
+  });
+  document.getElementById('cf-tbody').innerHTML=tbodyHtml;
+
+  // ── RETURNS TAB ──
+  document.getElementById('ret-banner').innerHTML=
+    '<div class="ab-item"><div class="ab-label">Gross Realisation</div><div class="ab-value">'+fd(grossRev)+'</div></div>'
+    +'<div class="ab-item"><div class="ab-label">Net Realisation</div><div class="ab-value teal">'+fd(netRev)+'</div></div>'
+    +'<div class="ab-item"><div class="ab-label">Total Dev Cost</div><div class="ab-value">'+fd(totalDevCost)+'</div></div>'
+    +'<div class="ab-item"><div class="ab-label">Total Profit</div><div class="ab-value '+(totalProfit>=0?'green':'red')+'">'+fd(totalProfit)+'</div></div>';
+
+  document.getElementById('ret-cards').innerHTML=
+    '<div class="scard '+(roc>=0.2?'ok':roc>=0.15?'warn':'bad')+'"><div class="sc-label">Return on Cost</div><div class="sc-value">'+fp(roc)+'</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">LTC (Senior)</div><div class="sc-value">'+fp(ltc)+'</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">LTV (Senior)</div><div class="sc-value">'+fp(ltv)+'</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Equity MOIC</div><div class="sc-value">'+eqMoic.toFixed(2)+'x</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Total Interest</div><div class="sc-value">'+fd(totalSrInterest)+'</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Total Fees</div><div class="sc-value">'+fd(totalSrFees)+'</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Peak Debt</div><div class="sc-value">'+fd(peakDebt)+'</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Months</div><div class="sc-value">'+months+'</div></div>';
+
+  // Waterfall
+  var totalSrPrincipal=0;for(var m=0;m<=months;m++) totalSrPrincipal+=srDraw[m];
+  var totalPrefPrincipal=0;for(var m=0;m<=months;m++) totalPrefPrincipal+=prefDrawArr[m];
+  var totalPrefInt=0;for(var m=0;m<=months;m++) totalPrefInt+=prefInterest[m];
+  var totalLineFees=0;for(var m=0;m<=months;m++) totalLineFees+=srLine[m];
+
+  var wf=[
+    {label:'Gross Realisation',val:grossRev,cls:''},
+    {label:'Less: GST',val:-gstAmt,cls:'red'},
+    {label:'Less: Selling Costs',val:-commAmt,cls:'red'},
+    {label:'Less: Senior Debt Principal',val:-totalSrPrincipal,cls:''},
+    {label:'Less: Senior Interest & Fees',val:-(totalSrInterest+totalSrFees),cls:''},
+    {label:'Less: Pref Equity Principal',val:-totalPrefPrincipal,cls:''},
+    {label:'Less: Pref Equity Coupon',val:-totalPrefInt,cls:''},
+    {label:'Less: Ordinary Equity',val:-totEq,cls:''},
+    {label:'Profit',val:totalProfit,cls:'green bold'}
+  ];
+  var wfHtml='';
+  wf.forEach(function(w){
+    var c=w.cls.indexOf('green')>-1?'var(--green)':w.cls.indexOf('red')>-1?'var(--red)':'var(--text)';
+    var fw=w.cls.indexOf('bold')>-1?'700':'500';
+    wfHtml+='<div class="row'+(w.cls.indexOf('bold')>-1?' sub':'')+'"><span class="row-label">'+w.label+'</span><span class="row-value" style="color:'+c+';font-weight:'+fw+'">'+fd(w.val)+'</span></div>';
+  });
+  document.getElementById('ret-waterfall').innerHTML=wfHtml;
+}
+
+/* ═══════════════════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════════════════ */
+window.addEventListener('load',function(){
+  initCosts();
+  initRevs();
+  calc();
+});
+</script>
+</body>
+</html>
