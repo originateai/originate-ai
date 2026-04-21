@@ -791,15 +791,16 @@ async function initAuth(){
     var did=p.get('deal');
     if(did){
       currentDealId=did;
-      // Check for existing saved model for this deal
-      if(currentUserId){
-        var mRes=await fetch('/.netlify/functions/feasibility-save',{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({action:'list',user_id:currentUserId})});
-        var mData=await mRes.json();
-        if(mData.models){
-          var dealModel=mData.models.find(function(m){return m.deal_id===did;});
-          if(dealModel){await loadModel(dealModel.id);return;}
-        }
+      // Check for existing saved model for this deal (any user)
+      var mRes=await fetch('/.netlify/functions/feasibility-save',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'find_by_deal',user_id:currentUserId||'anon',deal_id:did})});
+      var mData=await mRes.json();
+      if(mData.model){
+        currentModelId=mData.model.id;
+        document.getElementById('model-name').value=mData.model.model_name||'';
+        restoreData(mData.model.model_data);
+        setSt('Loaded ✓');
+        return;
       }
       // No saved model — pre-fill from deal data
       await loadDealData(did);

@@ -424,6 +424,7 @@ function showDetail(id) {
     + (d.address ? '<div style="margin-bottom:16px;border-radius:8px;overflow:hidden;border:1px solid var(--border)"><iframe width="100%" height="180" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps/embed/v1/place?key=' + GMAPS_KEY + '&q=' + encodeURIComponent(d.address) + '&zoom=15"></iframe></div>' : '')
     + '<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">'
     + '<button class="ld-btn primary" onclick="generateFundingRequest(\'' + d.id + '\')">📄 Generate Funding Request</button>'
+    + '<button class="ld-btn" onclick="openFeasibility(\'' + d.id + '\')" style="background:var(--teal-bg);color:var(--teal-dark);border-color:var(--teal-subtle)">📊 Feasibility</button>'
     + '<button class="ld-btn" onclick="window.open(\'settlement.html?deal=' + d.id + '\',\'_blank\')" style="background:var(--teal-bg);color:var(--teal-dark);border-color:var(--teal-subtle)">🏦 Settlement</button>'
     + '<button class="ld-btn" onclick="window.open(\'credit-paper.html\',\'_blank\')" style="background:var(--grey50)">📋 Credit Paper</button>'
     + '</div>'
@@ -1725,6 +1726,15 @@ function printFR() {
 
 function closeFR() {
   document.getElementById("fr-overlay").style.display = "none";
+}
+
+// ═══════════════════════════════════════════════════
+// OPEN FEASIBILITY
+// ═══════════════════════════════════════════════════
+
+async function openFeasibility(dealId) {
+  // Always open with deal param — feasibility page handles model lookup via server-side function
+  window.open('feasibility.html?deal=' + dealId, '_blank');
 }
 
 // ═══════════════════════════════════════════════════
