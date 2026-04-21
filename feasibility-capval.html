@@ -134,6 +134,17 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 .flow-banner{background:var(--teal-bg);border:1px solid var(--teal-subtle);border-radius:var(--radius);padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--teal-dark)}
 .flow-banner strong{font-weight:700;font-size:14px}
 
+/* ADD/REMOVE ROW BUTTONS */
+.add-row-btn{padding:4px 12px;border-radius:4px;border:1px solid var(--teal-subtle);background:var(--teal-bg);color:var(--teal-dark);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;letter-spacing:0}
+.add-row-btn:hover{background:var(--teal);color:white;border-color:var(--teal)}
+.outgoing-row{display:flex;align-items:center;padding:8px 22px;border-bottom:1px solid rgba(0,0,0,0.03);gap:8px}
+.outgoing-row .og-name{flex:1;background:var(--grey50);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;transition:border-color 0.2s}
+.outgoing-row .og-name:focus{border-color:var(--teal);background:var(--white)}
+.outgoing-row .og-val{background:var(--grey50);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--teal-dark);text-align:right;width:140px;outline:none;font-variant-numeric:tabular-nums;font-weight:500;transition:border-color 0.2s}
+.outgoing-row .og-val:focus{border-color:var(--teal);background:var(--white)}
+.og-remove{width:24px;height:24px;border-radius:4px;border:1px solid var(--border);background:var(--white);color:var(--red);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;flex-shrink:0;font-family:'DM Sans',sans-serif;line-height:1}
+.og-remove:hover{background:rgba(220,38,38,0.06);border-color:var(--red)}
+
 /* UNIT SCHEDULE TABLE */
 .unit-table{width:100%;border-collapse:collapse;font-size:12px}
 .unit-table th{font-size:9px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase;color:var(--muted);padding:10px 12px;border-bottom:2px solid var(--border);background:var(--grey50);white-space:nowrap}
@@ -211,53 +222,52 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
       <input class="edit-input" id="i-tenant" value="Viva Energy" style="width:200px;text-align:left" onchange="calc()">
     </div>
     <div class="row">
-      <span class="row-label">Gross Passing Income (p.a.)</span>
+      <span class="row-label">Gross Income (p.a.)</span>
       <input class="edit-input dollar" id="i-income" type="text" value="$492,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
     </div>
     <div class="row indent">
       <span class="row-label">Vacancy Allowance</span>
-      <input class="edit-input" id="i-vacancy" type="number" value="3" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
+      <input class="edit-input" id="i-vacancy" type="number" value="0" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
     </div>
     <div class="row indent">
       <span class="row-label">Less: Vacancy</span>
       <span class="row-value red" id="o-vacancy">—</span>
     </div>
     <div class="row subtotal">
-      <span class="row-label">Effective Gross Income</span>
+      <span class="row-label">Gross Income</span>
       <span class="row-value teal" id="o-egi">—</span>
     </div>
   </div>
 
-  <!-- COMMERCIAL: Outgoings -->
+  <!-- COMMERCIAL: Outgoings (dynamic add/remove) -->
   <div id="sec-outgoings" class="section">
-    <div class="section-head">Outgoings</div>
-    <div class="row indent">
-      <span class="row-label">Council Rates</span>
-      <input class="edit-input dollar" id="i-rates" type="text" value="$18,500" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
+    <div class="section-head">
+      Outgoings
+      <button class="add-row-btn" onclick="addOutgoing()">+ Add</button>
     </div>
-    <div class="row indent">
-      <span class="row-label">Insurance</span>
-      <input class="edit-input dollar" id="i-insurance" type="text" value="$12,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
-    </div>
-    <div class="row indent">
-      <span class="row-label">Land Tax</span>
-      <input class="edit-input dollar" id="i-landtax" type="text" value="$8,500" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
-    </div>
-    <div class="row indent">
-      <span class="row-label">Management Fee</span>
-      <input class="edit-input" id="i-mgmt" type="number" value="4" style="width:80px" onchange="calc()"> <span style="font-size:12px;color:var(--muted);margin-left:4px">%</span>
-    </div>
-    <div class="row indent">
-      <span class="row-label">Management Fee Amount</span>
-      <span class="row-value" id="o-mgmtamt">—</span>
-    </div>
-    <div class="row indent">
-      <span class="row-label">Other Outgoings</span>
-      <input class="edit-input dollar" id="i-other" type="text" value="$5,000" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
+    <div id="outgoings-list">
+      <!-- Default rows injected by JS -->
     </div>
     <div class="row subtotal">
       <span class="row-label">Total Outgoings</span>
       <span class="row-value red" id="o-outgoings">—</span>
+    </div>
+  </div>
+
+  <!-- COMMERCIAL: Recoveries & Other Income -->
+  <div id="sec-recoveries" class="section">
+    <div class="section-head">Recoveries & Other Income</div>
+    <div class="row">
+      <span class="row-label">Outgoings Recoveries</span>
+      <input class="edit-input dollar" id="i-recoveries" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
+    </div>
+    <div class="row">
+      <span class="row-label">Other Income</span>
+      <input class="edit-input dollar" id="i-otherincome" type="text" value="$0" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">
+    </div>
+    <div class="row subtotal">
+      <span class="row-label">Net Income</span>
+      <span class="row-value teal" id="o-netincome" style="font-size:16px;font-weight:700">—</span>
     </div>
   </div>
 
@@ -694,6 +704,58 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 
 var MODE = "commercial";
 
+// ── DYNAMIC OUTGOINGS ──
+var outgoingCounter = 0;
+var defaultOutgoings = [
+  {name: 'Statutory', value: 0},
+  {name: 'Recoverable', value: 0},
+  {name: 'Non-Recoverable', value: 0}
+];
+
+function initOutgoings(){
+  var list = document.getElementById('outgoings-list');
+  if(!list) return;
+  list.innerHTML = '';
+  outgoingCounter = 0;
+  defaultOutgoings.forEach(function(og){
+    addOutgoing(og.name, og.value);
+  });
+}
+
+function addOutgoing(name, value){
+  outgoingCounter++;
+  var id = outgoingCounter;
+  var list = document.getElementById('outgoings-list');
+  if(!list) return;
+  var div = document.createElement('div');
+  div.className = 'outgoing-row';
+  div.id = 'og-row-' + id;
+  div.innerHTML = '<input class="og-name" type="text" value="' + (name || '') + '" placeholder="Outgoing name">'
+    + '<input class="og-val dollar" type="text" value="' + (value ? '$' + Number(value).toLocaleString('en-AU') : '$0') + '" onfocus="dollarFocus(this)" onblur="dollarBlur(this)" oninput="calc()">'
+    + '<button class="og-remove" onclick="removeOutgoing(' + id + ')" title="Remove">×</button>';
+  list.appendChild(div);
+  calc();
+}
+
+function removeOutgoing(id){
+  var row = document.getElementById('og-row-' + id);
+  if(row) row.remove();
+  calc();
+}
+
+function getOutgoingsTotal(){
+  var total = 0;
+  var rows = document.querySelectorAll('#outgoings-list .outgoing-row');
+  rows.forEach(function(row){
+    var valInput = row.querySelector('.og-val');
+    if(valInput){
+      var raw = String(valInput.value).replace(/[$,\s]/g, '');
+      total += parseFloat(raw) || 0;
+    }
+  });
+  return total;
+}
+
 // ── FORMATTERS ──
 function fd(v){
   if(v === null || v === undefined || isNaN(v)) return "—";
@@ -752,7 +814,7 @@ function setMode(mode){
   });
 
   // Show/hide commercial sections
-  ['sec-income','sec-outgoings','sec-caprate','sec-btl','sec-adopted'].forEach(function(id){
+  ['sec-income','sec-outgoings','sec-recoveries','sec-caprate','sec-btl','sec-adopted'].forEach(function(id){
     var el = document.getElementById(id);
     if(el) el.classList.toggle('hidden', mode !== 'commercial');
   });
@@ -800,14 +862,15 @@ function calcInner(){
     var vacancyAmt = grossIncome * vacancyPct;
     var egi = grossIncome - vacancyAmt;
 
-    var rates = n('i-rates');
-    var insurance = n('i-insurance');
-    var landtax = n('i-landtax');
-    var mgmtPct = n('i-mgmt') / 100;
-    var mgmtAmt = egi * mgmtPct;
-    var otherOut = n('i-other');
-    var totalOutgoings = rates + insurance + landtax + mgmtAmt + otherOut;
-    netIncome = egi - totalOutgoings;
+    // Dynamic outgoings total
+    var totalOutgoings = getOutgoingsTotal();
+
+    // Recoveries & other income
+    var recoveries = n('i-recoveries');
+    var otherIncome = n('i-otherincome');
+
+    // Net Income = Gross Income - Vacancy - Outgoings + Recoveries + Other Income
+    netIncome = egi - totalOutgoings + recoveries + otherIncome;
 
     capRate = n('i-caprate') / 100;
     var capValue = capRate > 0 ? netIncome / capRate : 0;
@@ -826,7 +889,6 @@ function calcInner(){
     // Update commercial outputs
     set('o-vacancy', "-" + fd(vacancyAmt));
     set('o-egi', fd(egi));
-    set('o-mgmtamt', fd(mgmtAmt));
     set('o-outgoings', "-" + fd(totalOutgoings));
     set('o-netincome', fd(netIncome));
     set('o-capvalue', fd(capValue));
@@ -1144,6 +1206,7 @@ window.addEventListener('load', function(){
     var raw = parseFloat(String(el.value).replace(/[$,\s]/g, '')) || 0;
     el.value = raw === 0 ? '$0' : '$' + raw.toLocaleString('en-AU');
   });
+  initOutgoings();
   setMode('commercial');
   calc();
 });
