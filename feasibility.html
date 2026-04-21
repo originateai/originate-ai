@@ -832,11 +832,11 @@ async function loadDealData(dealId){
       }
     }
     // Pre-fill costs
-    if(d.land_cost||d.land_value){
+    if(d.land_cost){
       var landInps=document.querySelectorAll('#cost-body tr:not(.ct-group)');
       if(landInps[0]){
         var li=landInps[0].querySelectorAll('.ct-inp');
-        if(li[1]){var lv=parseFloat(d.land_cost||d.land_value)||0;li[1].value='$'+lv.toLocaleString('en-AU');}
+        if(li[1]){var lv=parseFloat(d.land_cost)||0;li[1].value='$'+lv.toLocaleString('en-AU');}
       }
     }
     if(d.construction_cost){
