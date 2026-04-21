@@ -270,32 +270,6 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
     <div class="row"><span class="row-label">Cost Escalation (p.a.)</span><input class="inp" id="g-costesc" type="number" value="3.0" step="0.1" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
     <div class="row"><span class="row-label">Default Drawdown Profile</span><select class="sel" id="g-profile" style="width:120px"><option value="straight">Straight Line</option><option value="scurve">S-Curve</option></select></div>
   </div>
-
-  <div class="section"><div class="section-head">Capital Stack</div>
-    <div class="row sub"><span class="row-label">Senior Debt</span><span style="font-size:11px;color:var(--green)">Always active</span></div>
-    <div class="row"><span class="row-label">Interest Rate</span><input class="inp" id="s-rate" type="number" value="9.5" step="0.25" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
-    <div class="row"><span class="row-label">Estab Fee</span><input class="inp" id="s-estab" type="number" value="1.65" step="0.05" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
-    <div class="row"><span class="row-label">Line Fee (p.a.)</span><input class="inp" id="s-linefee" type="number" value="2.25" step="0.25" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
-    <div class="row"><span class="row-label">Line Fee Frequency</span><select class="sel" id="s-linefreq" onchange="calc()"><option value="3">Quarterly</option><option value="1">Monthly</option><option value="6">Semi-Annual</option></select></div>
-
-    <div class="toggle-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:12px">
-      <span class="toggle-label" style="font-weight:600;color:var(--amber)">Mezzanine</span>
-      <label class="toggle"><input type="checkbox" id="mezz-on" onchange="toggleMezz();calc()"><span class="toggle-track"></span></label>
-    </div>
-    <div id="mezz-fields" class="hidden">
-      <div class="row"><span class="row-label">Mezz Interest Rate</span><input class="inp" id="m-rate" type="number" value="14" step="0.25" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
-      <div class="row"><span class="row-label">Mezz Term</span><input class="inp" id="m-term" type="number" value="24" style="width:80px" onchange="calc()"><span class="pct">mths</span></div>
-    </div>
-
-    <div class="toggle-row" style="border-top:1px solid var(--border);margin-top:4px;padding-top:12px">
-      <span class="toggle-label" style="font-weight:600;color:var(--purple)">Preferred Equity</span>
-      <label class="toggle"><input type="checkbox" id="pref-on" onchange="togglePref();calc()"><span class="toggle-track"></span></label>
-    </div>
-    <div id="pref-fields" class="hidden">
-      <div class="row"><span class="row-label">Pref Coupon (p.a.)</span><input class="inp" id="p-coupon" type="number" value="12" step="0.25" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
-      <div class="row"><span class="row-label">Profit Share</span><input class="inp" id="p-profshare" type="number" value="20" step="1" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
-    </div>
-  </div>
 </div>
 
 <!-- ═══════ TAB 3: COSTS ═══════ -->
@@ -312,6 +286,12 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
     </table></div>
   </div>
 </div>
+
+<!-- Hidden master toggles for JS state -->
+<input type="checkbox" id="mezz-on" style="display:none">
+<input type="checkbox" id="pref-on" style="display:none">
+<div id="mezz-fields" class="hidden"></div>
+<div id="pref-fields" class="hidden"></div>
 
 <!-- ═══════ TAB 4: FUNDING ═══════ -->
 <div id="tab-funding" class="hidden">
@@ -343,6 +323,24 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
     <div class="row sub"><span class="row-label">Debt Facility (Senior)</span><span class="row-value" id="o-fac" style="font-weight:700">—</span></div>
     <div class="row sub"><span class="row-label">Equity Required</span><span class="row-value" id="o-eq" style="color:var(--teal);font-weight:700">—</span></div>
     <div class="row sub"><span class="row-label">LTC</span><span class="row-value" id="o-ltc">—</span></div>
+  </div>
+
+  <!-- PRICING PER TRANCHE -->
+  <div class="section"><div class="section-head" style="color:var(--grey700)">Senior Debt — Pricing</div>
+    <div class="row"><span class="row-label">Interest Rate</span><input class="inp" id="s-rate" type="number" value="9.5" step="0.25" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+    <div class="row"><span class="row-label">Establishment Fee</span><input class="inp" id="s-estab" type="number" value="1.65" step="0.05" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+    <div class="row"><span class="row-label">Line Fee (p.a.)</span><input class="inp" id="s-linefee" type="number" value="2.25" step="0.25" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+    <div class="row"><span class="row-label">Line Fee Frequency</span><select class="sel" id="s-linefreq" onchange="calc()"><option value="3">Quarterly</option><option value="1">Monthly</option><option value="6">Semi-Annual</option></select></div>
+  </div>
+
+  <div class="section pref-col hidden"><div class="section-head" style="color:var(--purple)">Preferred Equity — Pricing</div>
+    <div class="row"><span class="row-label">Coupon (p.a.)</span><input class="inp" id="p-coupon" type="number" value="12" step="0.25" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+    <div class="row"><span class="row-label">Profit Share</span><input class="inp" id="p-profshare" type="number" value="20" step="1" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+  </div>
+
+  <div class="section mezz-col hidden"><div class="section-head" style="color:var(--amber)">Mezzanine — Pricing</div>
+    <div class="row"><span class="row-label">Interest Rate</span><input class="inp" id="m-rate" type="number" value="14" step="0.25" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+    <div class="row"><span class="row-label">Term</span><input class="inp" id="m-term" type="number" value="24" style="width:80px" onchange="calc()"><span class="pct">mths</span></div>
   </div>
 
   <!-- Capital stack toggles BELOW the funding table -->
