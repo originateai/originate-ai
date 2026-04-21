@@ -620,10 +620,24 @@ sv('o-fac',fd(totSr));sv('o-eq',fd(totEq));sv('o-ltc',totProj>0?fp(totSr/totProj
 
 // ── MONTHLY ARRAYS ──
 var mExp=new Array(months+1).fill(0),mEq=new Array(months+1).fill(0),mMz=new Array(months+1).fill(0),mPr=new Array(months+1).fill(0),mSr=new Array(months+1).fill(0);
-costs.forEach(function(c){if(c.sp<=0||c.proj<=0)return;var prof=c.profile==='scurve'?profSC(c.sp):profStr(c.sp);
-var mEsc=c.escYN==='Y'?Math.pow(1+c.escRate/100,1/12)-1:0;
-for(var i=0;i<c.sp;i++){var m=c.ms+i;if(m<0||m>months)continue;var esc=c.escYN==='Y'?Math.pow(1+mEsc,m):1;
-mExp[m]+=c.proj*prof[i]*esc;mEq[m]+=c.eq*prof[i]*esc;mMz[m]+=c.mezz*prof[i]*esc;mPr[m]+=c.pref*prof[i]*esc;mSr[m]+=Math.max(0,(c.sr)*prof[i]*esc);}});
+// Per-cost-item arrays for detailed CF
+var costItemArrays=[];
+var costNames=[];
+document.querySelectorAll('#cost-body tr:not(.ct-group)').forEach(function(tr){
+  var inps=tr.querySelectorAll('.ct-inp');
+  if(inps.length>=2) costNames.push(inps[0].value||'Cost');
+});
+costs.forEach(function(c,idx){
+  var itemArr=new Array(months+1).fill(0);
+  if(c.sp<=0||c.proj<=0){costItemArrays.push(itemArr);return;}
+  var prof=c.profile==='scurve'?profSC(c.sp):profStr(c.sp);
+  var mEsc=c.escYN==='Y'?Math.pow(1+c.escRate/100,1/12)-1:0;
+  for(var i=0;i<c.sp;i++){var m=c.ms+i;if(m<0||m>months)continue;var esc=c.escYN==='Y'?Math.pow(1+mEsc,m):1;
+  var draw=c.proj*prof[i]*esc;
+  itemArr[m]+=draw;
+  mExp[m]+=draw;mEq[m]+=c.eq*prof[i]*esc;mMz[m]+=c.mezz*prof[i]*esc;mPr[m]+=c.pref*prof[i]*esc;mSr[m]+=Math.max(0,(c.sr)*prof[i]*esc);}
+  costItemArrays.push(itemArr);
+});
 
 // Revenue per month (spread evenly over last 6 months for resi, immediate for commercial)
 var mRev=new Array(months+1).fill(0);
@@ -733,17 +747,27 @@ document.getElementById('cf-bars').innerHTML=bHtml;
 // ── CF TABLE ──
 var thH='<tr><th>Period</th>';for(var m=0;m<showM;m++)thH+='<th>'+(m===0?'Settle':'M'+m)+'</th>';thH+='<th>Total</th></tr>';
 document.getElementById('cf-thead').innerHTML=thH;
-var lines=[{l:'EXPENSES',sec:true},{l:'Total Expenses',d:mExp,c:'var(--text)',b:true},
-{l:'→ Equity',d:mEq,c:'var(--teal)'},{l:'→ Senior',d:mSr,c:'var(--grey700)'},
-{l:'SENIOR DEBT',sec:true},{l:'Opening',d:srO,c:'var(--grey600)'},{l:'Drawdown',d:srD,c:'var(--grey700)'},
+var lines=[{l:'EXPENSES',sec:true}];
+// Individual cost items
+costItemArrays.forEach(function(arr,idx){
+  lines.push({l:costNames[idx]||'Cost '+(idx+1),d:arr,c:'var(--text)'});
+});
+lines.push({l:'Total Expenses',d:mExp,c:'var(--text)',b:true});
+
+// Revenue
+lines.push({l:'REVENUE',sec:true});
+lines.push({l:'Net Realisations',d:mRev,c:'var(--green)',b:true});
+
+// Senior debt
+lines.push({l:'SENIOR DEBT',sec:true},{l:'Opening',d:srO,c:'var(--grey600)'},{l:'Drawdown',d:srD,c:'var(--grey700)'},
 {l:'Estab Fee',d:srEst,c:'var(--muted)'},{l:'Line Fee',d:srLn,c:'var(--muted)'},
-{l:'Interest',d:srI,c:'var(--amber)'},{l:'Repayments',d:srR,c:'var(--green)',neg:true},{l:'Closing',d:srC,c:'var(--grey700)',b:true}];
+{l:'Interest',d:srI,c:'var(--amber)'},{l:'Repayments',d:srR,c:'var(--green)',neg:true},{l:'Closing',d:srC,c:'var(--grey700)',b:true});
 if(MEZZ){lines.push({l:'MEZZANINE',sec:true},{l:'Drawdown',d:mzD,c:'var(--amber)'},{l:'Interest',d:mzI,c:'var(--amber)'},
 {l:'Repayments',d:mzR,c:'var(--green)',neg:true},{l:'Closing',d:mzC,c:'var(--amber)',b:true});}
 if(PREF){lines.push({l:'PREF EQUITY',sec:true},{l:'Drawdown',d:prD,c:'var(--purple)'},{l:'Interest',d:prI,c:'var(--amber)'},
 {l:'Repayments',d:prR,c:'var(--green)',neg:true},{l:'Closing',d:prC,c:'var(--purple)',b:true});}
-lines.push({l:'EQUITY',sec:true},{l:'Drawdown',d:eqD,c:'var(--teal)'},{l:'Repayments',d:eqR,c:'var(--green)',neg:true},{l:'Closing',d:eqC,c:'var(--teal)',b:true});
-lines.push({l:'REVENUE & PROFIT',sec:true},{l:'Net Realisations',d:mRev,c:'var(--green)',b:true},{l:'Profit',d:profitArr,c:'var(--green)',b:true});
+lines.push({l:'ORDINARY EQUITY',sec:true},{l:'Drawdown',d:eqD,c:'var(--teal)'},{l:'Repayments',d:eqR,c:'var(--green)',neg:true},{l:'Closing',d:eqC,c:'var(--teal)',b:true});
+lines.push({l:'PROFIT',sec:true},{l:'Project Profit',d:profitArr,c:'var(--green)',b:true});
 
 var tbH='';lines.forEach(function(li){if(li.sec){tbH+='<tr class="cf-sec"><td>'+li.l+'</td>';for(var m=0;m<showM;m++)tbH+='<td></td>';tbH+='<td></td></tr>';return;}
 tbH+='<tr class="'+(li.b?'cf-sub':'')+'"><td style="font-weight:'+(li.b?'600':'400')+'">'+li.l+'</td>';
@@ -823,8 +847,16 @@ async function loadDealData(dealId){
       }
     }
     calc();
+    formatAllDollars();
     setSt('Loaded from deal');
   }catch(e){console.warn('loadDealData:',e);}
+}
+
+function formatAllDollars(){
+  document.querySelectorAll('.inp.dollar,.ct-inp.dollar,.ut-inp.dollar').forEach(function(el){
+    var raw=parseFloat(String(el.value).replace(/[$,\s]/g,''))||0;
+    el.value=raw===0?'$0':'$'+raw.toLocaleString('en-AU');
+  });
 }
 
 function setSt(m){var e=document.getElementById('sv-status');if(e){e.textContent=m;setTimeout(function(){e.textContent='';},3000);}}
@@ -862,6 +894,7 @@ if(d.units){document.getElementById('unit-body').innerHTML='';unitId=0;d.units.f
 if(d.costs){var b=document.getElementById('cost-body');b.innerHTML='';costId=0;var lg='';
 d.costs.forEach(function(c){if(c.g!==lg){var gr=document.createElement('tr');gr.className='ct-group';gr.innerHTML='<td colspan="12">'+c.g+'</td>';b.appendChild(gr);lg=c.g;}
 addCost({name:c.v[0]||'',proj:pn(c.v[1]),eq:pn(c.v[2]),mezz:MEZZ&&c.v.length>3?pn(c.v[3]):0,pref:PREF&&c.v.length>4?pn(c.v[4]):0,ms:parseInt(c.v[c.v.length-2])||0,sp:parseInt(c.v[c.v.length-1])||1},c.g);});}
+formatAllDollars();
 calc();}
 
 async function deleteModel(mid,e){e.stopPropagation();if(!confirm('Delete?'))return;
@@ -881,7 +914,7 @@ function newModel(){currentModelId=null;document.getElementById('model-name').va
 document.addEventListener('click',function(e){if(!e.target.closest('.ml-drop'))hideML();});
 
 // ── INIT ──
-window.addEventListener('load',async function(){initOG();initBTL();initUnits();initCosts();setMode('commercial');calc();await initAuth();});
+window.addEventListener('load',async function(){initOG();initBTL();initUnits();initCosts();setMode('commercial');formatAllDollars();calc();await initAuth();});
 </script>
 </body>
 </html>
