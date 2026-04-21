@@ -7,6 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>getkredit.ai — Advanced Feasibility</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="config.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -110,6 +111,25 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 .ab-value.red{color:#fca5a5}
 
 .hidden{display:none!important}
+
+/* SAVE/LOAD BAR */
+.save-bar{background:var(--white);border-bottom:1px solid var(--border);padding:10px 40px;display:flex;align-items:center;gap:12px;font-size:13px}
+.save-bar .model-name{background:var(--grey50);border:1px solid var(--border);border-radius:4px;padding:6px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;width:220px}
+.save-bar .model-name:focus{border-color:var(--teal);background:var(--white)}
+.save-bar .save-btn{padding:6px 16px;border-radius:var(--radius);border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.save-btn-primary{background:var(--teal);color:white}.save-btn-primary:hover{background:var(--teal-dark)}
+.save-btn-secondary{background:var(--white);color:var(--grey600);border:1px solid var(--border)!important}.save-btn-secondary:hover{border-color:var(--teal)!important;color:var(--teal)}
+.save-status{font-size:11px;color:var(--muted);margin-left:auto}
+.models-dropdown{position:relative;display:inline-block}
+.models-list{position:absolute;top:100%;left:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:20;min-width:320px;max-height:300px;overflow-y:auto;margin-top:4px}
+.models-list.hidden{display:none}
+.ml-item{padding:10px 14px;border-bottom:1px solid rgba(0,0,0,0.04);cursor:pointer;transition:background 0.1s;display:flex;justify-content:space-between;align-items:center}
+.ml-item:hover{background:var(--teal-bg)}
+.ml-item:last-child{border-bottom:none}
+.ml-name{font-weight:600;color:var(--text);font-size:13px}
+.ml-meta{font-size:11px;color:var(--muted)}
+.ml-delete{color:var(--red);font-size:12px;cursor:pointer;padding:2px 6px;border-radius:4px;opacity:0.5;transition:opacity 0.15s;background:none;border:none}
+.ml-delete:hover{opacity:1;background:rgba(220,38,38,0.06)}
 @media(max-width:768px){.container{padding:16px}.nav{padding:0 16px}.tab-bar{padding:0 16px}.summary-grid{grid-template-columns:1fr 1fr}.adopted-banner{grid-template-columns:1fr 1fr}}
 </style>
 </head>
@@ -133,6 +153,19 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
   <button class="tab" onclick="showTab('cashflow')">③ Cash Flow</button>
   <button class="tab" onclick="showTab('returns')">④ Returns</button>
 </div>
+
+<!-- SAVE/LOAD BAR -->
+<div class="save-bar">
+  <input class="model-name" id="model-name" placeholder="Model name..." value="Untitled Model">
+  <button class="save-btn save-btn-primary" onclick="saveModel()">💾 Save</button>
+  <div class="models-dropdown">
+    <button class="save-btn save-btn-secondary" onclick="toggleModelsList()">📂 Load</button>
+    <div class="models-list hidden" id="models-list"></div>
+  </div>
+  <button class="save-btn save-btn-secondary" onclick="newModel()">+ New</button>
+  <span class="save-status" id="save-status"></span>
+</div>
+
 <div class="container">
 
 <!-- ══════════════════════════════════════════════ -->
@@ -849,12 +882,306 @@ function calcInner(){
 }
 
 /* ═══════════════════════════════════════════════════
+   SAVE / LOAD SYSTEM
+   ═══════════════════════════════════════════════════ */
+var currentModelId = null;
+var currentUserId = null;
+
+// Init Supabase client for auth
+var sb = null;
+async function initAuth() {
+  if (typeof SUPABASE_URL === 'undefined') return;
+  var script = document.createElement('script');
+  script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
+  document.head.appendChild(script);
+  await new Promise(function(r){ script.onload = r; });
+  sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  var sess = await sb.auth.getSession();
+  if (sess.data.session) {
+    currentUserId = sess.data.session.user.id;
+  }
+  // Check URL for model_id parameter
+  var params = new URLSearchParams(window.location.search);
+  var loadId = params.get('model');
+  if (loadId && currentUserId) {
+    await loadModel(loadId);
+  }
+}
+
+function setStatus(msg) {
+  var el = document.getElementById('save-status');
+  if (el) { el.textContent = msg; setTimeout(function(){ el.textContent = ''; }, 3000); }
+}
+
+// Gather all inputs into a JSON object
+function gatherModelData() {
+  var data = {
+    globals: {
+      start: document.getElementById('g-start').value,
+      months: gv('g-months'),
+      costEsc: gv('g-costesc'),
+      revEsc: gv('g-revesc')
+    },
+    senior: {
+      rate: gv('s-rate'), estab: gv('s-estab'),
+      linefee: gv('s-linefee'), linefreq: document.getElementById('s-linefreq').value
+    },
+    preferred: {
+      coupon: gv('p-coupon'), hurdle: gv('p-hurdle'), profshare: gv('p-profshare')
+    },
+    costs: [],
+    revenue: [],
+    revSettings: {
+      gst: document.getElementById('rv-gst').value,
+      comm: gv('rv-comm')
+    }
+  };
+
+  // Read cost rows
+  document.querySelectorAll('#cost-body tr:not(.ct-group)').forEach(function(tr) {
+    var inps = tr.querySelectorAll('.ct-inp');
+    var sels = tr.querySelectorAll('.ct-sel');
+    if (inps.length < 6) return;
+    var escInp = tr.querySelector('.ct-esc');
+    data.costs.push({
+      name: inps[0].value,
+      proj: pn(inps[1].value), eq: pn(inps[2].value), pref: pn(inps[3].value),
+      ms: parseInt(inps[4].value) || 0, sp: parseInt(inps[5].value) || 1,
+      profile: sels[0] ? sels[0].value : 'straight',
+      escYN: sels[1] ? sels[1].value : 'N',
+      escRate: escInp ? parseFloat(escInp.value) || 0 : 0,
+      group: tr.dataset.group || 'Construction'
+    });
+  });
+
+  // Read revenue rows
+  document.querySelectorAll('#rev-body tr').forEach(function(tr) {
+    var inps = tr.querySelectorAll('.ct-inp');
+    var sels = tr.querySelectorAll('.ct-sel');
+    if (inps.length < 4) return;
+    var escInp = tr.querySelector('.ct-esc');
+    data.revenue.push({
+      name: inps[0].value,
+      amt: pn(inps[1].value), month: parseInt(inps[2].value) || 29, span: parseInt(inps[3].value) || 1,
+      escYN: sels[0] ? sels[0].value : 'N',
+      escRate: escInp ? parseFloat(escInp.value) || 0 : 0
+    });
+  });
+
+  return data;
+}
+
+// Calculate snapshot metrics for listing
+function getSnapshot() {
+  // Read from current calc outputs
+  var grossRev = 0;
+  readRevs().forEach(function(r) { grossRev += r.amt; });
+  var costs = readCosts();
+  var totProj = 0, totSr = 0;
+  costs.forEach(function(c) { totProj += c.proj; totSr += c.sr; });
+  return {
+    grv: grossRev,
+    total_project_cost: totProj,
+    peak_debt: totSr
+  };
+}
+
+async function saveModel() {
+  if (!currentUserId) { setStatus('Please sign in to save'); return; }
+  var modelName = document.getElementById('model-name').value || 'Untitled Model';
+  setStatus('Saving...');
+  try {
+    var res = await fetch('/.netlify/functions/feasibility-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'save',
+        user_id: currentUserId,
+        model_id: currentModelId,
+        model_name: modelName,
+        model_type: 'advanced',
+        model_data: gatherModelData(),
+        snapshot: getSnapshot()
+      })
+    });
+    var data = await res.json();
+    if (data.success && data.model) {
+      currentModelId = data.model.id;
+      setStatus('Saved ✓');
+    } else {
+      setStatus('Save failed');
+    }
+  } catch (e) { setStatus('Save error'); console.error(e); }
+}
+
+// Restore all inputs from saved data
+function restoreModelData(d) {
+  if (!d) return;
+
+  // Globals
+  if (d.globals) {
+    if (d.globals.start) document.getElementById('g-start').value = d.globals.start;
+    if (d.globals.months) document.getElementById('g-months').value = d.globals.months;
+    if (d.globals.costEsc != null) document.getElementById('g-costesc').value = d.globals.costEsc;
+    if (d.globals.revEsc != null) document.getElementById('g-revesc').value = d.globals.revEsc;
+  }
+
+  // Senior
+  if (d.senior) {
+    if (d.senior.rate != null) document.getElementById('s-rate').value = d.senior.rate;
+    if (d.senior.estab != null) document.getElementById('s-estab').value = d.senior.estab;
+    if (d.senior.linefee != null) document.getElementById('s-linefee').value = d.senior.linefee;
+    if (d.senior.linefreq) document.getElementById('s-linefreq').value = d.senior.linefreq;
+  }
+
+  // Preferred
+  if (d.preferred) {
+    if (d.preferred.coupon != null) document.getElementById('p-coupon').value = d.preferred.coupon;
+    if (d.preferred.hurdle != null) document.getElementById('p-hurdle').value = d.preferred.hurdle;
+    if (d.preferred.profshare != null) document.getElementById('p-profshare').value = d.preferred.profshare;
+  }
+
+  // Costs
+  if (d.costs && d.costs.length > 0) {
+    var body = document.getElementById('cost-body');
+    body.innerHTML = '';
+    costId = 0;
+    var lastGroup = '';
+    d.costs.forEach(function(c) {
+      if (c.group !== lastGroup) {
+        var gr = document.createElement('tr');
+        gr.className = 'ct-group';
+        gr.innerHTML = '<td colspan="11">' + c.group + '</td>';
+        body.appendChild(gr);
+        lastGroup = c.group;
+      }
+      addCostRow(c, c.group);
+    });
+  }
+
+  // Revenue
+  if (d.revenue && d.revenue.length > 0) {
+    var revBody = document.getElementById('rev-body');
+    revBody.innerHTML = '';
+    revId = 0;
+    d.revenue.forEach(function(r) { addRevRow(r); });
+  }
+
+  // Rev settings
+  if (d.revSettings) {
+    if (d.revSettings.gst) document.getElementById('rv-gst').value = d.revSettings.gst;
+    if (d.revSettings.comm != null) document.getElementById('rv-comm').value = d.revSettings.comm;
+  }
+
+  calc();
+}
+
+async function loadModel(modelId) {
+  if (!currentUserId) { setStatus('Please sign in'); return; }
+  setStatus('Loading...');
+  try {
+    var res = await fetch('/.netlify/functions/feasibility-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'load', user_id: currentUserId, model_id: modelId })
+    });
+    var data = await res.json();
+    if (data.model) {
+      currentModelId = data.model.id;
+      document.getElementById('model-name').value = data.model.model_name || 'Untitled';
+      restoreModelData(data.model.model_data);
+      setStatus('Loaded ✓');
+      hideModelsList();
+    } else {
+      setStatus('Model not found');
+    }
+  } catch (e) { setStatus('Load error'); console.error(e); }
+}
+
+async function deleteModel(modelId, evt) {
+  evt.stopPropagation();
+  if (!confirm('Delete this model?')) return;
+  try {
+    await fetch('/.netlify/functions/feasibility-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', user_id: currentUserId, model_id: modelId })
+    });
+    if (currentModelId === modelId) { currentModelId = null; }
+    toggleModelsList(); // refresh list
+  } catch (e) { console.error(e); }
+}
+
+async function toggleModelsList() {
+  var list = document.getElementById('models-list');
+  if (!list.classList.contains('hidden')) { list.classList.add('hidden'); return; }
+  if (!currentUserId) { setStatus('Please sign in'); return; }
+  list.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:12px">Loading...</div>';
+  list.classList.remove('hidden');
+  try {
+    var res = await fetch('/.netlify/functions/feasibility-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'list', user_id: currentUserId })
+    });
+    var data = await res.json();
+    if (!data.models || data.models.length === 0) {
+      list.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:12px">No saved models yet</div>';
+      return;
+    }
+    list.innerHTML = data.models.map(function(m) {
+      var date = new Date(m.updated_at).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+      var grv = m.grv ? '$' + Number(m.grv).toLocaleString('en-AU', {maximumFractionDigits:0}) : '';
+      return '<div class="ml-item" onclick="loadModel(\'' + m.id + '\')">'
+        + '<div><div class="ml-name">' + (m.model_name || 'Untitled') + '</div>'
+        + '<div class="ml-meta">' + date + (grv ? ' · GRV ' + grv : '') + ' · ' + m.model_type + '</div></div>'
+        + '<button class="ml-delete" onclick="deleteModel(\'' + m.id + '\',event)">×</button>'
+        + '</div>';
+    }).join('');
+  } catch (e) {
+    list.innerHTML = '<div style="padding:12px;color:var(--red);font-size:12px">Error loading models</div>';
+  }
+}
+
+function hideModelsList() {
+  document.getElementById('models-list').classList.add('hidden');
+}
+
+function newModel() {
+  currentModelId = null;
+  document.getElementById('model-name').value = 'Untitled Model';
+  initCosts();
+  initRevs();
+  // Reset globals
+  document.getElementById('g-start').value = '2026-07';
+  document.getElementById('g-months').value = 36;
+  document.getElementById('g-costesc').value = 3.0;
+  document.getElementById('g-revesc').value = 0;
+  document.getElementById('s-rate').value = 9.5;
+  document.getElementById('s-estab').value = 1.65;
+  document.getElementById('s-linefee').value = 2.25;
+  document.getElementById('p-coupon').value = 0;
+  document.getElementById('p-hurdle').value = 0;
+  document.getElementById('p-profshare').value = 0;
+  document.getElementById('rv-gst').value = 'margin';
+  document.getElementById('rv-comm').value = 3.0;
+  calc();
+  setStatus('New model');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.models-dropdown')) hideModelsList();
+});
+
+/* ═══════════════════════════════════════════════════
    INIT
    ═══════════════════════════════════════════════════ */
 window.addEventListener('load',function(){
   initCosts();
   initRevs();
   calc();
+  initAuth();
 });
 </script>
 </body>
