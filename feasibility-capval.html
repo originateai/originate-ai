@@ -105,7 +105,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 /* CHART BARS */
 .bar-chart{display:flex;align-items:flex-end;gap:3px;height:160px;padding-bottom:24px;position:relative}
 .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:1}
-.bar-debt{background:linear-gradient(to top,var(--red),#ef4444);border-radius:3px 3px 0 0;transition:height 0.3s;min-width:4px}
+.bar-debt{background:linear-gradient(to top,var(--grey700),var(--grey500));border-radius:3px 3px 0 0;transition:height 0.3s;min-width:4px}
 .bar-equity{background:linear-gradient(to top,var(--teal),var(--teal-light));border-radius:3px 3px 0 0;transition:height 0.3s;min-width:4px}
 .bar-label{font-size:9px;color:var(--muted);margin-top:4px}
 .bar-legend{display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:11px;color:var(--muted)}
@@ -165,6 +165,23 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 /* HIDE/SHOW */
 .hidden{display:none!important}
 
+/* SAVE/LOAD BAR */
+.save-bar{background:var(--white);border-bottom:1px solid var(--border);padding:10px 40px;display:flex;align-items:center;gap:12px;font-size:13px}
+.save-bar .model-name{background:var(--grey50);border:1px solid var(--border);border-radius:4px;padding:6px 12px;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none;width:220px}
+.save-bar .model-name:focus{border-color:var(--teal);background:var(--white)}
+.save-btn{padding:6px 16px;border-radius:var(--radius);border:none;font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
+.save-btn-p{background:var(--teal);color:white}.save-btn-p:hover{background:var(--teal-dark)}
+.save-btn-s{background:var(--white);color:var(--grey600);border:1px solid var(--border)!important}.save-btn-s:hover{border-color:var(--teal)!important;color:var(--teal)}
+.save-status{font-size:11px;color:var(--muted);margin-left:auto}
+.models-dropdown{position:relative;display:inline-block}
+.models-list{position:absolute;top:100%;left:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,0.1);z-index:20;min-width:320px;max-height:300px;overflow-y:auto;margin-top:4px}
+.ml-item{padding:10px 14px;border-bottom:1px solid rgba(0,0,0,0.04);cursor:pointer;transition:background 0.1s;display:flex;justify-content:space-between;align-items:center}
+.ml-item:hover{background:var(--teal-bg)}
+.ml-name{font-weight:600;color:var(--text);font-size:13px}
+.ml-meta{font-size:11px;color:var(--muted)}
+.ml-del{color:var(--red);font-size:12px;cursor:pointer;padding:2px 6px;border-radius:4px;opacity:0.5;background:none;border:none}
+.ml-del:hover{opacity:1}
+
 @media(max-width:768px){
   .container{padding:20px}
   .nav{padding:0 20px}
@@ -199,6 +216,18 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
   <button class="tab" data-tab="costs" onclick="switchTab('costs')">② Costs & Funding</button>
   <button class="tab" data-tab="results" onclick="switchTab('results')">③ Results</button>
   <button class="tab" data-tab="cashflow" onclick="switchTab('cashflow')">④ Cash Flow</button>
+</div>
+
+<!-- SAVE/LOAD BAR -->
+<div class="save-bar">
+  <input class="model-name" id="model-name" placeholder="Model name..." value="Untitled Model">
+  <button class="save-btn save-btn-p" onclick="saveModel()">💾 Save</button>
+  <div class="models-dropdown">
+    <button class="save-btn save-btn-s" onclick="toggleModelsList()">📂 Load</button>
+    <div class="models-list hidden" id="models-list"></div>
+  </div>
+  <button class="save-btn save-btn-s" onclick="newModel()">+ New</button>
+  <span class="save-status" id="save-status"></span>
 </div>
 
 <div class="container">
@@ -681,7 +710,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
       <div class="bar-chart" id="cf-bars"></div>
       <div class="bar-legend">
         <span><span class="bar-legend-dot" style="background:var(--teal)"></span>Equity</span>
-        <span><span class="bar-legend-dot" style="background:var(--red)"></span>Debt</span>
+        <span><span class="bar-legend-dot" style="background:var(--grey700)"></span>Debt</span>
       </div>
     </div>
   </div>
@@ -1112,12 +1141,12 @@ function buildCashFlow(constCost, profFees, contingency, land, stamp, legal, lvr
 
   // Cards
   document.getElementById('cf-cards').innerHTML =
-    '<div class="scard bad"><div class="sc-label">Peak Debt</div><div class="sc-value bad">' + fd(peakDebt) + '</div></div>'
+    '<div class="scard neutral"><div class="sc-label">Peak Debt</div><div class="sc-value">' + fd(peakDebt) + '</div></div>'
     + '<div class="scard warn"><div class="sc-label">Total Interest</div><div class="sc-value warn">' + fd(totalInterest) + '</div></div>'
     + '<div class="scard neutral"><div class="sc-label">Total Equity</div><div class="sc-value teal">' + fd(totalEquity) + '</div></div>'
     + '<div class="scard neutral"><div class="sc-label">Months</div><div class="sc-value">' + months + '</div></div>';
 
-  // Bar chart
+  // Bar chart (keep structure, colours updated via CSS)
   var maxVal = peakDebt + totalEquity;
   var barsHtml = '';
   rows.forEach(function(r){
@@ -1133,21 +1162,34 @@ function buildCashFlow(constCost, profFees, contingency, land, stamp, legal, lvr
   });
   document.getElementById('cf-bars').innerHTML = barsHtml;
 
-  // Table
-  document.getElementById('cf-thead').innerHTML =
-    '<tr><th style="text-align:left">Period</th><th>Construction</th><th>Drawdown</th><th>Equity</th><th>Interest</th><th>Cum. Debt</th><th>Cum. Equity</th></tr>';
+  // Transposed table: line items as rows, months as columns
+  // Header row = period labels
+  var thHtml = '<tr><th style="text-align:left">Line Item</th>';
+  rows.forEach(function(r){ thHtml += '<th>' + r.label + '</th>'; });
+  thHtml += '</tr>';
+  document.getElementById('cf-thead').innerHTML = thHtml;
+
+  // Data rows: one per line item
+  var lineItems = [
+    {label:'Construction',  key:'construction', color:'var(--text)'},
+    {label:'Drawdown',      key:'drawdown',     color:'var(--grey700)'},
+    {label:'Equity',        key:'equity',       color:'var(--teal)'},
+    {label:'Interest',      key:'interest',     color:'var(--amber)'},
+    {label:'Cum. Debt',     key:'cumDebt',      color:'var(--grey700)', bold:true},
+    {label:'Cum. Equity',   key:'cumEquity',    color:'var(--teal)', bold:true}
+  ];
 
   var tbody = '';
-  rows.forEach(function(r){
-    tbody += '<tr>'
-      + '<td style="font-weight:600;color:var(--grey700)">' + r.label + '</td>'
-      + '<td>' + fd(r.construction) + '</td>'
-      + '<td style="color:var(--red)">' + fd(r.drawdown) + '</td>'
-      + '<td style="color:var(--teal)">' + fd(r.equity) + '</td>'
-      + '<td style="color:var(--amber)">' + fd(r.interest) + '</td>'
-      + '<td style="color:var(--red);font-weight:600">' + fd(r.cumDebt) + '</td>'
-      + '<td style="color:var(--teal);font-weight:600">' + fd(r.cumEquity) + '</td>'
-      + '</tr>';
+  lineItems.forEach(function(li){
+    tbody += '<tr>';
+    tbody += '<td style="font-weight:600;color:var(--grey700);text-align:left;white-space:nowrap">' + li.label + '</td>';
+    rows.forEach(function(r){
+      var val = r[li.key];
+      var style = 'color:' + li.color;
+      if(li.bold) style += ';font-weight:600';
+      tbody += '<td style="' + style + '">' + fd(val) + '</td>';
+    });
+    tbody += '</tr>';
   });
   document.getElementById('cf-tbody').innerHTML = tbody;
 }
@@ -1200,6 +1242,182 @@ function buildSensitivity(netIncome, totalBTL, totalProjectCost, currentCap){
   document.getElementById('sens-tbody').innerHTML = html;
 }
 
+/* ═══════════════════════════════════════════════════
+   SAVE / LOAD SYSTEM (Standard Feasibility)
+   ═══════════════════════════════════════════════════ */
+var currentModelId = null;
+var currentUserId = null;
+var sbClient = null;
+
+async function initAuth() {
+  if (typeof SUPABASE_CONFIG === 'undefined') return;
+  sbClient = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+  var sess = await sbClient.auth.getSession();
+  if (sess.data.session) currentUserId = sess.data.session.user.id;
+  var params = new URLSearchParams(window.location.search);
+  var loadId = params.get('model');
+  if (loadId && currentUserId) await loadModel(loadId);
+}
+
+function setStatus(msg) {
+  var el = document.getElementById('save-status');
+  if (el) { el.textContent = msg; setTimeout(function(){ el.textContent = ''; }, 3000); }
+}
+
+function gatherStdData() {
+  var data = { mode: MODE, inputs: {} };
+  // Gather all edit-input and ct-input values by ID
+  document.querySelectorAll('.edit-input, .ct-input').forEach(function(el) {
+    if (el.id) data.inputs[el.id] = el.value;
+  });
+  // Gather all select values
+  document.querySelectorAll('select').forEach(function(el) {
+    if (el.id) data.inputs[el.id] = el.value;
+  });
+  // Gather dynamic outgoings
+  data.outgoings = [];
+  document.querySelectorAll('#outgoings-list .outgoing-row').forEach(function(row) {
+    var nameInp = row.querySelector('.og-name');
+    var valInp = row.querySelector('.og-val');
+    if (nameInp && valInp) {
+      data.outgoings.push({ name: nameInp.value, value: valInp.value });
+    }
+  });
+  // Gather cost table rows
+  data.costRows = [];
+  document.querySelectorAll('#cost-body tr:not(.ct-group)').forEach(function(tr) {
+    var inps = tr.querySelectorAll('.ct-inp');
+    if (inps.length < 2) return;
+    var vals = [];
+    inps.forEach(function(inp) { vals.push(inp.value); });
+    data.costRows.push({ group: tr.dataset.group || '', values: vals });
+  });
+  return data;
+}
+
+function restoreStdData(d) {
+  if (!d) return;
+  if (d.mode) setMode(d.mode);
+  if (d.inputs) {
+    Object.keys(d.inputs).forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) el.value = d.inputs[id];
+    });
+  }
+  if (d.outgoings && d.outgoings.length > 0) {
+    var list = document.getElementById('outgoings-list');
+    if (list) {
+      list.innerHTML = '';
+      outgoingCounter = 0;
+      d.outgoings.forEach(function(og) {
+        addOutgoing(og.name, parseFloat(String(og.value).replace(/[$,\s]/g, '')) || 0);
+      });
+    }
+  }
+  // Format dollar inputs
+  document.querySelectorAll('.edit-input.dollar, .ct-input.dollar').forEach(function(el) {
+    var raw = parseFloat(String(el.value).replace(/[$,\s]/g, '')) || 0;
+    el.value = raw === 0 ? '$0' : '$' + raw.toLocaleString('en-AU');
+  });
+  calc();
+}
+
+async function saveModel() {
+  if (!currentUserId) { setStatus('Please sign in to save'); return; }
+  var modelName = document.getElementById('model-name').value || 'Untitled Model';
+  setStatus('Saving...');
+  try {
+    var res = await fetch('/.netlify/functions/feasibility-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'save', user_id: currentUserId, model_id: currentModelId,
+        model_name: modelName, model_type: 'standard',
+        model_data: gatherStdData(), snapshot: {}
+      })
+    });
+    var data = await res.json();
+    if (data.success && data.model) { currentModelId = data.model.id; setStatus('Saved ✓'); }
+    else { setStatus('Save failed'); }
+  } catch (e) { setStatus('Save error'); console.error(e); }
+}
+
+async function loadModel(modelId) {
+  if (!currentUserId) { setStatus('Please sign in'); return; }
+  setStatus('Loading...');
+  try {
+    var res = await fetch('/.netlify/functions/feasibility-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'load', user_id: currentUserId, model_id: modelId })
+    });
+    var data = await res.json();
+    if (data.model) {
+      currentModelId = data.model.id;
+      document.getElementById('model-name').value = data.model.model_name || 'Untitled';
+      restoreStdData(data.model.model_data);
+      setStatus('Loaded ✓');
+      hideModelsList();
+    } else { setStatus('Model not found'); }
+  } catch (e) { setStatus('Load error'); console.error(e); }
+}
+
+async function deleteModel(modelId, evt) {
+  evt.stopPropagation();
+  if (!confirm('Delete this model?')) return;
+  try {
+    await fetch('/.netlify/functions/feasibility-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'delete', user_id: currentUserId, model_id: modelId })
+    });
+    if (currentModelId === modelId) currentModelId = null;
+    toggleModelsList();
+  } catch (e) { console.error(e); }
+}
+
+async function toggleModelsList() {
+  var list = document.getElementById('models-list');
+  if (!list.classList.contains('hidden')) { list.classList.add('hidden'); return; }
+  if (!currentUserId) { setStatus('Please sign in'); return; }
+  list.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:12px">Loading...</div>';
+  list.classList.remove('hidden');
+  try {
+    var res = await fetch('/.netlify/functions/feasibility-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'list', user_id: currentUserId })
+    });
+    var data = await res.json();
+    if (!data.models || data.models.length === 0) {
+      list.innerHTML = '<div style="padding:12px;color:var(--muted);font-size:12px">No saved models yet</div>';
+      return;
+    }
+    list.innerHTML = data.models.map(function(m) {
+      var date = new Date(m.updated_at).toLocaleDateString('en-AU', { day:'numeric', month:'short', year:'numeric' });
+      return '<div class="ml-item" onclick="loadModel(\'' + m.id + '\')">'
+        + '<div><div class="ml-name">' + (m.model_name || 'Untitled') + '</div>'
+        + '<div class="ml-meta">' + date + ' · ' + m.model_type + '</div></div>'
+        + '<button class="ml-del" onclick="deleteModel(\'' + m.id + '\',event)">×</button></div>';
+    }).join('');
+  } catch (e) {
+    list.innerHTML = '<div style="padding:12px;color:var(--red);font-size:12px">Error loading</div>';
+  }
+}
+
+function hideModelsList() { document.getElementById('models-list').classList.add('hidden'); }
+
+function newModel() {
+  currentModelId = null;
+  document.getElementById('model-name').value = 'Untitled Model';
+  // Reset all inputs to defaults by reloading
+  window.location.href = window.location.pathname;
+}
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.models-dropdown')) hideModelsList();
+});
+
 // ── INIT ──
 window.addEventListener('load', function(){
   document.querySelectorAll('.edit-input.dollar, .ct-input.dollar').forEach(function(el){
@@ -1209,6 +1427,7 @@ window.addEventListener('load', function(){
   initOutgoings();
   setMode('commercial');
   calc();
+  initAuth();
 });
 </script>
 </body>

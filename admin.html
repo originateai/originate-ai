@@ -181,6 +181,21 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 .compose-actions{display:flex;gap:8px;margin-top:10px}
 .save-flash{animation:flashGreen 1s ease}
 
+/* Tranches */
+.tranche-card{border:1px solid var(--border);border-radius:var(--radius);margin-bottom:8px;overflow:hidden}
+.tranche-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--grey50);cursor:pointer}
+.tranche-head:hover{background:var(--grey100)}
+.tranche-type{font-size:11px;font-weight:700;letter-spacing:0.8px;text-transform:uppercase}
+.tranche-type.senior{color:var(--grey700)}.tranche-type.mezzanine{color:var(--amber)}.tranche-type.preferred_equity{color:#7c3aed}
+.tranche-amt{font-size:14px;font-weight:700;color:var(--text)}
+.tranche-body{padding:12px 14px;border-top:1px solid var(--border);font-size:12px}
+.tranche-body .detail-row{padding:4px 0}
+.tranche-body select,.tranche-body input{font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif}
+.tranche-actions{display:flex;gap:6px;margin-top:8px}
+.tranche-actions button{font-size:11px;padding:4px 10px;border-radius:4px;border:1px solid var(--border);background:var(--white);cursor:pointer;font-family:'DM Sans',sans-serif}
+.tranche-actions button:hover{border-color:var(--teal);color:var(--teal)}
+.tranche-actions .del{color:var(--red);border-color:transparent}.tranche-actions .del:hover{border-color:var(--red);background:rgba(220,38,38,0.04)}
+
 @media(max-width:768px){
   .container{padding:16px}
   .stats{grid-template-columns:repeat(2,1fr)}
@@ -485,6 +500,10 @@ function showDetail(id) {
     + '<div class="detail-row"><span class="detail-key">Lenders Matched</span><span class="detail-val">' + (d.calc_lenders_matched||"—") + '</span></div>'
     + '</div>'
     + '<div class="detail-section">'
+    + '<div class="detail-section-head">Capital Stack <button class="doc-btn" style="font-size:10px;padding:3px 10px" onclick="addTranche(\'' + d.id + '\')">+ Add Tranche</button></div>'
+    + '<div id="tranches-' + d.id + '"><div style="font-size:12px;color:var(--muted);padding:4px 0">Loading tranches...</div></div>'
+    + '</div>'
+    + '<div class="detail-section">'
     + '<div class="detail-section-head">Timeline</div>'
     + edt("Loan Term (months)","total_loan_term",d.total_loan_term,"number")
     + '<div class="detail-row"><span class="detail-key">Presales</span><span class="detail-val">' + (d.has_presales||"—") + (d.presales_value ? " — " + fd(d.presales_value) : "") + '</span></div>'
@@ -538,6 +557,7 @@ function showDetail(id) {
   // Load documents and lender responses for this deal
   loadDocuments(d.id);
   loadLenderResponses(d.id);
+  loadTranches(d.id);
 }
 
 async function loadLenderResponses(dealId) {
@@ -1705,6 +1725,154 @@ function printFR() {
 
 function closeFR() {
   document.getElementById("fr-overlay").style.display = "none";
+}
+
+// ═══════════════════════════════════════════════════
+// CAPITAL TRANCHES
+// ═══════════════════════════════════════════════════
+
+async function loadTranches(dealId) {
+  var container = document.getElementById("tranches-" + dealId);
+  if (!container) return;
+  try {
+    var res = await sb.from("deal_tranches").select("*, lenders(name)").eq("deal_id", dealId).order("created_at");
+    var tranches = res.data || [];
+    if (tranches.length === 0) {
+      container.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0">No tranches yet. Add a tranche to start building the capital stack.</div>';
+      return;
+    }
+
+    // Load all lenders for dropdown
+    var lenderRes = await sb.from("lenders").select("id,name").order("name");
+    var allLenders = lenderRes.data || [];
+
+    container.innerHTML = tranches.map(function(t) {
+      var typeLabel = t.tranche_type === 'senior' ? 'Senior Debt' : t.tranche_type === 'mezzanine' ? 'Mezzanine' : 'Preferred Equity';
+      var lenderName = t.lenders ? t.lenders.name : t.lender_name || 'Unassigned';
+      var statusOpts = ['draft','submitted','under_review','approved','declined','settled','withdrawn'];
+
+      return '<div class="tranche-card">'
+        + '<div class="tranche-head" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'">'
+        + '<div><span class="tranche-type ' + t.tranche_type + '">' + typeLabel + '</span>'
+        + '<span style="font-size:11px;color:var(--muted);margin-left:8px">' + lenderName + '</span></div>'
+        + '<div style="display:flex;align-items:center;gap:10px">'
+        + statusBadge(t.status)
+        + '<span class="tranche-amt">' + fd(t.amount) + '</span>'
+        + '</div></div>'
+        + '<div class="tranche-body" style="display:none">'
+        + '<div class="detail-row"><span class="detail-key">Amount</span>'
+        + '<input type="number" value="' + (t.amount || 0) + '" onchange="updateTranche(\'' + t.id + '\',\'amount\',this.value)" style="width:120px;text-align:right"></div>'
+        + '<div class="detail-row"><span class="detail-key">Status</span>'
+        + '<select onchange="updateTranche(\'' + t.id + '\',\'status\',this.value)">'
+        + statusOpts.map(function(s) { return '<option value="' + s + '"' + (t.status === s ? ' selected' : '') + '>' + s.replace(/_/g, ' ') + '</option>'; }).join('')
+        + '</select></div>'
+        + '<div class="detail-row"><span class="detail-key">Lender</span>'
+        + '<select onchange="updateTranche(\'' + t.id + '\',\'lender_id\',this.value)">'
+        + '<option value="">Unassigned</option>'
+        + allLenders.map(function(l) { return '<option value="' + l.id + '"' + (t.lender_id === l.id ? ' selected' : '') + '>' + l.name + '</option>'; }).join('')
+        + '</select></div>'
+        + '<div class="detail-row"><span class="detail-key">Interest Rate</span>'
+        + '<input type="number" value="' + (t.interest_rate || 0) + '" step="0.25" onchange="updateTranche(\'' + t.id + '\',\'interest_rate\',this.value)" style="width:80px;text-align:right">'
+        + '<span style="font-size:11px;color:var(--muted);margin-left:3px">%</span></div>'
+        + '<div class="detail-row"><span class="detail-key">Estab Fee</span>'
+        + '<input type="number" value="' + (t.establishment_fee || 0) + '" step="0.05" onchange="updateTranche(\'' + t.id + '\',\'establishment_fee\',this.value)" style="width:80px;text-align:right">'
+        + '<span style="font-size:11px;color:var(--muted);margin-left:3px">%</span></div>'
+        + '<div class="detail-row"><span class="detail-key">Term</span>'
+        + '<input type="number" value="' + (t.term_months || 0) + '" onchange="updateTranche(\'' + t.id + '\',\'term_months\',this.value)" style="width:80px;text-align:right">'
+        + '<span style="font-size:11px;color:var(--muted);margin-left:3px">mths</span></div>'
+        + '<div class="detail-row"><span class="detail-key">Notes</span>'
+        + '<input type="text" value="' + (t.notes || '') + '" onchange="updateTranche(\'' + t.id + '\',\'notes\',this.value)" style="width:100%;text-align:left" placeholder="Add notes..."></div>'
+        + '<div class="tranche-actions">'
+        + '<button onclick="emailTrancheLender(\'' + dealId + '\',\'' + t.id + '\')">📧 Invite Lender</button>'
+        + '<button onclick="window.open(\'settlement.html?deal=' + dealId + '&tranche=' + t.id + '\',\'_blank\')">🏦 Settlement CPs</button>'
+        + '<button class="del" onclick="deleteTranche(\'' + t.id + '\',\'' + dealId + '\')">× Remove</button>'
+        + '</div></div></div>';
+    }).join('');
+  } catch (e) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--red)">Error loading tranches</div>';
+    console.error('loadTranches:', e);
+  }
+}
+
+async function addTranche(dealId) {
+  var type = prompt("Tranche type:\n1 = Senior Debt\n2 = Mezzanine\n3 = Preferred Equity\n\nEnter 1, 2, or 3:");
+  var typeMap = {'1':'senior','2':'mezzanine','3':'preferred_equity'};
+  var trancheType = typeMap[type];
+  if (!trancheType) return;
+
+  var amount = prompt("Tranche amount ($):", "0");
+  amount = parseFloat((amount || "0").replace(/[$,\s]/g, '')) || 0;
+
+  try {
+    await sb.from("deal_tranches").insert({
+      deal_id: dealId,
+      tranche_type: trancheType,
+      tranche_label: trancheType === 'senior' ? 'Senior Debt' : trancheType === 'mezzanine' ? 'Mezzanine' : 'Preferred Equity',
+      amount: amount,
+      status: 'draft'
+    });
+    loadTranches(dealId);
+  } catch (e) { console.error('addTranche:', e); alert('Error adding tranche'); }
+}
+
+async function updateTranche(trancheId, field, value) {
+  try {
+    var update = {};
+    if (field === 'amount' || field === 'interest_rate' || field === 'establishment_fee' || field === 'term_months') {
+      update[field] = parseFloat(value) || 0;
+    } else {
+      update[field] = value || null;
+    }
+
+    // If assigning a lender, also denormalise the name
+    if (field === 'lender_id' && value) {
+      var lRes = await sb.from("lenders").select("name").eq("id", value).single();
+      if (lRes.data) update.lender_name = lRes.data.name;
+    }
+
+    // If status changing, fire email
+    if (field === 'status') {
+      var trRes = await sb.from("deal_tranches").select("deal_id,tranche_type").eq("id", trancheId).single();
+      if (trRes.data) {
+        try {
+          await fetch('/.netlify/functions/deal-email', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ type: value, deal_id: trRes.data.deal_id, extra: { tranche_type: trRes.data.tranche_type } })
+          });
+        } catch(e) { console.warn('Tranche email failed:', e); }
+      }
+    }
+
+    await sb.from("deal_tranches").update(update).eq("id", trancheId);
+  } catch (e) { console.error('updateTranche:', e); }
+}
+
+async function deleteTranche(trancheId, dealId) {
+  if (!confirm('Delete this tranche? This cannot be undone.')) return;
+  try {
+    await sb.from("deal_tranches").delete().eq("id", trancheId);
+    loadTranches(dealId);
+  } catch (e) { console.error('deleteTranche:', e); alert('Error deleting tranche'); }
+}
+
+async function emailTrancheLender(dealId, trancheId) {
+  try {
+    var trRes = await sb.from("deal_tranches").select("lender_id, lender_name").eq("id", trancheId).single();
+    if (!trRes.data || !trRes.data.lender_id) { alert('Assign a lender first'); return; }
+    var lRes = await sb.from("lenders").select("contact_email, name").eq("id", trRes.data.lender_id).single();
+    if (!lRes.data || !lRes.data.contact_email) { alert('No contact email for this lender'); return; }
+    await fetch('/.netlify/functions/deal-email', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        type: 'lender_invitation',
+        deal_id: dealId,
+        extra: { lender_email: lRes.data.contact_email, lender_contact: lRes.data.name }
+      })
+    });
+    alert('Invitation sent to ' + lRes.data.name);
+  } catch (e) { console.error('emailTrancheLender:', e); alert('Error sending invitation'); }
 }
 </script>
 
