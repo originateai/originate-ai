@@ -51,6 +51,20 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers, body: JSON.stringify({ models }) };
     }
 
+    // ── FIND BY DEAL: Get model for a specific deal (any user) ──
+    if (action === 'find_by_deal') {
+      const { deal_id } = body;
+      if (!deal_id) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing deal_id' }) };
+      const models = await sbFetch(
+        `feasibility_models?deal_id=eq.${deal_id}&select=*&order=updated_at.desc&limit=1`,
+        'GET'
+      );
+      if (models && models.length > 0) {
+        return { statusCode: 200, headers, body: JSON.stringify({ model: models[0] }) };
+      }
+      return { statusCode: 200, headers, body: JSON.stringify({ model: null }) };
+    }
+
     // ── LOAD: Get a specific model ──
     if (action === 'load') {
       const { model_id } = body;
