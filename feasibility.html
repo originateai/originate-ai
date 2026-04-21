@@ -167,10 +167,12 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
   </div>
 </nav>
 <div class="tab-bar">
-  <button class="tab active" onclick="showTab('revenue')">① Revenue</button>
-  <button class="tab" onclick="showTab('costs')">② Costs & Funding</button>
-  <button class="tab" onclick="showTab('results')">③ Results</button>
-  <button class="tab" onclick="showTab('cashflow')">④ Cash Flow</button>
+  <button class="tab active" onclick="showTab('assumptions')">① Assumptions</button>
+  <button class="tab" onclick="showTab('revenue')">② Revenue</button>
+  <button class="tab" onclick="showTab('costs')">③ Costs</button>
+  <button class="tab" onclick="showTab('funding')">④ Funding</button>
+  <button class="tab" onclick="showTab('results')">⑤ Results</button>
+  <button class="tab" onclick="showTab('cashflow')">⑥ Cash Flow</button>
 </div>
 <div class="save-bar">
   <input class="mn" id="model-name" placeholder="Model name..." value="Untitled Model">
@@ -185,7 +187,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 <div class="container">
 
 <!-- ═══════ TAB 1: REVENUE ═══════ -->
-<div id="tab-revenue">
+<div id="tab-revenue" class="hidden">
   <div class="mode-toggle">
     <button class="mode-btn active" onclick="setMode('commercial')">Commercial — Cap Val</button>
     <button class="mode-btn" onclick="setMode('resi')">Residential — Development</button>
@@ -201,13 +203,15 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
       <div class="row"><span class="row-label">Less: Vacancy</span><span class="row-value" id="o-vac" style="color:var(--red)">—</span></div>
       <div class="row sub"><span class="row-label">Gross Income</span><span class="row-value" id="o-gi" style="color:var(--teal)">—</span></div>
     </div>
+    <div class="section"><div class="section-head">Recoveries & Other Income</div>
+      <div class="row"><span class="row-label">Outgoings Recoveries</span><input class="inp dollar" id="i-recov" type="text" value="$0" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
+      <div class="row"><span class="row-label">Other Income</span><input class="inp dollar" id="i-otherinc" type="text" value="$0" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
+    </div>
     <div class="section"><div class="section-head">Outgoings<button class="add-btn" onclick="addOG()">+ Add</button></div>
       <div id="og-list"></div>
       <div class="row sub"><span class="row-label">Total Outgoings</span><span class="row-value" id="o-og" style="color:var(--red)">—</span></div>
     </div>
-    <div class="section"><div class="section-head">Recoveries & Other Income</div>
-      <div class="row"><span class="row-label">Outgoings Recoveries</span><input class="inp dollar" id="i-recov" type="text" value="$0" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
-      <div class="row"><span class="row-label">Other Income</span><input class="inp dollar" id="i-otherinc" type="text" value="$0" style="width:140px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></div>
+    <div class="section">
       <div class="row sub"><span class="row-label">Net Income</span><span class="row-value" id="o-ni" style="color:var(--teal);font-size:16px;font-weight:700">—</span></div>
     </div>
     <div class="section"><div class="section-head">Capitalisation</div>
@@ -261,16 +265,14 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
   </div>
 </div>
 
-<!-- ═══════ TAB 2: COSTS & FUNDING ═══════ -->
-<div id="tab-costs" class="hidden">
-  <div class="flow-banner">← Revenue: <strong id="flow-grv">—</strong> <span style="margin-left:8px;opacity:0.6" id="flow-mode">(commercial)</span></div>
-
+<!-- ═══════ TAB 1: ASSUMPTIONS ═══════ -->
+<div id="tab-assumptions">
   <div class="section"><div class="section-head">Global Assumptions</div>
     <div class="row"><span class="row-label">Project Months</span><input class="inp" id="g-months" type="number" value="36" min="1" max="120" style="width:80px" onchange="calc()"><span class="pct">mths</span></div>
     <div class="row"><span class="row-label">Cost Escalation (p.a.)</span><input class="inp" id="g-costesc" type="number" value="3.0" step="0.1" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
+    <div class="row"><span class="row-label">Default Drawdown Profile</span><select class="sel" id="g-profile" style="width:120px"><option value="straight">Straight Line</option><option value="scurve">S-Curve</option></select></div>
   </div>
 
-  <!-- CAPITAL STACK TOGGLES -->
   <div class="section"><div class="section-head">Capital Stack</div>
     <div class="row sub"><span class="row-label">Senior Debt</span><span style="font-size:11px;color:var(--green)">Always active</span></div>
     <div class="row"><span class="row-label">Interest Rate</span><input class="inp" id="s-rate" type="number" value="9.5" step="0.25" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
@@ -296,28 +298,53 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
       <div class="row"><span class="row-label">Profit Share</span><input class="inp" id="p-profshare" type="number" value="20" step="1" style="width:80px" onchange="calc()"><span class="pct">%</span></div>
     </div>
   </div>
+</div>
 
-  <!-- COST TABLE -->
-  <div class="section"><div class="section-head">Project Costs & Funding Split<button class="add-btn" onclick="addCost()">+ Add Line</button></div>
+<!-- ═══════ TAB 3: COSTS ═══════ -->
+<div id="tab-costs" class="hidden">
+  <div class="section"><div class="section-head">Project Costs<button class="add-btn" onclick="addCost()">+ Add Line</button></div>
     <div class="ct-scroll"><table class="ct" id="cost-table">
       <thead><tr>
-        <th style="min-width:170px">Cost Item</th><th>Project ($)</th><th>Ord. Equity ($)</th>
-        <th class="mezz-col hidden">Mezz ($)</th><th class="pref-col hidden">Pref Eq ($)</th>
-        <th>Senior ($)</th><th>Mth Start</th><th>Span</th><th>Profile</th><th>Esc.</th><th>Rate</th><th></th>
+        <th style="min-width:170px">Cost Item</th><th>Project ($)</th><th>Mth Start</th><th>Span</th><th>Profile</th><th>Esc.</th><th>Rate</th><th></th>
       </tr></thead>
       <tbody id="cost-body"></tbody>
       <tfoot>
-        <tr class="ct-sub"><td>Total</td><td id="st-proj">—</td><td id="st-eq">—</td>
-          <td class="mezz-col hidden" id="st-mezz">—</td><td class="pref-col hidden" id="st-pref">—</td>
-          <td id="st-sr">—</td><td colspan="6"></td></tr>
-        <tr class="ct-sub"><td>Finance Costs</td><td id="st-fin">—</td><td></td>
-          <td class="mezz-col hidden"></td><td class="pref-col hidden"></td>
-          <td id="st-fin-sr">—</td><td colspan="6"></td></tr>
-        <tr class="ct-total"><td>Total Development Cost</td><td id="st-tdc">—</td><td id="st-tdc-eq">—</td>
-          <td class="mezz-col hidden" id="st-tdc-mezz">—</td><td class="pref-col hidden" id="st-tdc-pref">—</td>
-          <td id="st-tdc-sr">—</td><td colspan="6"></td></tr>
+        <tr class="ct-sub"><td>Total Project Cost</td><td id="st-proj">—</td><td colspan="6"></td></tr>
       </tfoot>
     </table></div>
+  </div>
+</div>
+
+<!-- ═══════ TAB 4: FUNDING ═══════ -->
+<div id="tab-funding" class="hidden">
+  <div class="flow-banner">← Total Costs: <strong id="flow-grv">—</strong> &nbsp;|&nbsp; Revenue: <span style="opacity:0.6" id="flow-mode">—</span></div>
+
+  <div class="section"><div class="section-head">Funding Split per Cost Item</div>
+    <div class="ct-scroll"><table class="ct" id="fund-table">
+      <thead><tr>
+        <th style="min-width:170px">Cost Item</th><th>Project ($)</th><th>Ord. Equity ($)</th>
+        <th class="mezz-col hidden">Mezz ($)</th><th class="pref-col hidden">Pref Eq ($)</th>
+        <th>Senior ($)</th><th></th>
+      </tr></thead>
+      <tbody id="fund-body"></tbody>
+      <tfoot>
+        <tr class="ct-sub"><td>Total</td><td id="st-fund-proj">—</td><td id="st-eq">—</td>
+          <td class="mezz-col hidden" id="st-mezz">—</td><td class="pref-col hidden" id="st-pref">—</td>
+          <td id="st-sr">—</td><td></td></tr>
+        <tr class="ct-sub"><td>Finance Costs</td><td id="st-fin">—</td><td></td>
+          <td class="mezz-col hidden"></td><td class="pref-col hidden"></td>
+          <td id="st-fin-sr">—</td><td></td></tr>
+        <tr class="ct-total"><td>Total Development Cost</td><td id="st-tdc">—</td><td id="st-tdc-eq">—</td>
+          <td class="mezz-col hidden" id="st-tdc-mezz">—</td><td class="pref-col hidden" id="st-tdc-pref">—</td>
+          <td id="st-tdc-sr">—</td><td></td></tr>
+      </tfoot>
+    </table></div>
+  </div>
+
+  <div class="section"><div class="section-head">Summary</div>
+    <div class="row sub"><span class="row-label">Debt Facility (Senior)</span><span class="row-value" id="o-fac" style="font-weight:700">—</span></div>
+    <div class="row sub"><span class="row-label">Equity Required</span><span class="row-value" id="o-eq" style="color:var(--teal);font-weight:700">—</span></div>
+    <div class="row sub"><span class="row-label">LTC</span><span class="row-value" id="o-ltc">—</span></div>
   </div>
 </div>
 
@@ -371,7 +398,7 @@ function dfoc(el){var r=String(el.value).replace(/[$,\s]/g,'');el.value=r==='0'?
 function dblr(el){var r=parseFloat(String(el.value).replace(/[$,\s]/g,''))||0;el.value=r===0?'$0':'$'+r.toLocaleString('en-AU');calc();}
 
 // ── Tabs ──
-var TABS=['revenue','costs','results','cashflow'];
+var TABS=['assumptions','revenue','costs','funding','results','cashflow'];
 function showTab(t){TABS.forEach(function(id){document.getElementById('tab-'+id).classList.toggle('hidden',id!==t);});
 document.querySelectorAll('.tab').forEach(function(b,i){b.classList.toggle('active',TABS[i]===t);});calc();}
 
@@ -448,25 +475,37 @@ var defaultCosts=[
 {grp:'Land & Acquisition',items:[{name:'Land Settlement',proj:5300000,eq:1900000,mezz:0,pref:0,ms:1,sp:1},{name:'Stamp Duty',proj:311183,eq:311183,mezz:0,pref:0,ms:1,sp:1},{name:'Legal / Setups',proj:35000,eq:35000,mezz:0,pref:0,ms:1,sp:1}]},
 {grp:'Construction',items:[{name:'Construction',proj:14358190,eq:2100000,mezz:0,pref:0,ms:8,sp:21},{name:'Building & Dev',proj:627000,eq:627000,mezz:0,pref:0,ms:8,sp:21},{name:'Professional Fees',proj:855250,eq:855250,mezz:0,pref:0,ms:8,sp:21},{name:'Council / S94',proj:286770,eq:286770,mezz:0,pref:0,ms:8,sp:21},{name:'Marketing',proj:734250,eq:734250,mezz:0,pref:0,ms:8,sp:21},{name:'Contingency',proj:1435819,eq:1435819,mezz:0,pref:0,ms:8,sp:21}]}
 ];
-function initCosts(){var b=document.getElementById('cost-body');b.innerHTML='';costId=0;
-defaultCosts.forEach(function(g){var gr=document.createElement('tr');gr.className='ct-group';gr.innerHTML='<td colspan="12">'+g.grp+'</td>';b.appendChild(gr);
+function initCosts(){var b=document.getElementById('cost-body');b.innerHTML='';var fb=document.getElementById('fund-body');fb.innerHTML='';costId=0;
+defaultCosts.forEach(function(g){var gr=document.createElement('tr');gr.className='ct-group';gr.innerHTML='<td colspan="8">'+g.grp+'</td>';b.appendChild(gr);
+var fgr=document.createElement('tr');fgr.className='ct-group';fgr.innerHTML='<td colspan="7">'+g.grp+'</td>';fb.appendChild(fgr);
 g.items.forEach(function(it){addCost(it,g.grp);});});}
 
 function addCost(data,group){costId++;var d=data||{name:'',proj:0,eq:0,mezz:0,pref:0,ms:1,sp:1};var id=costId;
+// Cost table row (Tab 3)
 var tr=document.createElement('tr');tr.id='cr-'+id;tr.dataset.group=group||'Construction';
-tr.innerHTML='<td><input class="ct-inp" style="width:150px;text-align:left" value="'+d.name+'" onchange="calc()"></td>'
-+'<td><input class="ct-inp dollar" value="$'+d.proj.toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
-+'<td><input class="ct-inp dollar" value="$'+d.eq.toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
-+'<td class="mezz-col'+(MEZZ?'':' hidden')+'"><input class="ct-inp dollar" value="$'+(d.mezz||0).toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
-+'<td class="pref-col'+(PREF?'':' hidden')+'"><input class="ct-inp dollar" value="$'+(d.pref||0).toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
-+'<td class="ct-bank" id="cr-sr-'+id+'">—</td>'
+tr.innerHTML='<td><input class="ct-inp" style="width:150px;text-align:left" value="'+d.name+'" onchange="syncCostName('+id+');calc()"></td>'
++'<td><input class="ct-inp dollar" value="$'+d.proj.toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="syncCostProj('+id+');calc()"></td>'
 +'<td><input class="ct-inp" type="number" value="'+d.ms+'" min="0" max="120" style="width:45px" onchange="calc()"></td>'
 +'<td><input class="ct-inp" type="number" value="'+d.sp+'" min="1" max="120" style="width:45px" onchange="calc()"></td>'
 +'<td><select class="ct-sel" onchange="calc()"><option value="straight">Straight</option><option value="scurve">S-Curve</option></select></td>'
 +'<td><select class="ct-sel" style="width:40px" onchange="togEsc(this,'+id+');calc()"><option value="N">N</option><option value="Y">Y</option></select></td>'
 +'<td><input class="ct-esc disabled" id="cr-esc-'+id+'" type="number" value="'+gv('g-costesc')+'" step="0.1" style="width:48px" disabled onchange="calc()"></td>'
-+'<td><button class="rm-btn" onclick="document.getElementById(\'cr-'+id+'\').remove();calc()">×</button></td>';
-document.getElementById('cost-body').appendChild(tr);}
++'<td><button class="rm-btn" onclick="removeCost('+id+')">×</button></td>';
+document.getElementById('cost-body').appendChild(tr);
+// Funding table row (Tab 4)
+var fr=document.createElement('tr');fr.id='fr-'+id;fr.dataset.group=group||'Construction';
+fr.innerHTML='<td class="fn-name" id="fn-name-'+id+'">'+d.name+'</td>'
++'<td class="fn-proj" id="fn-proj-'+id+'">'+fd(d.proj)+'</td>'
++'<td><input class="ct-inp dollar" value="$'+d.eq.toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
++'<td class="mezz-col'+(MEZZ?'':' hidden')+'"><input class="ct-inp dollar" value="$'+(d.mezz||0).toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
++'<td class="pref-col'+(PREF?'':' hidden')+'"><input class="ct-inp dollar" value="$'+(d.pref||0).toLocaleString('en-AU')+'" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calc()"></td>'
++'<td class="ct-bank" id="fr-sr-'+id+'">—</td>'
++'<td></td>';
+document.getElementById('fund-body').appendChild(fr);}
+
+function removeCost(id){var cr=document.getElementById('cr-'+id);if(cr)cr.remove();var fr=document.getElementById('fr-'+id);if(fr)fr.remove();calc();}
+function syncCostName(id){var cr=document.getElementById('cr-'+id);var fn=document.getElementById('fn-name-'+id);if(cr&&fn){fn.textContent=cr.querySelector('.ct-inp').value;}}
+function syncCostProj(id){var cr=document.getElementById('cr-'+id);var fn=document.getElementById('fn-proj-'+id);if(cr&&fn){var v=pn(cr.querySelectorAll('.ct-inp')[1].value);fn.textContent=fd(v);}}
 
 function togEsc(sel,id){var inp=document.getElementById('cr-esc-'+id);if(sel.value==='Y'){inp.disabled=false;inp.classList.remove('disabled');}else{inp.disabled=true;inp.classList.add('disabled');}}
 
@@ -475,20 +514,28 @@ function profStr(sp){var p=[];for(var i=0;i<sp;i++)p.push(1/sp);return p;}
 function profSC(sp){var r=[];for(var i=0;i<sp;i++){var t=(i+0.5)/sp;r.push(Math.pow(Math.sin(t*Math.PI/2),1.5));}var s=r.reduce(function(a,b){return a+b;},0);return r.map(function(v){return v/s;});}
 
 // ── Read cost table ──
-function readCosts(){var rows=[];document.querySelectorAll('#cost-body tr:not(.ct-group)').forEach(function(tr){
-var inps=tr.querySelectorAll('.ct-inp');var sels=tr.querySelectorAll('.ct-sel');if(inps.length<6)return;
-var proj=pn(inps[1].value),eq=pn(inps[2].value);
-var mezzIdx=MEZZ?3:-1,prefIdx=PREF?(MEZZ?4:3):-1;
-var baseIdx=MEZZ&&PREF?5:MEZZ?4:PREF?4:3;
-var mezz=mezzIdx>=0?pn(inps[mezzIdx].value):0;
-var pref=prefIdx>=0?pn(inps[prefIdx].value):0;
-eq=Math.min(eq,proj);mezz=Math.min(mezz,proj-eq);pref=Math.min(pref,proj-eq-mezz);
-var sr=proj-eq-mezz-pref;
-var ms=parseInt(inps[baseIdx].value)||0,sp=parseInt(inps[baseIdx+1].value)||1;
+function readCosts(){var rows=[];
+// Read cost items from Tab 3 and funding from Tab 4
+var costTrs=document.querySelectorAll('#cost-body tr:not(.ct-group)');
+var fundTrs=document.querySelectorAll('#fund-body tr:not(.ct-group)');
+costTrs.forEach(function(tr,idx){
+var inps=tr.querySelectorAll('.ct-inp');var sels=tr.querySelectorAll('.ct-sel');if(inps.length<4)return;
+var proj=pn(inps[1].value);
+var ms=parseInt(inps[2].value)||0,sp=parseInt(inps[3].value)||1;
 var profile=sels[0]?sels[0].value:'straight';
 var escYN=sels[1]?sels[1].value:'N';var escInp=tr.querySelector('.ct-esc');
 var escRate=escYN==='Y'&&escInp?parseFloat(escInp.value)||0:0;
-var srCell=tr.querySelector('.ct-bank');if(srCell)srCell.textContent=fd(sr);
+// Get funding split from matching row
+var eq=0,mezz=0,pref=0;
+if(idx<fundTrs.length){var fi=fundTrs[idx].querySelectorAll('.ct-inp');
+eq=fi.length>0?pn(fi[0].value):0;
+var mezzIdx=MEZZ?1:-1,prefIdx=PREF?(MEZZ?2:1):-1;
+mezz=mezzIdx>=0&&fi.length>mezzIdx?pn(fi[mezzIdx].value):0;
+pref=prefIdx>=0&&fi.length>prefIdx?pn(fi[prefIdx].value):0;}
+eq=Math.min(eq,proj);mezz=Math.min(mezz,proj-eq);pref=Math.min(pref,proj-eq-mezz);
+var sr=proj-eq-mezz-pref;
+// Update senior display on funding table
+var srCell=fundTrs[idx]?fundTrs[idx].querySelector('.ct-bank'):null;if(srCell)srCell.textContent=fd(sr);
 rows.push({proj:proj,eq:eq,mezz:mezz,pref:pref,sr:sr,ms:ms,sp:sp,profile:profile,escYN:escYN,escRate:escRate,group:tr.dataset.group||'Construction'});});
 return rows;}
 
@@ -542,9 +589,12 @@ var costs=readCosts();
 var totProj=0,totEq=0,totMezz=0,totPref=0,totSr=0;
 costs.forEach(function(c){totProj+=c.proj;totEq+=c.eq;totMezz+=c.mezz;totPref+=c.pref;totSr+=c.sr;});
 sv('st-proj',fd(totProj));sv('st-eq',fd(totEq));sv('st-mezz',fd(totMezz));sv('st-pref',fd(totPref));sv('st-sr',fd(totSr));
+sv('st-fund-proj',fd(totProj));
 
 // Flow banners
-sv('flow-grv',fd(grv));sv('flow-mode','('+MODE+')');sv('flow2-grv',fd(grv));
+sv('flow-grv',fd(totProj));sv('flow-mode',fd(grv));sv('flow2-grv',fd(grv));
+// Funding summary
+sv('o-fac',fd(totSr));sv('o-eq',fd(totEq));sv('o-ltc',totProj>0?fp(totSr/totProj):'—');
 
 // ── MONTHLY ARRAYS ──
 var mExp=new Array(months+1).fill(0),mEq=new Array(months+1).fill(0),mMz=new Array(months+1).fill(0),mPr=new Array(months+1).fill(0),mSr=new Array(months+1).fill(0);
@@ -684,10 +734,17 @@ document.getElementById('cf-tbody').innerHTML=tbH;
 // SAVE / LOAD
 // ══════════════════════════════════════════════════
 var currentModelId=null,currentUserId=null,sbC=null;
-function initAuth(){if(typeof SUPABASE_CONFIG==='undefined')return;
-sbC=supabase.createClient(SUPABASE_CONFIG.url,SUPABASE_CONFIG.key);
-sbC.auth.getSession().then(function(s){if(s.data.session)currentUserId=s.data.session.user.id;
-var p=new URLSearchParams(window.location.search);var lid=p.get('model');if(lid&&currentUserId)loadModel(lid);});}
+async function initAuth(){
+  try{
+    if(typeof SUPABASE_CONFIG==='undefined'||typeof supabase==='undefined')return;
+    sbC=supabase.createClient(SUPABASE_CONFIG.url,SUPABASE_CONFIG.key);
+    var s=await sbC.auth.getSession();
+    if(s.data&&s.data.session){currentUserId=s.data.session.user.id;}
+    var p=new URLSearchParams(window.location.search);
+    var lid=p.get('model');
+    if(lid&&currentUserId)await loadModel(lid);
+  }catch(e){console.warn('Auth init:',e);}
+}
 
 function setSt(m){var e=document.getElementById('sv-status');if(e){e.textContent=m;setTimeout(function(){e.textContent='';},3000);}}
 function gatherData(){var d={mode:MODE,mezz:MEZZ,pref:PREF,inputs:{}};
@@ -739,11 +796,11 @@ l.innerHTML=d.models.map(function(m){var dt=new Date(m.updated_at).toLocaleDateS
 return'<div class="ml-item" onclick="loadModel(\''+m.id+'\')"><div><div class="ml-nm">'+(m.model_name||'Untitled')+'</div><div class="ml-mt">'+dt+' · '+m.model_type+'</div></div><button class="ml-del" onclick="deleteModel(\''+m.id+'\',event)">×</button></div>';}).join('');}
 catch(e){l.innerHTML='<div style="padding:12px;color:var(--red)">Error</div>';}}
 function hideML(){document.getElementById('ml-list').classList.add('hidden');}
-function newModel(){currentModelId=null;window.location.href=window.location.pathname;}
+function newModel(){currentModelId=null;document.getElementById('model-name').value='Untitled Model';initOG();initBTL();initUnits();initCosts();setMode('commercial');calc();setSt('New model');}
 document.addEventListener('click',function(e){if(!e.target.closest('.ml-drop'))hideML();});
 
 // ── INIT ──
-window.addEventListener('load',function(){initOG();initBTL();initUnits();initCosts();setMode('commercial');calc();initAuth();});
+window.addEventListener('load',async function(){initOG();initBTL();initUnits();initCosts();setMode('commercial');calc();await initAuth();});
 </script>
 </body>
 </html>
