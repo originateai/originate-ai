@@ -601,6 +601,14 @@ async function updateStatus(dealId, newStatus) {
   renderStats(allDeals);
   var filtered = currentFilter === "all" ? allDeals : allDeals.filter(function(d){return d.status===currentFilter});
   renderTable(filtered);
+  // Fire lifecycle email
+  try {
+    await fetch('/.netlify/functions/deal-email', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ type: newStatus, deal_id: dealId })
+    });
+  } catch(e) { console.warn('Email send failed:', e); }
 }
 
 async function doLogout() {
