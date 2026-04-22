@@ -872,11 +872,18 @@ var vals=[];i.forEach(function(inp){vals.push(inp.value);});var svals=[];s.forEa
 var esc=tr.querySelector('.ct-esc');d.costs.push({g:tr.dataset.group||'',v:vals,s:svals,e:esc?esc.value:'0'});});
 return d;}
 
-async function saveModel(){if(!currentUserId){setSt('Please sign in');return;}setSt('Saving...');
-try{var r=await fetch('/.netlify/functions/feasibility-save',{method:'POST',headers:{'Content-Type':'application/json'},
-body:JSON.stringify({action:'save',user_id:currentUserId,model_id:currentModelId,deal_id:currentDealId,
-model_name:document.getElementById('model-name').value||'Untitled',model_type:'unified',model_data:gatherData(),snapshot:{}})});
-var d=await r.json();if(d.success&&d.model){currentModelId=d.model.id;setSt('Saved ✓');}else setSt('Failed');}catch(e){setSt('Error');console.error(e);}}
+async function saveModel(){
+  if(!currentUserId){setSt('Please sign in to save');alert('Not signed in. Please log in first.');return;}
+  setSt('Saving...');
+  try{
+    var payload={action:'save',user_id:currentUserId,model_id:currentModelId,deal_id:currentDealId,
+      model_name:document.getElementById('model-name').value||'Untitled',model_type:'unified',model_data:gatherData(),snapshot:{}};
+    var r=await fetch('/.netlify/functions/feasibility-save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    var d=await r.json();
+    if(d.success&&d.model){currentModelId=d.model.id;setSt('Saved ✓');}
+    else{setSt('Save failed: '+(d.error||'unknown'));console.error('Save response:',d);}
+  }catch(e){setSt('Save error');console.error('Save error:',e);}
+}
 
 async function loadModel(mid){if(!currentUserId){setSt('Sign in');return;}setSt('Loading...');
 try{var r=await fetch('/.netlify/functions/feasibility-save',{method:'POST',headers:{'Content-Type':'application/json'},
