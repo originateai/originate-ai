@@ -811,14 +811,15 @@ async function initAuth(){
 
 async function loadDealData(dealId){
   try{
-    var res=await sbC.from('deals').select('*').eq('id',dealId).single();
-    if(!res.data)return;
-    var d=res.data;
+    var res=await fetch('/.netlify/functions/feasibility-save',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'get_deal',user_id:currentUserId||'anon',deal_id:dealId})});
+    var result=await res.json();
+    if(!result.deal)return;
+    var d=result.deal;
     document.getElementById('model-name').value=(d.borrower_name||'')+(d.address?' — '+d.address:'');
     // Pre-fill based on deal category
     if(d.category&&(d.category.toLowerCase().indexOf('town')>-1||d.category.toLowerCase().indexOf('resi')>-1||d.category.toLowerCase().indexOf('apartment')>-1||d.category.toLowerCase().indexOf('house')>-1)){
       setMode('resi');
-      // Pre-fill unit schedule if units/avg_price available
       if(d.units&&d.avg_price){
         document.getElementById('unit-body').innerHTML='';unitId=0;
         addUnit({type:'2-Bed Apartment',size:'70-80m²',qty:parseInt(d.units)||1,price:parseFloat(d.avg_price)||0});
@@ -826,13 +827,11 @@ async function loadDealData(dealId){
     } else {
       setMode('commercial');
       if(d.grv){
-        // Back-calculate income from GRV at default cap rate
         var estIncome=parseFloat(d.grv)*0.06;
         var incEl=document.getElementById('i-income');
         if(incEl)incEl.value='$'+Math.round(estIncome).toLocaleString('en-AU');
       }
     }
-    // Pre-fill costs
     if(d.land_cost){
       var landInps=document.querySelectorAll('#cost-body tr:not(.ct-group)');
       if(landInps[0]){
