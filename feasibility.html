@@ -561,7 +561,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 </div>
 
 <!-- AI COPILOT PANEL -->
-<div id="ai-fab" onclick="toggleAI()" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(13,148,136,0.4);z-index:100;font-size:24px;transition:transform 0.2s" onmouseenter="this.style.transform='scale(1.1)'" onmouseleave="this.style.transform='scale(1)'">✦</div>
+<div id="ai-fab" onclick="toggleAI()" style="position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(13,148,136,0.3);z-index:100;font-size:18px;transition:transform 0.2s;opacity:0.85" onmouseenter="this.style.transform='scale(1.1)';this.style.opacity='1'" onmouseleave="this.style.transform='scale(1)';this.style.opacity='0.85'">✦</div>
 
 <div id="ai-panel" style="display:none;position:fixed;bottom:24px;right:24px;width:400px;height:560px;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,0.15);z-index:101;display:none;flex-direction:column;overflow:hidden">
   <div style="background:var(--grey900);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
@@ -1216,45 +1216,67 @@ function rsUploadValuation(){
   var inp=document.createElement('input');inp.type='file';inp.accept='.pdf,.jpg,.jpeg,.png';
   inp.onchange=async function(){
     var file=inp.files[0];if(!file)return;
+    var ext=file.name.split('.').pop().toLowerCase();
+    sv('rs-sv-status','Processing...');
 
-    // Check file size — Netlify Pro limit is ~5MB for base64
-    if(file.size > 4 * 1024 * 1024){
-      sv('rs-sv-status','File too large (max 4MB). Try a smaller file or screenshot.');
-      return;
+    // For images: compress client-side to stay under size limit
+    if(['jpg','jpeg','png','webp'].includes(ext)){
+      var img=new Image();
+      img.onload=async function(){
+        var canvas=document.createElement('canvas');
+        var maxW=1500;var scale=img.width>maxW?maxW/img.width:1;
+        canvas.width=img.width*scale;canvas.height=img.height*scale;
+        var ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        var dataUrl=canvas.toDataURL('image/jpeg',0.8);
+        var base64=dataUrl.split(',')[1];
+        console.log('Compressed image size:',Math.round(base64.length/1024)+'KB');
+        await sendToExtract(base64,'jpg');
+      };
+      img.src=URL.createObjectURL(file);
+    } else if(ext==='pdf'){
+      if(file.size>5.5*1024*1024){sv('rs-sv-status','PDF over 5.5MB — try uploading a screenshot of the unit schedule page instead.');return;}
+      var reader=new FileReader();
+      reader.onload=async function(){await sendToExtract(reader.result.split(',')[1],'pdf');};
+      reader.readAsDataURL(file);
     }
-
-    sv('rs-sv-status','Reading file...');
-    var reader=new FileReader();
-    reader.onload=async function(){
-      var base64=reader.result.split(',')[1];
-      var ext=file.name.split('.').pop().toLowerCase();
-      sv('rs-sv-status','AI extracting units...');
-      try{
-        var res=await fetch('/.netlify/functions/extract-valuation',{
-          method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({fileBase64:base64,fileType:ext})
-        });
-        if(!res.ok){sv('rs-sv-status','Error: '+res.status);return;}
-        var data=await res.json();
-        if(data.success&&data.data&&data.data.units&&data.data.units.length>0){
-          document.getElementById('rs-unit-body').innerHTML='';rsUnitId=0;
-          data.data.units.forEach(function(u){
-            addRSUnit({lot:u.lot||'',addr:u.address||'',area:u.area||0,br:u.bedrooms||'',bath:u.bathrooms||'',park:u.parking||'',intArea:u.internalArea||0,val:u.valuationExGST||u.valuation||0,dateAdded:data.data.valuationDate||'',salePrice:u.valuation||0,forecastSale:'',actualSale:''});
-          });
-          formatAllDollars();calcRes();
-          var summary=data.data.units.length+' units extracted';
-          if(data.data.projectName)summary=data.data.projectName+' — '+summary;
-          sv('rs-sv-status','✓ '+summary);
-          if(data.data.projectName)document.getElementById('rs-model-name').value=data.data.projectName+' — Residual Stock';
-        } else {
-          sv('rs-sv-status','No units found in document');
-          if(data.error)console.error('Extraction:',data.error);
-        }
-      }catch(e){sv('rs-sv-status','Upload failed');console.error(e);}
-    };
-    reader.readAsDataURL(file);
   };
   inp.click();
+}
+
+async function sendToExtract(base64,ext){
+  // Animated loading messages
+  var msgs=['AI reading document...','Identifying units...','Extracting valuations...','Parsing lot details...','Almost there...'];
+  var msgIdx=0;
+  var loadingInterval=setInterval(function(){
+    msgIdx=(msgIdx+1)%msgs.length;
+    sv('rs-sv-status','✦ '+msgs[msgIdx]);
+  },2500);
+  sv('rs-sv-status','✦ '+msgs[0]);
+  try{
+    var res=await fetch('/.netlify/functions/extract-valuation',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({fileBase64:base64,fileType:ext})
+    });
+    var text=await res.text();
+    clearInterval(loadingInterval);
+    var data;
+    try{data=JSON.parse(text);}catch(e){sv('rs-sv-status','Server error: '+res.status);console.error('Response:',text);return;}
+    if(!res.ok){sv('rs-sv-status','Error: '+(data.error||res.status));console.error('Server:',data);return;}
+    if(data.success&&data.data&&data.data.units&&data.data.units.length>0){
+      document.getElementById('rs-unit-body').innerHTML='';rsUnitId=0;
+      data.data.units.forEach(function(u){
+        addRSUnit({lot:u.lot||'',addr:u.address||'',area:u.area||0,br:u.bedrooms||'',bath:u.bathrooms||'',park:u.parking||'',intArea:u.internalArea||0,val:u.valuationExGST||u.valuation||0,dateAdded:data.data.valuationDate||'',salePrice:u.valuation||0,forecastSale:'',actualSale:''});
+      });
+      formatAllDollars();calcRes();
+      var summary=data.data.units.length+' units extracted';
+      if(data.data.projectName)summary=data.data.projectName+' — '+summary;
+      sv('rs-sv-status','✓ '+summary);
+      if(data.data.projectName)document.getElementById('rs-model-name').value=data.data.projectName+' — Residual Stock';
+    } else {
+      sv('rs-sv-status','No units found in document');
+      if(data.error)console.error('Extraction:',data.error);
+    }
+  }catch(e){clearInterval(loadingInterval);sv('rs-sv-status','Upload failed');console.error(e);}
 }
 
 // ── CALC ENGINE ──
@@ -1474,7 +1496,6 @@ function calcResInner(){
     {l:'Interest',d:mInterest,c:'var(--amber)'},
     {l:'Repayments',d:mLoanRepay,c:'var(--green)',neg:true},
     {l:'Closing Balance',d:mLoanClose,c:'var(--grey700)',b:true},
-    {l:'LVR',sec:true},
     {l:'Opening LVR',d:mLVRopen,c:'var(--muted)',pct:true},
     {l:'Closing LVR',d:mLVRclose,c:'var(--muted)',pct:true},
     {l:'HOLDING',sec:true},
