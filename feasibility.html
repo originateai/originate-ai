@@ -1220,25 +1220,17 @@ function rsUploadValuation(){
     sv('rs-sv-status','Uploading to storage...');
 
     try{
-      // Ensure Supabase client is ready
-      if(!sbC){
-        if(typeof SUPABASE_CONFIG!=='undefined'&&typeof supabase!=='undefined'){
-          sbC=supabase.createClient(SUPABASE_CONFIG.url,SUPABASE_CONFIG.key);
-        } else {
-          sv('rs-sv-status','Not connected to storage');return;
-        }
+      // Ensure Supabase client is ready with auth
+      if(!sbC&&typeof SUPABASE_CONFIG!=='undefined'&&typeof supabase!=='undefined'){
+        sbC=supabase.createClient(SUPABASE_CONFIG.url,SUPABASE_CONFIG.key);
       }
-      // Upload to Supabase Storage
-      var filePath='valuations/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'');
-      var upRes=await sbC.storage.from('documents').upload(filePath,file,{contentType:file.type,upsert:true});
-      if(upRes.error){sv('rs-sv-status','Upload error: '+upRes.error.message);return;}
+      if(!sbC){sv('rs-sv-status','Storage not available');return;}
+      
+      // Check auth
+      var sess=await sbC.auth.getSession();
+      if(!sess.data||!sess.data.session){sv('rs-sv-status','Please sign in first');return;}
 
-      // Get signed URL (valid 10 min)
-      var urlRes=await sbC.storage.from('documents').createSignedUrl(filePath,600);
-      if(urlRes.error||!urlRes.data){sv('rs-sv-status','URL error');return;}
-      var signedUrl=urlRes.data.signedUrl;
-
-      // For images: also send compressed base64 as fallback
+      // For images: compress and send direct (no storage needed)
       if(['jpg','jpeg','png','webp'].includes(ext)){
         var img=new Image();
         img.onload=async function(){
@@ -1250,10 +1242,19 @@ function rsUploadValuation(){
           await sendToExtract(base64,'jpg');
         };
         img.src=URL.createObjectURL(file);
-      } else {
-        // PDF: send URL to function which downloads and processes
-        await sendToExtractUrl(signedUrl,ext);
+        return;
       }
+      
+      // PDF: upload to storage first
+      sv('rs-sv-status','Uploading PDF...');
+      var filePath='valuations/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'');
+      var upRes=await sbC.storage.from('documents').upload(filePath,file,{contentType:file.type,upsert:true});
+      if(upRes.error){sv('rs-sv-status','Upload error: '+upRes.error.message);return;}
+
+      var urlRes=await sbC.storage.from('documents').createSignedUrl(filePath,600);
+      if(urlRes.error||!urlRes.data){sv('rs-sv-status','URL error');return;}
+
+      await sendToExtractUrl(urlRes.data.signedUrl,ext);
     }catch(e){sv('rs-sv-status','Upload failed');console.error(e);}
   };
   inp.click();
