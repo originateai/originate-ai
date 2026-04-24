@@ -1450,17 +1450,16 @@ function calcResInner(){
   for(var m=0;m<=months;m++){
     var d2=new Date(dDate.getTime()+m*30.44*86400000);
     var cf=0;
-    if(loanDraw[m]>0) cf-=loanDraw[m]; // money out to borrower
-    if(loanRepay[m]>0) cf+=loanRepay[m]; // money back from borrower
-    if(!capInterest&&loanInterest[m]>0) cf+=loanInterest[m]; // interest payments received
+    if(mLoanDraw[m]>0) cf-=mLoanDraw[m];
+    if(mLoanRepay[m]>0) cf+=mLoanRepay[m];
+    if(!capInterest&&mInterest[m]>0) cf+=mInterest[m];
     if(cf!==0){xirrFlows.push(cf);xirrDates.push(d2);}
   }
-  // Add final balance as a repayment at maturity if still outstanding
-  if(loanClose[months]>0){
+  if(mLoanClose[months]>0){
     var finalDate=new Date(dDate.getTime()+months*30.44*86400000);
     var existingFinal=xirrDates.length>0&&xirrDates[xirrDates.length-1].getTime()===finalDate.getTime();
-    if(existingFinal){xirrFlows[xirrFlows.length-1]+=loanClose[months];}
-    else{xirrFlows.push(loanClose[months]);xirrDates.push(finalDate);}
+    if(existingFinal){xirrFlows[xirrFlows.length-1]+=mLoanClose[months];}
+    else{xirrFlows.push(mLoanClose[months]);xirrDates.push(finalDate);}
   }
 
   var xirrResult=calcXIRR(xirrFlows,xirrDates);
