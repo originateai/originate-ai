@@ -1,8 +1,5 @@
 // netlify/functions/extract-valuation.js
-// Supports two modes:
-// 1. fileBase64 + fileType — direct base64 (for compressed images)
-// 2. fileUrl + fileType — downloads from Supabase Storage signed URL (for large PDFs)
-
+// Accepts: {images: [base64,...], fileType:'images'} OR {fileBase64, fileType}
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -17,38 +14,39 @@ exports.handler = async (event) => {
 
   try {
     const body = JSON.parse(event.body);
-    const { fileBase64, fileUrl, fileType } = body;
+    const { images, fileBase64, fileType } = body;
 
-    let base64Data = fileBase64;
+    const system = `You are an expert Australian property valuer. Extract ALL units/lots/properties from these pages. Return ONLY valid JSON, no markdown fences:
+{"projectName":"string","address":"string","borrowerName":"string","valuationDate":"YYYY-MM-DD","units":[{"lot":"string","address":"string","area":0,"bedrooms":"","bathrooms":"","parking":"","internalArea":0,"valuation":0,"valuationExGST":0,"unitType":"string","notes":""}],"summary":"string"}
+unitType: 1-Bed Apartment, 2-Bed Apartment, 3-Bed Apartment, Studio, Townhouse, Villa, Duplex, House & Land, Penthouse, Commercial, Retail, Industrial, Medical, Land Lot, Strata Unit.
+Valuations as numbers in AUD. Only extract what exists in the document. If no units found, return {"units":[]}.`;
 
-    // If URL provided, download the file and convert to base64
-    if (!base64Data && fileUrl) {
-      console.log('Downloading file from URL...');
-      const dlRes = await fetch(fileUrl);
-      if (!dlRes.ok) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Could not download file: ' + dlRes.status }) };
-      const buffer = await dlRes.arrayBuffer();
-      base64Data = Buffer.from(buffer).toString('base64');
-      console.log('Downloaded, base64 length:', base64Data.length);
+    // Build content array
+    let content = [];
+
+    if (images && images.length > 0) {
+      // Multiple page images
+      images.forEach(img => {
+        content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: img } });
+      });
+    } else if (fileBase64) {
+      // Single file
+      const isImage = ['png','jpg','jpeg','gif','webp'].includes(fileType);
+      const mediaType = fileType === 'pdf' ? 'application/pdf'
+        : fileType === 'png' ? 'image/png'
+        : (fileType === 'jpg' || fileType === 'jpeg') ? 'image/jpeg'
+        : 'application/pdf';
+      content.push({
+        type: isImage ? 'image' : 'document',
+        source: { type: 'base64', media_type: mediaType, data: fileBase64 }
+      });
+    } else {
+      return { statusCode: 400, headers, body: JSON.stringify({ error: 'No file data' }) };
     }
 
-    if (!base64Data) return { statusCode: 400, headers, body: JSON.stringify({ error: 'No file data provided' }) };
+    content.push({ type: 'text', text: 'Extract all unit/lot details from these valuation pages. Return JSON only.' });
 
-    const isImage = ['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(fileType);
-    const mediaType = fileType === 'pdf' ? 'application/pdf'
-      : fileType === 'png' ? 'image/png'
-      : (fileType === 'jpg' || fileType === 'jpeg') ? 'image/jpeg'
-      : 'application/pdf';
-
-    const system = `You are an expert Australian property valuer. Extract ALL units/lots/properties from this document. Return ONLY valid JSON, no markdown fences. Structure:
-{"projectName":"string","valuationDate":"YYYY-MM-DD","units":[{"lot":"string","address":"string","area":0,"bedrooms":"","bathrooms":"","parking":"","internalArea":0,"valuation":0,"valuationExGST":0,"unitType":"string","notes":""}],"summary":"string"}
-unitType must be one of: 1-Bed Apartment, 2-Bed Apartment, 3-Bed Apartment, Studio, Townhouse, Villa, Duplex, House & Land, Penthouse, Commercial, Retail, Industrial, Medical, Land Lot, Strata Unit.
-Valuations as numbers in AUD. Only extract what is in the document.`;
-
-    const contentBlock = isImage
-      ? { type: 'image', source: { type: 'base64', media_type: mediaType, data: base64Data } }
-      : { type: 'document', source: { type: 'base64', media_type: mediaType, data: base64Data } };
-
-    console.log('Sending to Claude, type:', isImage ? 'image' : 'document', 'media:', mediaType);
+    console.log('Sending to Claude:', content.length - 1, 'images/docs');
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -61,17 +59,14 @@ Valuations as numbers in AUD. Only extract what is in the document.`;
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 8192,
         system: system,
-        messages: [{ role: 'user', content: [
-          contentBlock,
-          { type: 'text', text: 'Extract all unit/lot details from this valuation. Return JSON only.' }
-        ]}]
+        messages: [{ role: 'user', content: content }]
       })
     });
 
     const data = await res.json();
     if (!res.ok) {
       console.error('Anthropic error:', JSON.stringify(data).substring(0, 500));
-      return { statusCode: 500, headers, body: JSON.stringify({ error: 'AI failed', detail: data.error ? data.error.message : 'Unknown error' }) };
+      return { statusCode: 500, headers, body: JSON.stringify({ error: data.error ? data.error.message : 'AI failed' }) };
     }
 
     let text = data.content && data.content[0] ? data.content[0].text : '';
@@ -79,7 +74,7 @@ Valuations as numbers in AUD. Only extract what is in the document.`;
 
     let parsed;
     try { parsed = JSON.parse(text); }
-    catch (e) { return { statusCode: 200, headers, body: JSON.stringify({ error: 'Could not parse AI response', raw: text.substring(0, 1000) }) }; }
+    catch (e) { return { statusCode: 200, headers, body: JSON.stringify({ error: 'Could not parse response', raw: text.substring(0, 1000) }) }; }
 
     console.log('Extracted', parsed.units ? parsed.units.length : 0, 'units');
     return { statusCode: 200, headers, body: JSON.stringify({ success: true, data: parsed }) };
