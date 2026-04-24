@@ -560,6 +560,44 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
   <div class="container"><div class="coming-soon"><h2>Bridging Finance</h2><p>Short-term bridging loan analysis with exit strategy modelling, LVR waterfall, and interest capitalisation. Coming soon.</p></div></div>
 </div>
 
+<!-- AI COPILOT PANEL -->
+<div id="ai-fab" onclick="toggleAI()" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(13,148,136,0.4);z-index:100;font-size:24px;transition:transform 0.2s" onmouseenter="this.style.transform='scale(1.1)'" onmouseleave="this.style.transform='scale(1)'">✦</div>
+
+<div id="ai-panel" style="display:none;position:fixed;bottom:24px;right:24px;width:400px;height:560px;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,0.15);z-index:101;display:none;flex-direction:column;overflow:hidden">
+  <div style="background:var(--grey900);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+    <div>
+      <div style="color:white;font-weight:700;font-size:15px">✦ AI Copilot</div>
+      <div style="color:rgba(255,255,255,0.4);font-size:11px">Property finance assistant</div>
+    </div>
+    <button onclick="toggleAI()" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:20px;cursor:pointer;padding:4px">×</button>
+  </div>
+  <div id="ai-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
+    <div style="background:var(--teal-bg);border-radius:12px 12px 12px 2px;padding:12px 14px;font-size:13px;color:var(--teal-dark);max-width:85%;line-height:1.5">
+      G'day — I'm your AI copilot. I can see your current model and help with feasibility analysis, restructuring advice, pricing guidance, and risk flags. What would you like to know?
+    </div>
+  </div>
+  <div style="padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;background:var(--grey50)">
+    <input id="ai-input" type="text" placeholder="Ask about your deal..." style="flex:1;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none" onkeydown="if(event.key==='Enter')sendAI()">
+    <button onclick="sendAI()" style="background:var(--teal);color:white;border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap">Send</button>
+  </div>
+  <div style="padding:6px 16px 10px;display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0">
+    <button class="ai-quick" onclick="sendQuick('Analyse this deal')">Analyse deal</button>
+    <button class="ai-quick" onclick="sendQuick('How can I improve the margin?')">Improve margin</button>
+    <button class="ai-quick" onclick="sendQuick('What risks would a lender flag?')">Risk flags</button>
+    <button class="ai-quick" onclick="sendQuick('Suggest capital structure')">Capital structure</button>
+  </div>
+</div>
+
+<style>
+.ai-quick{background:var(--grey50);border:1px solid var(--border);border-radius:16px;padding:4px 10px;font-size:10px;color:var(--grey600);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;white-space:nowrap}
+.ai-quick:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-bg)}
+.ai-user{background:var(--grey900);color:white;border-radius:12px 12px 2px 12px;padding:10px 14px;font-size:13px;max-width:85%;align-self:flex-end;line-height:1.5}
+.ai-bot{background:var(--teal-bg);border-radius:12px 12px 12px 2px;padding:12px 14px;font-size:13px;color:var(--teal-dark);max-width:85%;line-height:1.5}
+.ai-bot strong{color:var(--teal-dark)}.ai-bot code{background:rgba(0,0,0,0.05);padding:1px 4px;border-radius:3px;font-size:12px}
+.ai-typing{background:var(--grey100);border-radius:12px 12px 12px 2px;padding:12px 14px;font-size:13px;color:var(--muted);max-width:85%}
+@media(max-width:768px){#ai-panel{width:calc(100vw - 16px);height:calc(100vh - 80px);bottom:8px;right:8px;border-radius:12px}}
+</style>
+
 <script>
 "use strict";
 var MODE="commercial",MEZZ=false,PREF=false;
@@ -1062,7 +1100,7 @@ async function saveModel(){
   setSt('Saving...');
   try{
     var payload={action:'save',user_id:currentUserId,model_id:currentModelId,deal_id:currentDealId,
-      model_name:document.getElementById('model-name').value||'Untitled',model_type:'unified',model_data:gatherData(),snapshot:{}};
+      model_name:document.getElementById('model-name').value||'Untitled',model_type:'standard',model_data:gatherData(),snapshot:{}};
     var r=await fetch('/.netlify/functions/feasibility-save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     var d=await r.json();
     if(d.success&&d.model){currentModelId=d.model.id;setSt('Saved ✓');}
@@ -1471,6 +1509,96 @@ function calcResInner(){
 }
 
 function saveResModel(){sv('rs-sv-status','Coming soon');}
+
+// ══════════════════════════════════════════════════
+// AI COPILOT
+// ══════════════════════════════════════════════════
+var aiHistory=[];
+var aiOpen=false;
+
+function toggleAI(){
+  aiOpen=!aiOpen;
+  document.getElementById('ai-panel').style.display=aiOpen?'flex':'none';
+  document.getElementById('ai-fab').style.display=aiOpen?'none':'flex';
+  if(aiOpen)document.getElementById('ai-input').focus();
+}
+
+function sendQuick(msg){document.getElementById('ai-input').value=msg;sendAI();}
+
+function getModelContext(){
+  // Gather current model state for AI context
+  var ctx={product:PRODUCT};
+  if(PRODUCT==='development'){
+    ctx.mode=MODE;
+    ctx.grv=document.getElementById('o-adopted')?document.getElementById('o-adopted').textContent:'';
+    ctx.netIncome=document.getElementById('o-ni')?document.getElementById('o-ni').textContent:'';
+    ctx.capRate=document.getElementById('i-caprate')?document.getElementById('i-caprate').value+'%':'';
+    ctx.totalProjectCost=document.getElementById('st-tdc')?document.getElementById('st-tdc').textContent:'';
+    ctx.seniorDebt=document.getElementById('st-sr')?document.getElementById('st-sr').textContent:'';
+    ctx.equity=document.getElementById('st-eq')?document.getElementById('st-eq').textContent:'';
+    ctx.margin=document.getElementById('o-r-margin')?document.getElementById('o-r-margin').textContent:'';
+    ctx.marginPct=document.getElementById('o-r-marpct')?document.getElementById('o-r-marpct').textContent:'';
+    ctx.mezz=MEZZ;ctx.pref=PREF;
+    ctx.months=document.getElementById('g-months')?document.getElementById('g-months').value:'';
+    ctx.interestRate=document.getElementById('s-rate')?document.getElementById('s-rate').value+'%':'';
+    // Get cost items
+    ctx.costs=[];
+    document.querySelectorAll('#cost-body tr:not(.ct-group)').forEach(function(tr){
+      var inps=tr.querySelectorAll('.ct-inp');
+      if(inps.length>=2) ctx.costs.push({name:inps[0].value,amount:inps[1].value});
+    });
+  } else if(PRODUCT==='residual'){
+    ctx.units=document.querySelectorAll('#rs-unit-body tr').length;
+    ctx.collateral=document.getElementById('rs-tot-val')?document.getElementById('rs-tot-val').textContent:'';
+    ctx.loanBalance=document.getElementById('rs-init-advance')?document.getElementById('rs-init-advance').textContent:'';
+    ctx.lvr=document.getElementById('rs-init-lvr')?document.getElementById('rs-init-lvr').value+'%':'';
+    ctx.rate=document.getElementById('rs-applied-rate')?document.getElementById('rs-applied-rate').textContent:'';
+  }
+  return ctx;
+}
+
+async function sendAI(){
+  var input=document.getElementById('ai-input');
+  var msg=input.value.trim();
+  if(!msg)return;
+  input.value='';
+
+  // Add user message
+  var msgDiv=document.getElementById('ai-messages');
+  msgDiv.innerHTML+='<div class="ai-user">'+msg.replace(/</g,'&lt;')+'</div>';
+  msgDiv.innerHTML+='<div class="ai-typing" id="ai-typing">Thinking...</div>';
+  msgDiv.scrollTop=msgDiv.scrollHeight;
+
+  aiHistory.push({role:'user',content:msg});
+
+  try{
+    var res=await fetch('/.netlify/functions/ai-copilot',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        message:msg,
+        context:getModelContext(),
+        history:aiHistory.slice(-10) // last 10 messages for context
+      })
+    });
+    var data=await res.json();
+    var typing=document.getElementById('ai-typing');
+    if(typing)typing.remove();
+
+    var reply=data.reply||'Sorry, I couldn\'t process that.';
+    // Simple markdown: bold, line breaks
+    reply=reply.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+    aiHistory.push({role:'assistant',content:data.reply||''});
+
+    msgDiv.innerHTML+='<div class="ai-bot">'+reply+'</div>';
+    msgDiv.scrollTop=msgDiv.scrollHeight;
+  }catch(e){
+    var typing=document.getElementById('ai-typing');
+    if(typing)typing.remove();
+    msgDiv.innerHTML+='<div class="ai-bot" style="color:var(--red)">Error connecting to AI. Please try again.</div>';
+    console.error('AI error:',e);
+  }
+}
 
 // ── INIT ──
 window.addEventListener('load',async function(){initOG();initBTL();initUnits();initCosts();initRSUnits();initRSHold();setMode('commercial');formatAllDollars();calc();calcRes();await initAuth();});
