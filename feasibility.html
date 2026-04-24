@@ -566,16 +566,18 @@ var PRODUCT="development";
 
 // ── Product Switching ──
 function showProduct(p){
+  console.log('showProduct:',p);
   if(p!=='development'&&p!=='residual')return;
   PRODUCT=p;
   ['development','residual','investment','site','bridging'].forEach(function(id){
-    var el=document.getElementById('product-'+id);if(el)el.classList.toggle('hidden',id!==p);
+    var el=document.getElementById('product-'+id);
+    if(el){el.classList.toggle('hidden',id!==p);console.log('product-'+id,id===p?'SHOW':'HIDE');}
   });
   document.querySelectorAll('.product-tab').forEach(function(b){
-    var match=(p==='development'&&b.textContent==='Development')||(p==='residual'&&b.textContent==='Residual Stock');
+    var match=(p==='development'&&b.textContent.trim()==='Development')||(p==='residual'&&b.textContent.trim()==='Residual Stock');
     b.classList.toggle('active',match);
   });
-  if(p==='residual')calcRes();
+  if(p==='residual'){setTimeout(function(){calcRes();},100);}
   if(p==='development')calc();
 }
 
@@ -1183,7 +1185,11 @@ function calcXIRR(cf,dates,guess){
   return Math.abs(npv(rate))<1?rate:null;
 }
 
-function calcRes(){try{calcResInner();}catch(e){console.warn('ResCalc:',e);}}
+function calcRes(){
+  var el=document.getElementById('product-residual');
+  if(!el||el.classList.contains('hidden'))return;
+  try{calcResInner();}catch(e){console.warn('ResCalc:',e);}
+}
 
 function calcResInner(){
   var initLVR=parseFloat(document.getElementById('rs-init-lvr').value)/100||0.7;
