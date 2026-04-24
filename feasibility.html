@@ -1217,66 +1217,93 @@ function rsUploadValuation(){
   inp.onchange=async function(){
     var file=inp.files[0];if(!file)return;
     var ext=file.name.split('.').pop().toLowerCase();
-    sv('rs-sv-status','Processing...');
+    sv('rs-sv-status','Uploading to storage...');
 
-    // For images: compress client-side to stay under size limit
-    if(['jpg','jpeg','png','webp'].includes(ext)){
-      var img=new Image();
-      img.onload=async function(){
-        var canvas=document.createElement('canvas');
-        var maxW=1500;var scale=img.width>maxW?maxW/img.width:1;
-        canvas.width=img.width*scale;canvas.height=img.height*scale;
-        var ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);
-        var dataUrl=canvas.toDataURL('image/jpeg',0.8);
-        var base64=dataUrl.split(',')[1];
-        console.log('Compressed image size:',Math.round(base64.length/1024)+'KB');
-        await sendToExtract(base64,'jpg');
-      };
-      img.src=URL.createObjectURL(file);
-    } else if(ext==='pdf'){
-      if(file.size>5.5*1024*1024){sv('rs-sv-status','PDF over 5.5MB — try uploading a screenshot of the unit schedule page instead.');return;}
-      var reader=new FileReader();
-      reader.onload=async function(){await sendToExtract(reader.result.split(',')[1],'pdf');};
-      reader.readAsDataURL(file);
-    }
+    try{
+      // Upload to Supabase Storage
+      var filePath='valuations/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'');
+      var upRes=await sbC.storage.from('documents').upload(filePath,file,{contentType:file.type,upsert:true});
+      if(upRes.error){sv('rs-sv-status','Upload error: '+upRes.error.message);return;}
+
+      // Get signed URL (valid 10 min)
+      var urlRes=await sbC.storage.from('documents').createSignedUrl(filePath,600);
+      if(urlRes.error||!urlRes.data){sv('rs-sv-status','URL error');return;}
+      var signedUrl=urlRes.data.signedUrl;
+
+      // For images: also send compressed base64 as fallback
+      if(['jpg','jpeg','png','webp'].includes(ext)){
+        var img=new Image();
+        img.onload=async function(){
+          var canvas=document.createElement('canvas');
+          var maxW=1500;var scale=img.width>maxW?maxW/img.width:1;
+          canvas.width=img.width*scale;canvas.height=img.height*scale;
+          var ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);
+          var base64=canvas.toDataURL('image/jpeg',0.8).split(',')[1];
+          await sendToExtract(base64,'jpg');
+        };
+        img.src=URL.createObjectURL(file);
+      } else {
+        // PDF: send URL to function which downloads and processes
+        await sendToExtractUrl(signedUrl,ext);
+      }
+    }catch(e){sv('rs-sv-status','Upload failed');console.error(e);}
   };
   inp.click();
 }
 
-async function sendToExtract(base64,ext){
-  // Animated loading messages
-  var msgs=['AI reading document...','Identifying units...','Extracting valuations...','Parsing lot details...','Almost there...'];
+async function sendToExtractUrl(url,ext){
+  var msgs=['✦ AI reading document...','✦ Identifying units...','✦ Extracting valuations...','✦ Parsing lot details...','✦ Almost there...'];
   var msgIdx=0;
-  var loadingInterval=setInterval(function(){
-    msgIdx=(msgIdx+1)%msgs.length;
-    sv('rs-sv-status','✦ '+msgs[msgIdx]);
-  },2500);
-  sv('rs-sv-status','✦ '+msgs[0]);
+  var loadingInterval=setInterval(function(){msgIdx=(msgIdx+1)%msgs.length;sv('rs-sv-status',msgs[msgIdx]);},2500);
+  sv('rs-sv-status',msgs[0]);
+  try{
+    var res=await fetch('/.netlify/functions/extract-valuation',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({fileUrl:url,fileType:ext})
+    });
+    clearInterval(loadingInterval);
+    var text=await res.text();
+    var data;
+    try{data=JSON.parse(text);}catch(e){sv('rs-sv-status','Server error');console.error('Response:',text);return;}
+    if(!res.ok){sv('rs-sv-status','Error: '+(data.error||res.status));return;}
+    processExtraction(data);
+  }catch(e){clearInterval(loadingInterval);sv('rs-sv-status','Failed');console.error(e);}
+}
+
+async function sendToExtract(base64,ext){
+  var msgs=['✦ AI reading document...','✦ Identifying units...','✦ Extracting valuations...','✦ Parsing lot details...','✦ Almost there...'];
+  var msgIdx=0;
+  var loadingInterval=setInterval(function(){msgIdx=(msgIdx+1)%msgs.length;sv('rs-sv-status',msgs[msgIdx]);},2500);
+  sv('rs-sv-status',msgs[0]);
   try{
     var res=await fetch('/.netlify/functions/extract-valuation',{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({fileBase64:base64,fileType:ext})
     });
-    var text=await res.text();
     clearInterval(loadingInterval);
+    var text=await res.text();
     var data;
     try{data=JSON.parse(text);}catch(e){sv('rs-sv-status','Server error: '+res.status);console.error('Response:',text);return;}
     if(!res.ok){sv('rs-sv-status','Error: '+(data.error||res.status));console.error('Server:',data);return;}
-    if(data.success&&data.data&&data.data.units&&data.data.units.length>0){
-      document.getElementById('rs-unit-body').innerHTML='';rsUnitId=0;
-      data.data.units.forEach(function(u){
-        addRSUnit({lot:u.lot||'',addr:u.address||'',area:u.area||0,br:u.bedrooms||'',bath:u.bathrooms||'',park:u.parking||'',intArea:u.internalArea||0,val:u.valuationExGST||u.valuation||0,dateAdded:data.data.valuationDate||'',salePrice:u.valuation||0,forecastSale:'',actualSale:''});
-      });
-      formatAllDollars();calcRes();
-      var summary=data.data.units.length+' units extracted';
-      if(data.data.projectName)summary=data.data.projectName+' — '+summary;
-      sv('rs-sv-status','✓ '+summary);
-      if(data.data.projectName)document.getElementById('rs-model-name').value=data.data.projectName+' — Residual Stock';
-    } else {
-      sv('rs-sv-status','No units found in document');
-      if(data.error)console.error('Extraction:',data.error);
-    }
+    processExtraction(data);
   }catch(e){clearInterval(loadingInterval);sv('rs-sv-status','Upload failed');console.error(e);}
+}
+
+function processExtraction(data){
+  if(data.success&&data.data&&data.data.units&&data.data.units.length>0){
+    document.getElementById('rs-unit-body').innerHTML='';rsUnitId=0;
+    data.data.units.forEach(function(u){
+      addRSUnit({lot:u.lot||'',addr:u.address||'',area:u.area||0,br:u.bedrooms||'',bath:u.bathrooms||'',park:u.parking||'',intArea:u.internalArea||0,val:u.valuationExGST||u.valuation||0,dateAdded:data.data.valuationDate||'',salePrice:u.valuation||0,forecastSale:'',actualSale:''});
+    });
+    formatAllDollars();calcRes();
+    var summary=data.data.units.length+' units extracted';
+    if(data.data.projectName)summary=data.data.projectName+' — '+summary;
+    sv('rs-sv-status','✓ '+summary);
+    if(data.data.projectName)document.getElementById('rs-model-name').value=data.data.projectName+' — Residual Stock';
+  } else {
+    sv('rs-sv-status','No units found in document');
+    if(data.error)console.error('Extraction:',data.error);
+  }
 }
 
 // ── CALC ENGINE ──
