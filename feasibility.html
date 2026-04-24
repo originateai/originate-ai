@@ -1212,7 +1212,42 @@ function addHoldCost(name,val){
   document.getElementById('rs-hold-list').appendChild(div);
 }
 
-function rsUploadValuation(){alert('Upload a valuation PDF and AI will extract unit details, valuations, and lot sizes. Coming soon.');}
+function rsUploadValuation(){
+  var inp=document.createElement('input');inp.type='file';inp.accept='.pdf,.jpg,.jpeg,.png';
+  inp.onchange=async function(){
+    var file=inp.files[0];if(!file)return;
+    sv('rs-sv-status','Reading file...');
+    var reader=new FileReader();
+    reader.onload=async function(){
+      var base64=reader.result.split(',')[1];
+      var ext=file.name.split('.').pop().toLowerCase();
+      sv('rs-sv-status','AI extracting units...');
+      try{
+        var res=await fetch('/.netlify/functions/extract-valuation',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({fileBase64:base64,fileType:ext})
+        });
+        var data=await res.json();
+        if(data.success&&data.data&&data.data.units&&data.data.units.length>0){
+          document.getElementById('rs-unit-body').innerHTML='';rsUnitId=0;
+          data.data.units.forEach(function(u){
+            addRSUnit({lot:u.lot||'',addr:u.address||'',area:u.area||0,br:u.bedrooms||'',bath:u.bathrooms||'',park:u.parking||'',intArea:u.internalArea||0,val:u.valuationExGST||u.valuation||0,dateAdded:data.data.valuationDate||'',salePrice:u.valuation||0,forecastSale:'',actualSale:''});
+          });
+          formatAllDollars();calcRes();
+          var summary=data.data.units.length+' units extracted';
+          if(data.data.projectName)summary=data.data.projectName+' — '+summary;
+          sv('rs-sv-status','✓ '+summary);
+          if(data.data.projectName)document.getElementById('rs-model-name').value=data.data.projectName+' — Residual Stock';
+        } else {
+          sv('rs-sv-status','No units found');
+          if(data.raw)console.log('Raw:',data.raw);
+        }
+      }catch(e){sv('rs-sv-status','Upload failed');console.error(e);}
+    };
+    reader.readAsDataURL(file);
+  };
+  inp.click();
+}
 
 // ── CALC ENGINE ──
 // ── XIRR — Newton-Raphson ──
@@ -1508,7 +1543,25 @@ function calcResInner(){
   sv('rs-xirr',xirrResult!==null?fp(xirrResult):'N/A');
 }
 
-function saveResModel(){sv('rs-sv-status','Coming soon');}
+function saveResModel(){
+  if(!currentUserId){sv('rs-sv-status','Please sign in');return;}
+  sv('rs-sv-status','Saving...');
+  var resData={product:'residual',inputs:{}};
+  document.querySelectorAll('#product-residual .inp, #product-residual .ct-inp, #product-residual .ct-esc').forEach(function(e){if(e.id)resData.inputs[e.id]=e.value;});
+  document.querySelectorAll('#product-residual select').forEach(function(e){if(e.id)resData.inputs[e.id]=e.value;});
+  document.querySelectorAll('#product-residual input[type="checkbox"]').forEach(function(e){if(e.id)resData.inputs[e.id]=e.checked;});
+  resData.units=[];
+  document.querySelectorAll('#rs-unit-body tr').forEach(function(tr){var inps=tr.querySelectorAll('.ct-inp');var vals=[];inps.forEach(function(i){vals.push(i.value);});resData.units.push(vals);});
+  resData.holdCosts=[];
+  document.querySelectorAll('#rs-hold-list .row').forEach(function(r){var v=r.querySelectorAll('.inp');if(v.length>=2)resData.holdCosts.push({n:v[0].value,v:v[1].value});});
+  fetch('/.netlify/functions/feasibility-save',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'save',user_id:currentUserId,model_id:null,deal_id:currentDealId,
+    model_name:document.getElementById('rs-model-name').value||'Residual Stock',model_type:'residual',model_data:resData,snapshot:{}})
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.success)sv('rs-sv-status','Saved ✓');
+    else sv('rs-sv-status','Failed: '+(d.error||''));
+  }).catch(function(e){sv('rs-sv-status','Error');console.error(e);});
+}
 
 // ══════════════════════════════════════════════════
 // AI COPILOT
