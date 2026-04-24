@@ -8,12 +8,14 @@
 <title>getkredit.ai — Feasibility</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>if(typeof supabase==='undefined'){document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"><\/script>')}</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 <script src="config.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:hidden;overflow-y:auto}
 :root{
 --teal:#0D9488;--teal-light:#14B8A6;--teal-dark:#0F766E;--teal-bg:#F0FDFA;--teal-subtle:#CCFBF1;
 --white:#fff;--grey50:#f8fafc;--grey100:#f1f5f9;--grey200:#e2e8f0;
@@ -86,7 +88,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 .toggle input:checked+.toggle-track{background:var(--teal)}
 .toggle input:checked+.toggle-track:before{transform:translateX(20px)}
 /* Tables */
-.ct-scroll{overflow-x:auto}
+.ct-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;position:relative}
 .ct{width:100%;border-collapse:collapse;font-size:12px}
 .ct th{font-size:9px;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;color:var(--muted);padding:8px 8px;border-bottom:2px solid var(--border);text-align:right;background:var(--grey50);white-space:nowrap}
 .ct th:first-child{text-align:left}
@@ -112,7 +114,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 .ut-inp:focus{border-color:var(--teal);background:var(--white)}
 .ut-sel{background:var(--grey50);border:1px solid var(--border);border-radius:3px;padding:3px 6px;font-size:11px;font-family:'DM Sans',sans-serif;color:var(--text);outline:none}
 /* Cashflow */
-.cf-scroll{overflow-x:auto}
+.cf-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .cf{width:100%;border-collapse:collapse;font-size:11px;min-width:800px}
 .cf th{font-size:8px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--muted);padding:6px 6px;border-bottom:2px solid var(--border);text-align:right;background:var(--grey50);white-space:nowrap}
 .cf th:first-child{text-align:left;position:sticky;left:0;background:var(--grey50);z-index:2;min-width:140px}
@@ -477,7 +479,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 
   <!-- RS TAB 2: SECURITY POOL (unit-by-unit) -->
   <div id="rs-stock" class="hidden">
-    <div class="section"><div class="section-head">Security Pool — Unit Schedule<button class="add-btn" onclick="addRSUnit()">+ Add Unit</button></div>
+    <div class="section"><div class="section-head">Security Pool — Unit Schedule<span style="display:flex;gap:6px"><button class="add-btn" onclick="addRSUnit()">+ Add Unit</button><button class="add-btn" onclick="copyDownDates()" style="background:var(--white);color:var(--grey600);border-color:var(--border)">📅 Copy Down Dates</button></span></div>
       <div class="ct-scroll"><table class="ct" id="rs-unit-table">
         <thead><tr>
           <th>Lot #</th>
@@ -495,7 +497,6 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
           <th>Sell Costs</th>
           <th>Net Proceeds</th>
           <th>Forecast Sale</th>
-          <th>Actual Sale</th>
           <th></th>
         </tr></thead>
         <tbody id="rs-unit-body"></tbody>
@@ -508,7 +509,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
             <td id="rs-tot-sale">—</td>
             <td id="rs-tot-sellcost">—</td>
             <td id="rs-tot-net">—</td>
-            <td colspan="3"></td>
+            <td colspan="2"></td>
           </tr>
         </tfoot>
       </table></div>
@@ -1191,13 +1192,12 @@ function addRSUnit(data){
     +'<td><input class="ct-inp" type="number" value="'+(d.intm||0)+'" style="width:50px" onchange="calcRes()"></td>'
     +'<td><input class="ct-inp dollar" value="$'+(d.val||0).toLocaleString('en-AU')+'" style="width:95px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calcRes()"></td>'
     +'<td><input class="ct-inp" type="date" value="'+(d.added||'')+'" style="width:115px" onchange="calcRes()"></td>'
-    +'<td class="rs-ulvr" id="rsu-lvr-'+id+'" style="font-size:11px">—</td>'
-    +'<td class="rs-udebt" id="rsu-debt-'+id+'" style="font-size:11px">—</td>'
+    +'<td class="rs-u-lvr" style="font-size:11px">—</td>'
+    +'<td class="rs-u-debt" style="font-size:11px">—</td>'
     +'<td><input class="ct-inp dollar" value="$'+((d.salePrice||d.val||0).toLocaleString('en-AU'))+'" style="width:95px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calcRes()"></td>'
-    +'<td class="rs-usellcost" id="rsu-sc-'+id+'" style="font-size:11px;color:var(--red)">—</td>'
-    +'<td class="rs-unet" id="rsu-net-'+id+'" style="font-size:11px;font-weight:600">—</td>'
-    +'<td><input class="ct-inp" type="date" value="'+(d.saleFc||'')+'" style="width:115px" onchange="calcRes()"></td>'
-    +'<td><input class="ct-inp" type="date" value="'+(d.saleAct||'')+'" style="width:115px" onchange="calcRes()"></td>'
+    +'<td class="rs-u-sellcost" style="font-size:11px;color:var(--red)">—</td>'
+    +'<td class="rs-u-net" style="font-size:11px;font-weight:600;color:var(--teal)">—</td>'
+    +'<td><input class="ct-inp rs-forecast-date" type="date" value="'+(d.saleFc||'')+'" style="width:115px" onchange="calcRes()"></td>'
     +'<td><button class="rm-btn" onclick="document.getElementById(\'rsu-'+id+'\').remove();calcRes()">×</button></td>';
   document.getElementById('rs-unit-body').appendChild(tr);
 }
@@ -1215,6 +1215,16 @@ function addHoldCost(name,val){
     +'<span class="pct">/ mth</span>'
     +'<button class="rm-btn" onclick="document.getElementById(\'rsh-'+id+'\').remove();calcRes()">×</button>';
   document.getElementById('rs-hold-list').appendChild(div);
+}
+
+// Copy first forecast date to all empty forecast dates
+function copyDownDates(){
+  var dates=document.querySelectorAll('#rs-unit-body .rs-forecast-date');
+  var first='';
+  dates.forEach(function(d){if(d.value&&!first)first=d.value;});
+  if(!first){alert('Enter a forecast sale date on the first unit, then click Copy Down.');return;}
+  dates.forEach(function(d){if(!d.value)d.value=first;});
+  calcRes();
 }
 
 function rsUploadValuation(){
@@ -1444,13 +1454,11 @@ function calcResInner(){
   // Read units
   var units=[];var totVal=0,totArea=0,totSale=0,totSellCost=0,totNet=0;
   document.querySelectorAll('#rs-unit-body tr').forEach(function(tr,idx){
-    var inps=tr.querySelectorAll('.ct-inp');if(inps.length<12)return;
-    // 0=lot 1=addr 2=area 3=br 4=bath 5=park 6=intArea 7=val 8=dateAdded 9=salePrice 10=forecastSale 11=actualSale
+    var inps=tr.querySelectorAll('.ct-inp');if(inps.length<10)return;
+    // 0=lot 1=addr 2=area 3=br 4=bath 5=park 6=intArea 7=val 8=dateAdded 9=salePrice 10=forecastSale
     var val=pn(inps[7].value);
     var salePrice=pn(inps[9].value)||val;
-    var saleFc=inps[10].value;
-    var saleAct=inps[11].value;
-    var effectiveDate=saleAct||saleFc;
+    var saleFc=inps[10]?inps[10].value:'';
     var area=parseInt(inps[2].value)||0;
     var debt=val*initLVR;
     var sc=salePrice*sellPct;
@@ -1466,8 +1474,8 @@ function calcResInner(){
 
     // Work out sale month relative to drawdown
     var saleMonth=-1;
-    if(effectiveDate&&drawdownDate){
-      var sd=new Date(effectiveDate);
+    if(saleFc&&drawdownDate){
+      var sd=new Date(saleFc);
       saleMonth=Math.round((sd-dDate)/(1000*60*60*24*30.44));
       if(saleMonth<0)saleMonth=0;
     }
@@ -1574,7 +1582,6 @@ function calcResInner(){
       mLoanClose[m]=bal+mInterest[m]-lenderRepay-intPaid;
       if(mLoanClose[m]<0)mLoanClose[m]=0;
     }
-    mLoanRepay[m]=repay;
     if(mLoanClose[m]<1)mLoanClose[m]=0;
     mLVRclose[m]=mSecClose[m]>0?mLoanClose[m]/mSecClose[m]:0;
   }
