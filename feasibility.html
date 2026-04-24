@@ -1005,14 +1005,15 @@ document.getElementById('cf-tbody').innerHTML=tbH;
 var currentModelId=null,currentUserId=null,currentDealId=null,sbC=null;
 async function initAuth(){
   try{
-    if(typeof SUPABASE_CONFIG==='undefined'||typeof supabase==='undefined')return;
+    if(typeof SUPABASE_CONFIG==='undefined'||typeof supabase==='undefined'){console.warn('No Supabase config');return;}
     sbC=supabase.createClient(SUPABASE_CONFIG.url,SUPABASE_CONFIG.key);
     var s=await sbC.auth.getSession();
-    if(!s.data||!s.data.session){
-      window.location.href='login.html?redirect='+encodeURIComponent(window.location.href);
-      return;
+    console.log('Auth session:',s.data&&s.data.session?'YES user='+s.data.session.user.id:'NO SESSION');
+    if(s.data&&s.data.session){
+      currentUserId=s.data.session.user.id;
+    } else {
+      console.warn('No auth session — save will not work');
     }
-    currentUserId=s.data.session.user.id;
     var p=new URLSearchParams(window.location.search);
     var lid=p.get('model');
     var did=p.get('deal');
@@ -1520,6 +1521,8 @@ function calcResInner(){
 
   // Build loan schedule
   var totalInterest=0;
+  var mBorrowerSurplus=new Array(months+1).fill(0);
+  var mLenderRepay=new Array(months+1).fill(0);
   for(var m=0;m<=months;m++){
     // Security
     mSecOpen[m]=m>0?mSecClose[m-1]:0;
@@ -1533,30 +1536,43 @@ function calcResInner(){
     mInterest[m]=bal*(appliedRate/12);
     totalInterest+=mInterest[m];
 
-    // LVR check
+    // LVR
     mLVRopen[m]=mSecOpen[m]>0?mLoanOpen[m]/mSecOpen[m]:0;
 
-    // Repayments from net sale proceeds
-    // If LVR above threshold, mandatory repayment of lvrPaid% of sale value
-    var repay=0;
+    // On sale: split net proceeds between lender and borrower
+    var lenderRepay=0;
+    var borrowerGet=0;
     if(mNetProceeds[m]>0){
-      var currentLVR=mSecClose[m]>0?(bal+mInterest[m])/mSecClose[m]:0;
-      if(currentLVR>lvrThreshold){
-        repay=Math.min(mNetProceeds[m],mSecSales[m]*lvrPaid);
+      // Lender gets: enough to maintain LVR covenant
+      // Required debt reduction = current debt - (remaining security × target LVR)
+      var remainingSec=mSecClose[m];
+      var targetDebt=remainingSec*lvrPaid;
+      var requiredRepay=bal+mInterest[m]-targetDebt;
+      
+      if(requiredRepay>0){
+        lenderRepay=Math.min(mNetProceeds[m],requiredRepay);
       } else {
-        repay=Math.min(mNetProceeds[m],mSecSales[m]*lvrThreshold);
+        // LVR already fine — minimum repayment is pro-rata share
+        lenderRepay=Math.min(mNetProceeds[m],mSecSales[m]*initLVR);
       }
-      repay=Math.max(repay,0);
+      lenderRepay=Math.max(0,lenderRepay);
+      
+      // Borrower gets the rest
+      borrowerGet=mNetProceeds[m]-lenderRepay;
     }
 
-    // If capitalising interest, add to balance; otherwise treat as cash payment
+    mLenderRepay[m]=lenderRepay;
+    mBorrowerSurplus[m]=borrowerGet;
+    mLoanRepay[m]=lenderRepay;
+
+    // Close balance
     if(capInterest){
-      mLoanClose[m]=bal+mInterest[m]-repay;
+      mLoanClose[m]=bal+mInterest[m]-lenderRepay;
     } else {
-      repay+=mInterest[m]; // interest paid from proceeds
-      mLoanClose[m]=bal-repay+mInterest[m];
-      // Recalc: repay includes interest
-      mLoanClose[m]=bal-Math.min(repay,bal);
+      // Interest paid separately from proceeds
+      var intPaid=Math.min(mInterest[m],mNetProceeds[m]);
+      mLoanClose[m]=bal+mInterest[m]-lenderRepay-intPaid;
+      if(mLoanClose[m]<0)mLoanClose[m]=0;
     }
     mLoanRepay[m]=repay;
     if(mLoanClose[m]<1)mLoanClose[m]=0;
@@ -1606,8 +1622,10 @@ function calcResInner(){
     {l:'Opening Balance',d:mLoanOpen,c:'var(--grey600)'},
     {l:'Drawdowns',d:mLoanDraw,c:'var(--grey700)'},
     {l:'Interest',d:mInterest,c:'var(--amber)'},
-    {l:'Repayments',d:mLoanRepay,c:'var(--green)',neg:true},
+    {l:'Repayments (to lender)',d:mLenderRepay,c:'var(--green)',neg:true},
     {l:'Closing Balance',d:mLoanClose,c:'var(--grey700)',b:true},
+    {l:'BORROWER',sec:true},
+    {l:'Surplus to Borrower',d:mBorrowerSurplus,c:'var(--teal)',b:true},
     {l:'HOLDING',sec:true},
     {l:'Unsold Units',d:unsoldCount,c:'var(--muted)'},
     {l:'Holding Costs',d:mHoldCost,c:'var(--red)',neg:true},
