@@ -1428,6 +1428,18 @@ function calcResInner(){
   document.querySelectorAll('#rs-hold-list .row').forEach(function(r){var v=r.querySelectorAll('.inp');if(v.length>=2)holdPerUnit+=pn(v[1].value);});
   sv('rs-hold-total',fd(holdPerUnit));
 
+  var totDebt=0;
+  sv('rs-init-advance',fd(0));
+
+  // Determine months and dDate FIRST — needed for sale month calc
+  var months=18;
+  var dDate=new Date();
+  if(drawdownDate&&maturityDate){
+    dDate=new Date(drawdownDate);var md=new Date(maturityDate);
+    months=Math.round((md-dDate)/(1000*60*60*24*30.44));
+  }
+  if(months<1)months=1;if(months>120)months=120;
+
   // Read units
   var units=[];var totVal=0,totArea=0,totSale=0,totSellCost=0,totNet=0;
   document.querySelectorAll('#rs-unit-body tr').forEach(function(tr,idx){
@@ -1466,20 +1478,13 @@ function calcResInner(){
   sv('rs-tot-sale',fd(totSale));sv('rs-tot-sellcost','-'+fd(totSellCost));sv('rs-tot-net',fd(totNet));
   sv('rs-init-advance',fd(totDebt));
 
-  // Determine months from drawdown to maturity
-  var months=18;
-  var dDate=new Date();
-  if(drawdownDate&&maturityDate){
-    dDate=new Date(drawdownDate);var md=new Date(maturityDate);
-    months=Math.round((md-dDate)/(1000*60*60*24*30.44));
-  }
-  if(months<1)months=1;if(months>120)months=120;
-
   // Monthly arrays
   var mSecOpen=new Array(months+1).fill(0);
   var mSecAdd=new Array(months+1).fill(0);
   var mSecSales=new Array(months+1).fill(0);
   var mSecClose=new Array(months+1).fill(0);
+  var mGrossSales=new Array(months+1).fill(0);
+  var mSellCost=new Array(months+1).fill(0);
   var mNetProceeds=new Array(months+1).fill(0);
   var mLoanOpen=new Array(months+1).fill(0);
   var mLoanDraw=new Array(months+1).fill(0);
@@ -1500,6 +1505,8 @@ function calcResInner(){
   units.forEach(function(u){
     if(u.saleMonth>=0&&u.saleMonth<=months){
       mSecSales[u.saleMonth]+=u.val;
+      mGrossSales[u.saleMonth]+=u.salePrice;
+      mSellCost[u.saleMonth]+=u.sellCost;
       mNetProceeds[u.saleMonth]+=u.netProceeds;
       for(var m=u.saleMonth;m<=months;m++)unsoldCount[m]--;
     }
@@ -1591,7 +1598,9 @@ function calcResInner(){
     {l:'Additions',d:mSecAdd,c:'var(--teal)'},
     {l:'Sales (removed)',d:mSecSales,c:'var(--red)',neg:true},
     {l:'Closing Security',d:mSecClose,c:'var(--teal)',b:true},
-    {l:'NET SALE PROCEEDS',sec:true},
+    {l:'SALES',sec:true},
+    {l:'Gross Sales',d:mGrossSales,c:'var(--green)',b:true},
+    {l:'Selling Costs',d:mSellCost,c:'var(--red)',neg:true},
     {l:'Net Proceeds',d:mNetProceeds,c:'var(--green)',b:true},
     {l:'LOAN',sec:true},
     {l:'Opening Balance',d:mLoanOpen,c:'var(--grey600)'},
