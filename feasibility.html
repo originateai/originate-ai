@@ -1222,10 +1222,11 @@ function calcResInner(){
   var units=[];var totVal=0,totArea=0,totSale=0,totSellCost=0,totNet=0;
   document.querySelectorAll('#rs-unit-body tr').forEach(function(tr,idx){
     var inps=tr.querySelectorAll('.ct-inp');if(inps.length<12)return;
+    // 0=lot 1=addr 2=area 3=br 4=bath 5=park 6=intArea 7=val 8=dateAdded 9=salePrice 10=forecastSale 11=actualSale
     var val=pn(inps[7].value);
-    var salePrice=pn(inps[11].value);
-    var saleFc=inps[14].value;
-    var saleAct=inps[15].value;
+    var salePrice=pn(inps[9].value)||val;
+    var saleFc=inps[10].value;
+    var saleAct=inps[11].value;
     var effectiveDate=saleAct||saleFc;
     var area=parseInt(inps[2].value)||0;
     var debt=val*initLVR;
@@ -1233,11 +1234,10 @@ function calcResInner(){
     var net=salePrice-sc;
 
     // Update display
-    var id=tr.id.replace('rsu-','');
-    sv('rsu-lvr-'+id,fp(initLVR));
-    sv('rsu-debt-'+id,fd(debt));
-    sv('rsu-sc-'+id,'-'+fd(sc));
-    sv('rsu-net-'+id,fd(net));
+    var lvrEl=tr.querySelector('.rs-u-lvr');if(lvrEl)lvrEl.textContent=fp(initLVR);
+    var debtEl=tr.querySelector('.rs-u-debt');if(debtEl)debtEl.textContent=fd(debt);
+    var scEl=tr.querySelector('.rs-u-sellcost');if(scEl)scEl.textContent='-'+fd(sc);
+    var netEl=tr.querySelector('.rs-u-net');if(netEl)netEl.textContent=fd(net);
 
     totVal+=val;totArea+=area;totSale+=salePrice;totSellCost+=sc;totNet+=net;
 
