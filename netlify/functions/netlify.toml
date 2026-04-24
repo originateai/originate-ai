@@ -1,0 +1,26 @@
+[build]
+  functions = "netlify/functions"
+  publish = "."
+
+[functions]
+  [functions.doc-reader]
+    timeout = 60
+  [functions.reminders]
+    timeout = 60
+    schedule = "0 21 * * *"
+  [functions.save-conditions]
+    timeout = 30
+  [functions.credit-paper]
+    timeout = 60
+  [functions.extract-conditions]
+    timeout = 120
+  [functions.extract-valuation]
+    timeout = 120
+  [functions.ai-copilot]
+    timeout = 60
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
