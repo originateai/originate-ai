@@ -418,6 +418,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
   </div>
 </div>
 
+</div><!-- /container -->
 </div><!-- end product-development -->
 
 <!-- RESIDUAL STOCK MODEL -->
@@ -571,13 +572,16 @@ function showProduct(p){
   PRODUCT=p;
   ['development','residual','investment','site','bridging'].forEach(function(id){
     var el=document.getElementById('product-'+id);
-    if(el){el.classList.toggle('hidden',id!==p);console.log('product-'+id,id===p?'SHOW':'HIDE');}
+    if(el){
+      if(id===p){el.style.display='';el.classList.remove('hidden');console.log('product-'+id,'SHOW');}
+      else{el.style.display='none';console.log('product-'+id,'HIDE');}
+    }
   });
   document.querySelectorAll('.product-tab').forEach(function(b){
     var match=(p==='development'&&b.textContent.trim()==='Development')||(p==='residual'&&b.textContent.trim()==='Residual Stock');
     b.classList.toggle('active',match);
   });
-  if(p==='residual'){setTimeout(function(){calcRes();},100);}
+  if(p==='residual'){setTimeout(function(){calcRes();},200);}
   if(p==='development')calc();
 }
 
