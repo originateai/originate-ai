@@ -1217,45 +1217,48 @@ function rsUploadValuation(){
   inp.onchange=async function(){
     var file=inp.files[0];if(!file)return;
     var ext=file.name.split('.').pop().toLowerCase();
-    sv('rs-sv-status','Uploading to storage...');
+    sv('rs-sv-status','Processing...');
 
-    try{
-      // Ensure Supabase client is ready with auth
-      if(!sbC&&typeof SUPABASE_CONFIG!=='undefined'&&typeof supabase!=='undefined'){
-        sbC=supabase.createClient(SUPABASE_CONFIG.url,SUPABASE_CONFIG.key);
-      }
-      if(!sbC){sv('rs-sv-status','Storage not available');return;}
-      
-      // Check auth
-      var sess=await sbC.auth.getSession();
-      if(!sess.data||!sess.data.session){sv('rs-sv-status','Please sign in first');return;}
-
-      // For images: compress and send direct (no storage needed)
-      if(['jpg','jpeg','png','webp'].includes(ext)){
-        var img=new Image();
-        img.onload=async function(){
-          var canvas=document.createElement('canvas');
-          var maxW=1500;var scale=img.width>maxW?maxW/img.width:1;
-          canvas.width=img.width*scale;canvas.height=img.height*scale;
-          var ctx=canvas.getContext('2d');ctx.drawImage(img,0,0,canvas.width,canvas.height);
-          var base64=canvas.toDataURL('image/jpeg',0.8).split(',')[1];
-          await sendToExtract(base64,'jpg');
-        };
-        img.src=URL.createObjectURL(file);
+    if(['jpg','jpeg','png','webp'].includes(ext)){
+      // Images: compress and send direct
+      var img=new Image();
+      img.onload=async function(){
+        var canvas=document.createElement('canvas');
+        var maxW=1500;var scale=img.width>maxW?maxW/img.width:1;
+        canvas.width=img.width*scale;canvas.height=img.height*scale;
+        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+        var base64=canvas.toDataURL('image/jpeg',0.8).split(',')[1];
+        await sendToExtract(base64,'jpg');
+      };
+      img.src=URL.createObjectURL(file);
+    } else if(ext==='pdf'){
+      if(file.size>4*1024*1024){
+        // Large PDF: try storage upload
+        try{
+          if(!sbC&&typeof SUPABASE_CONFIG!=='undefined'&&typeof supabase!=='undefined'){
+            sbC=supabase.createClient(SUPABASE_CONFIG.url,SUPABASE_CONFIG.key);
+          }
+          if(sbC){
+            sv('rs-sv-status','Uploading large PDF...');
+            var filePath='valuations/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'');
+            var upRes=await sbC.storage.from('documents').upload(filePath,file,{contentType:'application/pdf',upsert:true});
+            if(!upRes.error){
+              var urlRes=await sbC.storage.from('documents').createSignedUrl(filePath,600);
+              if(urlRes.data&&urlRes.data.signedUrl){
+                await sendToExtractUrl(urlRes.data.signedUrl,'pdf');
+                return;
+              }
+            }
+          }
+        }catch(e){console.warn('Storage fallback:',e);}
+        sv('rs-sv-status','PDF too large. Take a screenshot of the unit schedule and upload that instead.');
         return;
       }
-      
-      // PDF: upload to storage first
-      sv('rs-sv-status','Uploading PDF...');
-      var filePath='valuations/'+Date.now()+'_'+file.name.replace(/[^a-zA-Z0-9._-]/g,'');
-      var upRes=await sbC.storage.from('documents').upload(filePath,file,{contentType:file.type,upsert:true});
-      if(upRes.error){sv('rs-sv-status','Upload error: '+upRes.error.message);return;}
-
-      var urlRes=await sbC.storage.from('documents').createSignedUrl(filePath,600);
-      if(urlRes.error||!urlRes.data){sv('rs-sv-status','URL error');return;}
-
-      await sendToExtractUrl(urlRes.data.signedUrl,ext);
-    }catch(e){sv('rs-sv-status','Upload failed');console.error(e);}
+      // Small PDF: send direct
+      var reader=new FileReader();
+      reader.onload=async function(){await sendToExtract(reader.result.split(',')[1],'pdf');};
+      reader.readAsDataURL(file);
+    }
   };
   inp.click();
 }
