@@ -8,6 +8,7 @@
 <title>getkredit.ai — Feasibility</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
 <script src="config.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -1226,84 +1227,123 @@ async function handleValuationFile(file){
   if(!file)return;
   var ext=file.name.split('.').pop().toLowerCase();
   var msgDiv=document.getElementById('ai-messages');
-  msgDiv.innerHTML+='<div class="ai-user">📎 '+file.name+'</div>';
+  msgDiv.innerHTML+='<div class="ai-user">📎 '+file.name+' ('+Math.round(file.size/1024/1024*10)/10+'MB)</div>';
   msgDiv.innerHTML+='<div class="ai-typing" id="ai-typing">✦ Reading valuation...</div>';
   msgDiv.scrollTop=msgDiv.scrollHeight;
 
-  // Rotate status messages
   var msgs=['✦ Reading valuation...','✦ Identifying units & lots...','✦ Extracting valuations...','✦ Parsing property details...','✦ Building unit schedule...'];
   var mi=0;var li=setInterval(function(){mi=(mi+1)%msgs.length;var t=document.getElementById('ai-typing');if(t)t.textContent=msgs[mi];},2500);
 
-  // Read file
   var reader=new FileReader();
   reader.onload=async function(e){
     var base64;
     if(ext==='pdf'){
-      try{var bytes=new Uint8Array(e.target.result);var bin='';var ch=8192;for(var i=0;i<bytes.length;i+=ch)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+ch));base64=btoa(bin);}
-      catch(err){clearInterval(li);var t=document.getElementById('ai-typing');if(t)t.textContent='Error reading PDF';return;}
+      try{
+        var raw=e.target.result;
+        var rawSizeMB=raw.byteLength/1024/1024;
+        
+        // If under 4MB raw, send as-is
+        if(rawSizeMB<4){
+          var bytes=new Uint8Array(raw);var bin='';var ch=8192;
+          for(var i=0;i<bytes.length;i+=ch)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+ch));
+          base64=btoa(bin);
+        } else {
+          // Re-save with pdf-lib to strip bloat (removes unused objects, compresses)
+          var srcDoc=await PDFLib.PDFDocument.load(raw,{ignoreEncryption:true});
+          var pageCount=srcDoc.getPageCount();
+          var newDoc=await PDFLib.PDFDocument.create();
+          var indices=[];for(var i=0;i<pageCount;i++)indices.push(i);
+          var copied=await newDoc.copyPages(srcDoc,indices);
+          copied.forEach(function(p){newDoc.addPage(p);});
+          var newBytes=await newDoc.save();
+          var newSizeMB=newBytes.byteLength/1024/1024;
+          console.log('PDF: '+pageCount+' pages, raw:'+rawSizeMB.toFixed(1)+'MB, re-saved:'+newSizeMB.toFixed(1)+'MB');
+          
+          // If still over 4MB after re-save, take first half + last quarter of pages
+          if(newSizeMB>4){
+            var half=Math.ceil(pageCount*0.6);
+            var lastQ=Math.floor(pageCount*0.8);
+            var newDoc2=await PDFLib.PDFDocument.create();
+            var idx2=[];
+            for(var i=0;i<half;i++)idx2.push(i);
+            for(var i=lastQ;i<pageCount;i++)idx2.push(i);
+            var copied2=await newDoc2.copyPages(srcDoc,idx2);
+            copied2.forEach(function(p){newDoc2.addPage(p);});
+            newBytes=await newDoc2.save();
+            console.log('Still large, trimmed to '+idx2.length+'/'+pageCount+' pages: '+(newBytes.byteLength/1024/1024).toFixed(1)+'MB');
+          }
+          
+          var bytes=new Uint8Array(newBytes);var bin='';var ch=8192;
+          for(var i=0;i<bytes.length;i+=ch)bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+ch));
+          base64=btoa(bin);
+        }
+      }catch(err){
+        console.error('PDF error:',err);
+        // Last resort: raw read
+        var r2=new FileReader();
+        r2.onload=function(e2){doExtract(e2.target.result.split(',')[1],ext,msgDiv,li);};
+        r2.readAsDataURL(file);return;
+      }
     } else {
       base64=e.target.result.split(',')[1];
     }
-
-    try{
-      // Send to doc-reader (same function as development chat — handles large files)
-      var res=await fetch('/.netlify/functions/doc-reader',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({fileBase64:base64,fileType:ext,docType:'valuation-unit-schedule'})
-      });
-      clearInterval(li);
-      var t=document.getElementById('ai-typing');if(t)t.remove();
-
-      if(!res.ok){
-        msgDiv.innerHTML+='<div class="ai-bot" style="color:var(--red)">Error processing file ('+res.status+'). Try a smaller file or screenshot of the unit schedule page.</div>';
-        msgDiv.scrollTop=msgDiv.scrollHeight;return;
-      }
-      var data=await res.json();
-      if(data.error){msgDiv.innerHTML+='<div class="ai-bot" style="color:var(--red)">'+data.error+'</div>';msgDiv.scrollTop=msgDiv.scrollHeight;return;}
-
-      // Extract units from doc-reader response
-      var units=[];
-      if(data.unitBreakdown&&data.unitBreakdown.length>0){
-        units=data.unitBreakdown.map(function(u){return{
-          lot:u.lot||u.unit||u.type||'',addr:u.address||data.address||'',area:u.area||u.landArea||0,
-          br:u.beds||u.bedrooms||'',bath:u.baths||u.bathrooms||'',park:u.parking||u.cars||'',
-          intArea:u.internalArea||u.internal||0,val:u.value||u.price||u.valuation||0,
-          dateAdded:'',salePrice:u.price||u.value||u.valuation||0,forecastSale:'',actualSale:''
-        };});
-      }
-      if(units.length===0&&data.units&&typeof data.units==='number'&&data.avgPrice){
-        for(var i=0;i<data.units;i++){
-          units.push({lot:''+(i+1),addr:data.address||'',area:0,br:'',bath:'',park:'',intArea:0,val:data.avgPrice,dateAdded:'',salePrice:data.avgPrice,forecastSale:'',actualSale:''});
-        }
-      }
-
-      if(units.length>0){
-        document.getElementById('rs-unit-body').innerHTML='';rsUnitId=0;
-        units.forEach(function(u){addRSUnit(u);});
-        formatAllDollars();calcRes();
-        var summary='✓ Extracted **'+units.length+' units** from your valuation';
-        if(data.address)summary+=' — '+data.address;
-        if(data.borrowerName){
-          document.getElementById('rs-model-name').value=data.borrowerName+(data.address?' — '+data.address:'');
-          summary+='<br>Borrower: '+data.borrowerName;
-        }
-        summary+='<br><br>Check the **Security Pool** tab to review and edit the unit details. You can adjust sale prices, forecast sale dates, and add/remove units.';
-        msgDiv.innerHTML+='<div class="ai-bot">'+summary.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')+'</div>';
-      } else if(data.creditNarrative){
-        msgDiv.innerHTML+='<div class="ai-bot">I extracted deal information but couldn\'t find a unit schedule. Here\'s what I found:<br><br>'+data.creditNarrative.substring(0,500)+'<br><br>Try uploading a screenshot of just the unit/lot schedule page from the valuation.</div>';
-      } else {
-        msgDiv.innerHTML+='<div class="ai-bot">I couldn\'t find unit details in this document. Try uploading:<br>• The unit schedule page from a valuation<br>• A screenshot of the lot/unit pricing table<br>• The schedule of values from a QS report</div>';
-      }
-      msgDiv.scrollTop=msgDiv.scrollHeight;
-
-    }catch(e){
-      clearInterval(li);var t=document.getElementById('ai-typing');if(t)t.remove();
-      msgDiv.innerHTML+='<div class="ai-bot" style="color:var(--red)">Upload failed. Please try again.</div>';
-      msgDiv.scrollTop=msgDiv.scrollHeight;console.error(e);
-    }
+    doExtract(base64,ext,msgDiv,li);
   };
   if(ext==='pdf')reader.readAsArrayBuffer(file);
   else reader.readAsDataURL(file);
+}
+
+async function doExtract(base64,ext,msgDiv,li){
+  try{
+    var res=await fetch('/.netlify/functions/doc-reader',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({fileBase64:base64,fileType:ext,docType:'valuation-unit-schedule'})
+    });
+    clearInterval(li);
+    var t=document.getElementById('ai-typing');if(t)t.remove();
+
+    if(!res.ok){
+      msgDiv.innerHTML+='<div class="ai-bot" style="color:var(--red)">Error '+res.status+'. The file may be too large even after compression. Try uploading a screenshot of just the unit schedule page.</div>';
+      msgDiv.scrollTop=msgDiv.scrollHeight;return;
+    }
+    var data=await res.json();
+    if(data.error){msgDiv.innerHTML+='<div class="ai-bot" style="color:var(--red)">'+data.error+'</div>';msgDiv.scrollTop=msgDiv.scrollHeight;return;}
+
+    var units=[];
+    if(data.unitBreakdown&&data.unitBreakdown.length>0){
+      units=data.unitBreakdown.map(function(u){return{
+        lot:u.lot||u.unit||u.type||'',addr:u.address||data.address||'',area:u.area||u.landArea||0,
+        br:u.beds||u.bedrooms||'',bath:u.baths||u.bathrooms||'',park:u.parking||u.cars||'',
+        intArea:u.internalArea||u.internal||0,val:u.value||u.price||u.valuation||0,
+        dateAdded:'',salePrice:u.price||u.value||u.valuation||0,forecastSale:'',actualSale:''
+      };});
+    }
+    if(units.length===0&&data.units&&typeof data.units==='number'&&data.avgPrice){
+      for(var i=0;i<data.units;i++){
+        units.push({lot:''+(i+1),addr:data.address||'',area:0,br:'',bath:'',park:'',intArea:0,val:data.avgPrice,dateAdded:'',salePrice:data.avgPrice,forecastSale:'',actualSale:''});
+      }
+    }
+
+    if(units.length>0){
+      document.getElementById('rs-unit-body').innerHTML='';rsUnitId=0;
+      units.forEach(function(u){addRSUnit(u);});
+      formatAllDollars();calcRes();
+      var summary='✓ Extracted <strong>'+units.length+' units</strong>';
+      if(data.address)summary+=' — '+data.address;
+      if(data.borrowerName){document.getElementById('rs-model-name').value=data.borrowerName+(data.address?' — '+data.address:'');}
+      summary+='<br><br>Check the <strong>Security Pool</strong> tab to review.';
+      msgDiv.innerHTML+='<div class="ai-bot">'+summary+'</div>';
+    } else if(data.creditNarrative){
+      msgDiv.innerHTML+='<div class="ai-bot">I found deal info but no unit schedule:<br><br>'+data.creditNarrative.substring(0,500)+'<br><br>Try a screenshot of the unit/lot pricing table.</div>';
+    } else {
+      msgDiv.innerHTML+='<div class="ai-bot">Couldn\'t find unit details. Try uploading a screenshot of the unit schedule page from the valuation.</div>';
+    }
+    msgDiv.scrollTop=msgDiv.scrollHeight;
+  }catch(e){
+    clearInterval(li);var t=document.getElementById('ai-typing');if(t)t.remove();
+    msgDiv.innerHTML+='<div class="ai-bot" style="color:var(--red)">Failed. Try a screenshot instead.</div>';
+    msgDiv.scrollTop=msgDiv.scrollHeight;console.error(e);
+  }
 }
 
 // ── CALC ENGINE ──
@@ -1708,7 +1748,9 @@ async function sendAI(){
 }
 
 // ── INIT ──
-window.addEventListener('load',async function(){initOG();initBTL();initUnits();initCosts();initRSUnits();initRSHold();setMode('commercial');formatAllDollars();calc();calcRes();await initAuth();});
+window.addEventListener('load',async function(){initOG();initBTL();initUnits();initCosts();initRSUnits();initRSHold();setMode('commercial');formatAllDollars();calc();calcRes();await initAuth();
+setTimeout(function(){toggleAI();},1500);
+});
 </script>
 </body>
 </html>
