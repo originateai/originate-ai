@@ -1216,6 +1216,13 @@ function rsUploadValuation(){
   var inp=document.createElement('input');inp.type='file';inp.accept='.pdf,.jpg,.jpeg,.png';
   inp.onchange=async function(){
     var file=inp.files[0];if(!file)return;
+
+    // Check file size — Netlify Pro limit is ~5MB for base64
+    if(file.size > 4 * 1024 * 1024){
+      sv('rs-sv-status','File too large (max 4MB). Try a smaller file or screenshot.');
+      return;
+    }
+
     sv('rs-sv-status','Reading file...');
     var reader=new FileReader();
     reader.onload=async function(){
@@ -1227,6 +1234,7 @@ function rsUploadValuation(){
           method:'POST',headers:{'Content-Type':'application/json'},
           body:JSON.stringify({fileBase64:base64,fileType:ext})
         });
+        if(!res.ok){sv('rs-sv-status','Error: '+res.status);return;}
         var data=await res.json();
         if(data.success&&data.data&&data.data.units&&data.data.units.length>0){
           document.getElementById('rs-unit-body').innerHTML='';rsUnitId=0;
@@ -1239,8 +1247,8 @@ function rsUploadValuation(){
           sv('rs-sv-status','✓ '+summary);
           if(data.data.projectName)document.getElementById('rs-model-name').value=data.data.projectName+' — Residual Stock';
         } else {
-          sv('rs-sv-status','No units found');
-          if(data.raw)console.log('Raw:',data.raw);
+          sv('rs-sv-status','No units found in document');
+          if(data.error)console.error('Extraction:',data.error);
         }
       }catch(e){sv('rs-sv-status','Upload failed');console.error(e);}
     };
