@@ -29,8 +29,10 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--white);
 .nav-links{display:flex;gap:32px;align-items:center}
 .nav-links a{font-size:14px;color:var(--grey600);text-decoration:none;font-weight:500;transition:color 0.2s}
 .nav-links a:hover{color:var(--teal)}
-.nav-cta{padding:9px 20px;background:var(--teal);color:white;border-radius:var(--radius);font-size:13px;font-weight:600;text-decoration:none;transition:all 0.2s;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
-.nav-cta:hover{background:var(--teal-dark)}
+.nav-cta{padding:9px 20px;background:var(--teal);color:#ffffff;border-radius:var(--radius);font-size:13px;font-weight:600;text-decoration:none;transition:all 0.2s;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.nav-cta:hover{background:var(--teal-dark);color:#ffffff}
+.nav-links a.nav-cta{color:#ffffff}
+.nav-links a.nav-cta:hover{color:#ffffff}
 
 /* HERO */
 .hero{padding:140px 40px 80px;max-width:1100px;margin:0 auto;text-align:center}
@@ -39,9 +41,9 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--white);
 .hero h1 em{font-style:normal;color:var(--teal)}
 .hero p{font-size:19px;color:var(--grey500);line-height:1.7;max-width:600px;margin:0 auto 36px}
 .hero-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-.btn-primary{padding:14px 32px;background:var(--teal);color:white;border-radius:var(--radius);font-size:15px;font-weight:600;text-decoration:none;transition:all 0.2s;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-primary{padding:14px 32px;background:var(--teal);color:#ffffff;border-radius:var(--radius);font-size:15px;font-weight:600;text-decoration:none;transition:all 0.2s;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;min-width:220px;text-align:center;box-sizing:border-box}
 .btn-primary:hover{background:var(--teal-dark);transform:translateY(-1px)}
-.btn-secondary{padding:14px 32px;background:var(--white);color:var(--grey700);border:1px solid var(--grey200);border-radius:var(--radius);font-size:15px;font-weight:500;text-decoration:none;transition:all 0.2s;cursor:pointer;font-family:'DM Sans',sans-serif}
+.btn-secondary{padding:14px 32px;background:var(--white);color:var(--grey700);border:1px solid var(--grey200);border-radius:var(--radius);font-size:15px;font-weight:500;text-decoration:none;transition:all 0.2s;cursor:pointer;font-family:'DM Sans',sans-serif;min-width:220px;text-align:center;box-sizing:border-box}
 .btn-secondary:hover{border-color:var(--grey300);background:var(--grey50)}
 .hero-sub{margin-top:16px;font-size:13px;color:var(--grey500)}
 
@@ -104,7 +106,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--white);
     <a href="#how">How it works</a>
     <a href="#features">Features</a>
     <a href="login.html">Sign In</a>
-    <a href="development-chat.html" class="nav-cta">Get started →</a>
+    <a href="get-started.html" class="nav-cta">Get started →</a>
   </div>
 </nav>
 
@@ -114,8 +116,8 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--white);
   <h1>Get your development<br>finance <em>sorted in minutes</em></h1>
   <p>Upload your project documents and our AI builds your Funding Request automatically — or answer a few guided questions. Either way, you'll get a full feasibility, lender matching, and indicative term sheet.</p>
   <div class="hero-actions">
-    <a href="development-chat.html?mode=ai" class="btn-primary">✨ Fast-track with AI →</a>
-    <a href="development-chat.html" class="btn-secondary">Enter manually</a>
+    <a href="get-started.html?mode=ai" class="btn-primary">✨ Fast-track with AI →</a>
+    <a href="get-started.html" class="btn-secondary">Enter manually</a>
   </div>
   <div class="hero-sub">Free to use · No obligation · Upload a valuation or financials to get started</div>
 </section>
@@ -200,7 +202,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--white);
 <section class="cta-section">
   <h2>Ready to originate your next deal?</h2>
   <p>Upload your project documents and let AI do the heavy lifting — or answer a few quick questions. Your Funding Request will be ready in minutes.</p>
-  <a href="development-chat.html?mode=ai" class="btn-white">✨ Fast-track with AI →</a>
+  <a href="get-started.html?mode=ai" class="btn-white">✨ Fast-track with AI →</a>
 </section>
 
 <!-- FOOTER -->
