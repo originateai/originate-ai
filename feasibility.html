@@ -148,7 +148,17 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 .credit-box.warn{background:rgba(217,119,6,0.08);border:1.5px solid var(--amber);color:var(--amber)}
 .credit-box.bad{background:rgba(220,38,38,0.06);border:1.5px solid var(--red);color:var(--red)}
 .hidden{display:none!important}
-@media(max-width:768px){.container{padding:16px}.nav{padding:0 16px}.tab-bar{padding:0 16px}.save-bar{padding:8px 16px;flex-wrap:wrap}.summary-grid{grid-template-columns:1fr 1fr}.adopted-banner{grid-template-columns:1fr 1fr}}
+/* Parent product tabs */
+.product-bar{background:var(--grey900);display:flex;gap:0;padding:0 40px;overflow-x:auto}
+.product-tab{padding:12px 22px;font-size:13px;font-weight:500;color:rgba(255,255,255,0.5);cursor:pointer;border-bottom:3px solid transparent;transition:all 0.2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;white-space:nowrap}
+.product-tab:hover{color:rgba(255,255,255,0.8)}
+.product-tab.active{color:white;border-bottom-color:var(--teal);font-weight:600}
+.product-tab.disabled{color:rgba(255,255,255,0.25);cursor:default}
+.product-tab.disabled:hover{color:rgba(255,255,255,0.25)}
+.coming-soon{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;color:var(--muted);text-align:center}
+.coming-soon h2{font-family:'Source Serif 4',serif;font-size:28px;font-weight:700;color:var(--grey700);margin-bottom:8px}
+.coming-soon p{font-size:14px;max-width:400px}
+@media(max-width:768px){.container{padding:16px}.nav{padding:0 16px}.tab-bar{padding:0 16px}.product-bar{padding:0 16px}.save-bar{padding:8px 16px;flex-wrap:wrap}.summary-grid{grid-template-columns:1fr 1fr}.adopted-banner{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -166,6 +176,16 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
     <a href="portal.html" class="nav-link">← Portal</a>
   </div>
 </nav>
+<div class="product-bar">
+  <button class="product-tab active" onclick="showProduct('development')">Development</button>
+  <button class="product-tab" onclick="showProduct('residual')">Residual Stock</button>
+  <button class="product-tab disabled" onclick="showProduct('investment')">Investment</button>
+  <button class="product-tab disabled" onclick="showProduct('site')">Site</button>
+  <button class="product-tab disabled" onclick="showProduct('bridging')">Bridging</button>
+</div>
+
+<!-- DEVELOPMENT SUB-TABS -->
+<div id="product-development">
 <div class="tab-bar">
   <button class="tab active" onclick="showTab('assumptions')">① Assumptions</button>
   <button class="tab" onclick="showTab('revenue')">② Revenue</button>
@@ -398,11 +418,166 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
   </div>
 </div>
 
+</div><!-- end product-development -->
+
+<!-- RESIDUAL STOCK MODEL -->
+<div id="product-residual" class="hidden">
+<div class="tab-bar">
+  <button class="tab active" onclick="showResTab('rs-facility')">① Facility</button>
+  <button class="tab" onclick="showResTab('rs-stock')">② Security Pool</button>
+  <button class="tab" onclick="showResTab('rs-holding')">③ Costs</button>
+  <button class="tab" onclick="showResTab('rs-cashflow')">④ Cash Flow</button>
+  <button class="tab" onclick="showResTab('rs-results')">⑤ Results</button>
+</div>
+<div class="save-bar">
+  <input class="mn" id="rs-model-name" placeholder="Model name..." value="Residual Stock Model">
+  <button class="sv-btn sv-p" onclick="saveResModel()">💾 Save</button>
+  <button class="sv-btn sv-s" onclick="rsUploadValuation()">📄 Upload Valuation (AI)</button>
+  <span class="sv-status" id="rs-sv-status"></span>
+</div>
+<div class="container">
+
+  <!-- RS TAB 1: FACILITY -->
+  <div id="rs-facility">
+    <div class="section"><div class="section-head">Facility Terms</div>
+      <div class="row"><span class="row-label">Drawdown Date</span><input class="inp" id="rs-drawdown-date" type="date" value="2025-02-13" style="width:150px" onchange="calcRes()"></div>
+      <div class="row"><span class="row-label">Loan Maturity</span><input class="inp" id="rs-maturity-date" type="date" value="2026-08-31" style="width:150px" onchange="calcRes()"></div>
+      <div class="row"><span class="row-label">Initial LVR</span><input class="inp" id="rs-init-lvr" type="number" value="70" step="1" style="width:80px" onchange="calcRes()"><span class="pct">%</span></div>
+      <div class="row sub"><span class="row-label">Initial Cash Advance</span><span class="row-value" id="rs-init-advance" style="color:var(--teal);font-size:16px;font-weight:700">—</span></div>
+    </div>
+    <div class="section"><div class="section-head">LVR Covenants</div>
+      <div class="row"><span class="row-label">LVR Threshold (target)</span><input class="inp" id="rs-lvr-threshold" type="number" value="55" step="1" style="width:80px" onchange="calcRes()"><span class="pct">%</span></div>
+      <div class="row"><span class="row-label">Paid to Lender below LVR</span><input class="inp" id="rs-lvr-paid" type="number" value="65" step="1" style="width:80px" onchange="calcRes()"><span class="pct">%</span></div>
+    </div>
+    <div class="section"><div class="section-head">Interest</div>
+      <div class="row"><span class="row-label">Interest Margin</span><input class="inp" id="rs-margin" type="number" value="7.7" step="0.1" style="width:80px" onchange="calcRes()"><span class="pct">%</span></div>
+      <div class="row"><span class="row-label">Interest Floor</span><input class="inp" id="rs-floor" type="number" value="12.0" step="0.1" style="width:80px" onchange="calcRes()"><span class="pct">%</span></div>
+      <div class="row"><span class="row-label">Base Rate (BBSW 3m)</span><input class="inp" id="rs-bbsw" type="number" value="4.2" step="0.1" style="width:80px" onchange="calcRes()"><span class="pct">%</span></div>
+      <div class="row sub"><span class="row-label">All-in Rate (margin + base)</span><span class="row-value" id="rs-allin-rate">—</span></div>
+      <div class="row sub"><span class="row-label">Applied Rate (max of all-in vs floor)</span><span class="row-value" id="rs-applied-rate" style="font-weight:700">—</span></div>
+      <div class="row"><span class="row-label">Capitalise Interest?</span>
+        <label class="toggle"><input type="checkbox" id="rs-cap-interest" checked onchange="calcRes()"><span class="toggle-track"></span></label>
+      </div>
+    </div>
+    <div class="section"><div class="section-head">Selling Costs</div>
+      <div class="row"><span class="row-label">Selling Costs (% of sale price)</span><input class="inp" id="rs-sell-pct" type="number" value="1.35" step="0.05" style="width:80px" onchange="calcRes()"><span class="pct">%</span></div>
+    </div>
+    <div class="section"><div class="section-head">Rental Income (optional)</div>
+      <div class="row"><span class="row-label">Lease Unsold Units?</span>
+        <label class="toggle"><input type="checkbox" id="rs-lease-on" onchange="calcRes()"><span class="toggle-track"></span></label>
+      </div>
+      <div class="row"><span class="row-label">Avg Weekly Rent</span><input class="inp dollar" id="rs-weekly-rent" type="text" value="$750" style="width:120px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calcRes()"></div>
+      <div class="row"><span class="row-label">Vacancy Allowance</span><input class="inp" id="rs-rent-vac" type="number" value="5" style="width:80px" onchange="calcRes()"><span class="pct">%</span></div>
+    </div>
+  </div>
+
+  <!-- RS TAB 2: SECURITY POOL (unit-by-unit) -->
+  <div id="rs-stock" class="hidden">
+    <div class="section"><div class="section-head">Security Pool — Unit Schedule<button class="add-btn" onclick="addRSUnit()">+ Add Unit</button></div>
+      <div class="ct-scroll"><table class="ct" id="rs-unit-table">
+        <thead><tr>
+          <th>Lot #</th>
+          <th style="min-width:120px">Address</th>
+          <th>Area (m²)</th>
+          <th>BR</th>
+          <th>Bath</th>
+          <th>Park</th>
+          <th>Int. (m²)</th>
+          <th>Val (excl GST)</th>
+          <th>Date Added</th>
+          <th>LVR</th>
+          <th>Debt Alloc.</th>
+          <th>Sale Price</th>
+          <th>Sell Costs</th>
+          <th>Net Proceeds</th>
+          <th>Forecast Sale</th>
+          <th>Actual Sale</th>
+          <th></th>
+        </tr></thead>
+        <tbody id="rs-unit-body"></tbody>
+        <tfoot>
+          <tr class="ct-sub">
+            <td colspan="2">Totals</td>
+            <td id="rs-tot-area">—</td><td colspan="4"></td>
+            <td id="rs-tot-val">—</td><td></td><td></td>
+            <td id="rs-tot-debt">—</td>
+            <td id="rs-tot-sale">—</td>
+            <td id="rs-tot-sellcost">—</td>
+            <td id="rs-tot-net">—</td>
+            <td colspan="3"></td>
+          </tr>
+        </tfoot>
+      </table></div>
+    </div>
+  </div>
+
+  <!-- RS TAB 3: HOLDING COSTS -->
+  <div id="rs-holding" class="hidden">
+    <div class="section"><div class="section-head">Monthly Holding Costs (per unsold unit)<button class="add-btn" onclick="addHoldCost()">+ Add</button></div>
+      <div id="rs-hold-list"></div>
+      <div class="row sub"><span class="row-label">Total per Unit / Month</span><span class="row-value" id="rs-hold-total" style="color:var(--red)">—</span></div>
+    </div>
+  </div>
+
+  <!-- RS TAB 4: CASH FLOW -->
+  <div id="rs-cashflow" class="hidden">
+    <div class="summary-grid" id="rs-cf-cards"></div>
+    <div class="section"><div class="section-head">Security & Debt Balance</div>
+      <div style="padding:20px"><div class="bar-chart" id="rs-cf-bars"></div>
+        <div class="bar-legend">
+          <span><span class="bar-legend-dot" style="background:var(--teal)"></span>Security Pool</span>
+          <span><span class="bar-legend-dot" style="background:var(--grey700)"></span>Loan Balance</span>
+        </div>
+      </div>
+    </div>
+    <div class="section"><div class="section-head">Monthly Detail</div>
+      <div class="cf-scroll"><table class="cf"><thead id="rs-cf-thead"></thead><tbody id="rs-cf-tbody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- RS TAB 5: RESULTS -->
+  <div id="rs-results" class="hidden">
+    <div class="adopted-banner" id="rs-banner" style="grid-template-columns:repeat(4,1fr)"></div>
+    <div class="summary-grid" id="rs-ret-cards"></div>
+    <div class="section"><div class="section-head">Reconciliation</div><div id="rs-waterfall"></div></div>
+    <div class="section" style="margin-top:16px"><div class="section-head">Lender Returns</div>
+      <div class="row sub"><span class="row-label">Loan XIRR</span><span class="row-value" id="rs-xirr" style="font-size:16px;font-weight:700">—</span></div>
+    </div>
+  </div>
+
+</div>
+</div><!-- end product-residual -->
+
+<!-- PLACEHOLDERS -->
+<div id="product-investment" class="hidden">
+  <div class="container"><div class="coming-soon"><h2>Investment Model</h2><p>Income-producing asset analysis with yield metrics, WALE, cap rate sensitivity, and DCF valuation. Coming soon.</p></div></div>
+</div>
+<div id="product-site" class="hidden">
+  <div class="container"><div class="coming-soon"><h2>Site Acquisition</h2><p>Pre-DA site feasibility with zoning analysis, GFA calculations, and highest-and-best-use modelling. Coming soon.</p></div></div>
+</div>
+<div id="product-bridging" class="hidden">
+  <div class="container"><div class="coming-soon"><h2>Bridging Finance</h2><p>Short-term bridging loan analysis with exit strategy modelling, LVR waterfall, and interest capitalisation. Coming soon.</p></div></div>
 </div>
 
 <script>
 "use strict";
 var MODE="commercial",MEZZ=false,PREF=false;
+var PRODUCT="development";
+
+// ── Product Switching ──
+function showProduct(p){
+  if(p!=='development'&&p!=='residual')return;
+  PRODUCT=p;
+  ['development','residual','investment','site','bridging'].forEach(function(id){
+    var el=document.getElementById('product-'+id);if(el)el.classList.toggle('hidden',id!==p);
+  });
+  document.querySelectorAll('.product-tab').forEach(function(b){
+    var match=(p==='development'&&b.textContent==='Development')||(p==='residual'&&b.textContent==='Residual Stock');
+    b.classList.toggle('active',match);
+  });
+  if(p==='residual')calcRes();
+  if(p==='development')calc();
+}
 
 // ── Formatters ──
 function fd(v){if(v==null||isNaN(v))return"—";return new Intl.NumberFormat("en-AU",{style:"currency",currency:"AUD",minimumFractionDigits:0,maximumFractionDigits:0}).format(v);}
@@ -785,7 +960,11 @@ async function initAuth(){
     if(typeof SUPABASE_CONFIG==='undefined'||typeof supabase==='undefined')return;
     sbC=supabase.createClient(SUPABASE_CONFIG.url,SUPABASE_CONFIG.key);
     var s=await sbC.auth.getSession();
-    if(s.data&&s.data.session){currentUserId=s.data.session.user.id;}
+    if(!s.data||!s.data.session){
+      window.location.href='login.html?redirect='+encodeURIComponent(window.location.href);
+      return;
+    }
+    currentUserId=s.data.session.user.id;
     var p=new URLSearchParams(window.location.search);
     var lid=p.get('model');
     var did=p.get('deal');
@@ -920,8 +1099,371 @@ function hideML(){document.getElementById('ml-list').classList.add('hidden');}
 function newModel(){currentModelId=null;document.getElementById('model-name').value='Untitled Model';initOG();initBTL();initUnits();initCosts();setMode('commercial');calc();setSt('New model');}
 document.addEventListener('click',function(e){if(!e.target.closest('.ml-drop'))hideML();});
 
+// ══════════════════════════════════════════════════
+// RESIDUAL STOCK MODEL
+// ══════════════════════════════════════════════════
+
+var RS_TABS=['rs-facility','rs-stock','rs-holding','rs-cashflow','rs-results'];
+function showResTab(t){RS_TABS.forEach(function(id){document.getElementById(id).classList.toggle('hidden',id!==t);});
+document.querySelectorAll('#product-residual .tab').forEach(function(b,i){b.classList.toggle('active',RS_TABS[i]===t);});calcRes();}
+
+// ── Default units from Box Hill model ──
+var rsUnitId=0;
+var defaultRSUnits=[
+  {lot:'1',addr:'Turffontein Ave',area:302,br:'',bath:'',park:'',intm:'',val:798153,added:'2025-02-13',saleFc:'2026-08-31',saleAct:''},
+  {lot:'3',addr:'Turffontein Ave',area:301,br:'',bath:'',park:'',intm:'',val:795599,added:'2025-02-13',saleFc:'2026-08-31',saleAct:''},
+  {lot:'5',addr:'Turffontein Ave',area:301,br:'',bath:'',park:'',intm:'',val:794577,added:'2025-02-13',saleFc:'2026-08-31',saleAct:''},
+  {lot:'7',addr:'Turffontein Ave',area:318,br:'',bath:'',park:'',intm:'',val:822019,added:'2025-02-13',saleFc:'2026-08-31',saleAct:''},
+  {lot:'9',addr:'Turffontein Ave',area:319,br:'',bath:'',park:'',intm:'',val:824021,added:'2025-02-13',saleFc:'2026-08-31',saleAct:''},
+  {lot:'2',addr:'Turffontein Ave',area:355,br:'',bath:'',park:'',intm:'',val:702853,added:'2025-02-13',saleFc:'2026-08-31',saleAct:''},
+  {lot:'9',addr:'Mount Carmel Drv',area:331,br:'',bath:'',park:'',intm:'',val:838398,added:'2025-02-13',saleFc:'2026-08-31',saleAct:''},
+  {lot:'11',addr:'Mount Carmel Drv',area:331,br:'',bath:'',park:'',intm:'',val:838398,added:'2025-02-13',saleFc:'2026-08-31',saleAct:''},
+  {lot:'13',addr:'Mount Carmel Drv',area:331,br:'',bath:'',park:'',intm:'',val:838153,added:'2025-02-13',saleFc:'2026-08-31',saleAct:''},
+  {lot:'15',addr:'Mount Carmel Drv',area:331,br:'',bath:'',park:'',intm:'',val:838153,added:'2025-02-13',saleFc:'2026-03-26',saleAct:'2026-03-26'},
+  {lot:'17',addr:'Mount Carmel Drv',area:368,br:'',bath:'',park:'',intm:'',val:853250,added:'2025-02-13',saleFc:'2026-08-31',saleAct:''},
+  {lot:'19',addr:'Mount Carmel Drv',area:368,br:'',bath:'',park:'',intm:'',val:853250,added:'2025-02-13',saleFc:'2026-03-06',saleAct:'2026-03-06'},
+  {lot:'21',addr:'Mount Carmel Drv',area:368,br:'',bath:'',park:'',intm:'',val:853025,added:'2025-02-13',saleFc:'2026-08-31',saleAct:''},
+  {lot:'23',addr:'Mount Carmel Drv',area:331,br:'',bath:'',park:'',intm:'',val:838153,added:'2025-02-13',saleFc:'2026-08-31',saleAct:''}
+];
+
+function initRSUnits(){document.getElementById('rs-unit-body').innerHTML='';rsUnitId=0;
+defaultRSUnits.forEach(function(u){addRSUnit(u);});}
+
+function addRSUnit(data){
+  rsUnitId++;var d=data||{lot:'',addr:'',area:0,br:'',bath:'',park:'',intm:'',val:0,added:'',saleFc:'',saleAct:''};var id=rsUnitId;
+  var tr=document.createElement('tr');tr.id='rsu-'+id;
+  tr.innerHTML=
+    '<td><input class="ct-inp" style="width:40px;text-align:left" value="'+d.lot+'" onchange="calcRes()"></td>'
+    +'<td><input class="ct-inp" style="width:110px;text-align:left" value="'+d.addr+'" onchange="calcRes()"></td>'
+    +'<td><input class="ct-inp" type="number" value="'+(d.area||0)+'" style="width:55px" onchange="calcRes()"></td>'
+    +'<td><input class="ct-inp" style="width:30px" value="'+d.br+'" onchange="calcRes()"></td>'
+    +'<td><input class="ct-inp" style="width:30px" value="'+d.bath+'" onchange="calcRes()"></td>'
+    +'<td><input class="ct-inp" style="width:30px" value="'+d.park+'" onchange="calcRes()"></td>'
+    +'<td><input class="ct-inp" type="number" value="'+(d.intm||0)+'" style="width:50px" onchange="calcRes()"></td>'
+    +'<td><input class="ct-inp dollar" value="$'+(d.val||0).toLocaleString('en-AU')+'" style="width:95px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calcRes()"></td>'
+    +'<td><input class="ct-inp" type="date" value="'+(d.added||'')+'" style="width:115px" onchange="calcRes()"></td>'
+    +'<td class="rs-ulvr" id="rsu-lvr-'+id+'" style="font-size:11px">—</td>'
+    +'<td class="rs-udebt" id="rsu-debt-'+id+'" style="font-size:11px">—</td>'
+    +'<td><input class="ct-inp dollar" value="$'+((d.salePrice||d.val||0).toLocaleString('en-AU'))+'" style="width:95px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calcRes()"></td>'
+    +'<td class="rs-usellcost" id="rsu-sc-'+id+'" style="font-size:11px;color:var(--red)">—</td>'
+    +'<td class="rs-unet" id="rsu-net-'+id+'" style="font-size:11px;font-weight:600">—</td>'
+    +'<td><input class="ct-inp" type="date" value="'+(d.saleFc||'')+'" style="width:115px" onchange="calcRes()"></td>'
+    +'<td><input class="ct-inp" type="date" value="'+(d.saleAct||'')+'" style="width:115px" onchange="calcRes()"></td>'
+    +'<td><button class="rm-btn" onclick="document.getElementById(\'rsu-'+id+'\').remove();calcRes()">×</button></td>';
+  document.getElementById('rs-unit-body').appendChild(tr);
+}
+
+// ── Holding costs ──
+var rsHoldId=0;
+function initRSHold(){document.getElementById('rs-hold-list').innerHTML='';rsHoldId=0;
+[{n:'Council Rates',v:250},{n:'Insurance',v:150},{n:'Land Tax',v:200}].forEach(function(h){addHoldCost(h.n,h.v);});}
+
+function addHoldCost(name,val){
+  rsHoldId++;var id=rsHoldId;
+  var div=document.createElement('div');div.className='row';div.id='rsh-'+id;
+  div.innerHTML='<input class="inp" style="width:180px;text-align:left;flex:1" value="'+(name||'')+'" placeholder="Cost...">'
+    +'<input class="inp dollar" type="text" value="$'+((val||0).toLocaleString('en-AU'))+'" style="width:120px" onfocus="dfoc(this)" onblur="dblr(this)" oninput="calcRes()">'
+    +'<span class="pct">/ mth</span>'
+    +'<button class="rm-btn" onclick="document.getElementById(\'rsh-'+id+'\').remove();calcRes()">×</button>';
+  document.getElementById('rs-hold-list').appendChild(div);
+}
+
+function rsUploadValuation(){alert('Upload a valuation PDF and AI will extract unit details, valuations, and lot sizes. Coming soon.');}
+
+// ── CALC ENGINE ──
+// ── XIRR — Newton-Raphson ──
+function calcXIRR(cf,dates,guess){
+  if(!cf||cf.length<2)return null;
+  var hasP=false,hasN=false;cf.forEach(function(c){if(c>0)hasP=true;if(c<0)hasN=true;});
+  if(!hasP||!hasN)return null;
+  var rate=guess||0.1;var d0=dates[0].getTime();
+  function npv(r){var t=0;for(var i=0;i<cf.length;i++){var y=(dates[i].getTime()-d0)/(365.25*86400000);t+=cf[i]/Math.pow(1+r,y);}return t;}
+  function dnpv(r){var t=0;for(var i=0;i<cf.length;i++){var y=(dates[i].getTime()-d0)/(365.25*86400000);if(y===0)continue;t+=-y*cf[i]/Math.pow(1+r,y+1);}return t;}
+  for(var it=0;it<100;it++){var n=npv(rate);var dn=dnpv(rate);if(Math.abs(dn)<1e-10)break;var nr=rate-n/dn;if(Math.abs(nr-rate)<1e-8)return nr;rate=nr;if(rate<-0.99)rate=-0.99;if(rate>10)rate=10;}
+  return Math.abs(npv(rate))<1?rate:null;
+}
+
+function calcRes(){try{calcResInner();}catch(e){console.warn('ResCalc:',e);}}
+
+function calcResInner(){
+  var initLVR=parseFloat(document.getElementById('rs-init-lvr').value)/100||0.7;
+  var lvrThreshold=parseFloat(document.getElementById('rs-lvr-threshold').value)/100||0.55;
+  var lvrPaid=parseFloat(document.getElementById('rs-lvr-paid').value)/100||0.65;
+  var margin=parseFloat(document.getElementById('rs-margin').value)/100||0.077;
+  var floor=parseFloat(document.getElementById('rs-floor').value)/100||0.12;
+  var bbsw=parseFloat(document.getElementById('rs-bbsw').value)/100||0.042;
+  var capInterest=document.getElementById('rs-cap-interest').checked;
+  var sellPct=parseFloat(document.getElementById('rs-sell-pct').value)/100||0.0135;
+  var leaseOn=document.getElementById('rs-lease-on').checked;
+  var weeklyRent=pn(document.getElementById('rs-weekly-rent').value);
+  var rentVac=parseFloat(document.getElementById('rs-rent-vac').value)/100||0.05;
+
+  var drawdownDate=document.getElementById('rs-drawdown-date').value;
+  var maturityDate=document.getElementById('rs-maturity-date').value;
+
+  // Compute applied rate
+  var allinRate=bbsw+margin;
+  var appliedRate=Math.max(allinRate,floor);
+  sv('rs-allin-rate',fp(allinRate));
+  sv('rs-applied-rate',fp(appliedRate));
+
+  // Holding cost per unit per month
+  var holdPerUnit=0;
+  document.querySelectorAll('#rs-hold-list .row').forEach(function(r){var v=r.querySelectorAll('.inp');if(v.length>=2)holdPerUnit+=pn(v[1].value);});
+  sv('rs-hold-total',fd(holdPerUnit));
+
+  // Read units
+  var units=[];var totVal=0,totArea=0,totSale=0,totSellCost=0,totNet=0;
+  document.querySelectorAll('#rs-unit-body tr').forEach(function(tr,idx){
+    var inps=tr.querySelectorAll('.ct-inp');if(inps.length<12)return;
+    var val=pn(inps[7].value);
+    var salePrice=pn(inps[11].value);
+    var saleFc=inps[14].value;
+    var saleAct=inps[15].value;
+    var effectiveDate=saleAct||saleFc;
+    var area=parseInt(inps[2].value)||0;
+    var debt=val*initLVR;
+    var sc=salePrice*sellPct;
+    var net=salePrice-sc;
+
+    // Update display
+    var id=tr.id.replace('rsu-','');
+    sv('rsu-lvr-'+id,fp(initLVR));
+    sv('rsu-debt-'+id,fd(debt));
+    sv('rsu-sc-'+id,'-'+fd(sc));
+    sv('rsu-net-'+id,fd(net));
+
+    totVal+=val;totArea+=area;totSale+=salePrice;totSellCost+=sc;totNet+=net;
+
+    // Work out sale month relative to drawdown
+    var saleMonth=-1;
+    if(effectiveDate&&drawdownDate){
+      var dd=new Date(drawdownDate);var sd=new Date(effectiveDate);
+      saleMonth=Math.round((sd-dd)/(1000*60*60*24*30.44));
+      if(saleMonth<0)saleMonth=0;
+    }
+    units.push({val:val,debt:debt,salePrice:salePrice,sellCost:sc,netProceeds:net,saleMonth:saleMonth});
+  });
+
+  var totDebt=totVal*initLVR;
+  sv('rs-tot-area',totArea);sv('rs-tot-val',fd(totVal));sv('rs-tot-debt',fd(totDebt));
+  sv('rs-tot-sale',fd(totSale));sv('rs-tot-sellcost','-'+fd(totSellCost));sv('rs-tot-net',fd(totNet));
+  sv('rs-init-advance',fd(totDebt));
+
+  // Determine months from drawdown to maturity
+  var months=18;
+  if(drawdownDate&&maturityDate){
+    var dd=new Date(drawdownDate);var md=new Date(maturityDate);
+    months=Math.round((md-dd)/(1000*60*60*24*30.44));
+  }
+  if(months<1)months=1;if(months>120)months=120;
+
+  // Monthly arrays
+  var mSecOpen=new Array(months+1).fill(0);
+  var mSecAdd=new Array(months+1).fill(0);
+  var mSecSales=new Array(months+1).fill(0);
+  var mSecClose=new Array(months+1).fill(0);
+  var mNetProceeds=new Array(months+1).fill(0);
+  var mLoanOpen=new Array(months+1).fill(0);
+  var mLoanDraw=new Array(months+1).fill(0);
+  var mLoanRepay=new Array(months+1).fill(0);
+  var mLoanClose=new Array(months+1).fill(0);
+  var mLVRopen=new Array(months+1).fill(0);
+  var mLVRclose=new Array(months+1).fill(0);
+  var mInterest=new Array(months+1).fill(0);
+  var mHoldCost=new Array(months+1).fill(0);
+  var mRental=new Array(months+1).fill(0);
+  var unsoldCount=new Array(months+1).fill(units.length);
+
+  // M0: all units added to security, loan drawn
+  mSecAdd[0]=totVal;
+  mLoanDraw[0]=totDebt;
+
+  // Track sales per month
+  units.forEach(function(u){
+    if(u.saleMonth>=0&&u.saleMonth<=months){
+      mSecSales[u.saleMonth]+=u.val;
+      mNetProceeds[u.saleMonth]+=u.netProceeds;
+      for(var m=u.saleMonth;m<=months;m++)unsoldCount[m]--;
+    }
+  });
+
+  // Holding & rental
+  for(var m=0;m<=months;m++){
+    mHoldCost[m]=unsoldCount[m]*holdPerUnit;
+    if(leaseOn)mRental[m]=unsoldCount[m]*weeklyRent*4.33*(1-rentVac);
+  }
+
+  // Build loan schedule
+  var totalInterest=0;
+  for(var m=0;m<=months;m++){
+    // Security
+    mSecOpen[m]=m>0?mSecClose[m-1]:0;
+    mSecClose[m]=mSecOpen[m]+mSecAdd[m]-mSecSales[m];
+
+    // Loan
+    mLoanOpen[m]=m>0?mLoanClose[m-1]:0;
+    var bal=mLoanOpen[m]+mLoanDraw[m];
+
+    // Interest on balance
+    mInterest[m]=bal*(appliedRate/12);
+    totalInterest+=mInterest[m];
+
+    // LVR check
+    mLVRopen[m]=mSecOpen[m]>0?mLoanOpen[m]/mSecOpen[m]:0;
+
+    // Repayments from net sale proceeds
+    // If LVR above threshold, mandatory repayment of lvrPaid% of sale value
+    var repay=0;
+    if(mNetProceeds[m]>0){
+      var currentLVR=mSecClose[m]>0?(bal+mInterest[m])/mSecClose[m]:0;
+      if(currentLVR>lvrThreshold){
+        repay=Math.min(mNetProceeds[m],mSecSales[m]*lvrPaid);
+      } else {
+        repay=Math.min(mNetProceeds[m],mSecSales[m]*lvrThreshold);
+      }
+      repay=Math.max(repay,0);
+    }
+
+    // If capitalising interest, add to balance; otherwise treat as cash payment
+    if(capInterest){
+      mLoanClose[m]=bal+mInterest[m]-repay;
+    } else {
+      repay+=mInterest[m]; // interest paid from proceeds
+      mLoanClose[m]=bal-repay+mInterest[m];
+      // Recalc: repay includes interest
+      mLoanClose[m]=bal-Math.min(repay,bal);
+    }
+    mLoanRepay[m]=repay;
+    if(mLoanClose[m]<1)mLoanClose[m]=0;
+    mLVRclose[m]=mSecClose[m]>0?mLoanClose[m]/mSecClose[m]:0;
+  }
+
+  var peakDebt=Math.max.apply(null,mLoanClose);
+  var totalHold=mHoldCost.reduce(function(a,b){return a+b;},0);
+  var totalRent=mRental.reduce(function(a,b){return a+b;},0);
+  var finalDebt=mLoanClose[months];
+
+  // ── CARDS ──
+  document.getElementById('rs-cf-cards').innerHTML=
+    '<div class="scard neutral"><div class="sc-label">Units</div><div class="sc-value">'+units.length+'</div><div class="sc-sub">'+fd(totVal)+' collateral</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Initial Advance</div><div class="sc-value">'+fd(totDebt)+'</div><div class="sc-sub">'+fp(initLVR)+' LVR</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Peak Debt</div><div class="sc-value">'+fd(peakDebt)+'</div></div>'
+    +'<div class="scard '+(finalDebt<1?'ok':'bad')+'"><div class="sc-label">Remaining Debt</div><div class="sc-value">'+fd(finalDebt)+'</div></div>';
+
+  // ── BAR CHART ──
+  var maxV=Math.max(totVal,peakDebt)||1;
+  var bHtml='';
+  for(var m=0;m<=months;m++){
+    var secH=(mSecClose[m]/maxV)*160;
+    var debtH=(mLoanClose[m]/maxV)*160;
+    bHtml+='<div class="bar-col"><div style="display:flex;flex-direction:column-reverse;height:160px;width:100%">'
+      +'<div class="bar-seg" style="height:'+secH+'px;background:var(--teal);opacity:0.3"></div>'
+      +'<div class="bar-seg" style="height:'+debtH+'px;background:var(--grey700);position:absolute;bottom:0;width:100%"></div>'
+      +'</div><span class="bar-label">M'+m+'</span></div>';
+  }
+  document.getElementById('rs-cf-bars').innerHTML=bHtml;
+
+  // ── CF TABLE ──
+  var thH='<tr><th>Period</th>';for(var m=0;m<=months;m++)thH+='<th>M'+m+'</th>';thH+='<th>Total</th></tr>';
+  document.getElementById('rs-cf-thead').innerHTML=thH;
+
+  var cfLines=[
+    {l:'SECURITY POOL',sec:true},
+    {l:'Opening Security',d:mSecOpen,c:'var(--teal)'},
+    {l:'Additions',d:mSecAdd,c:'var(--teal)'},
+    {l:'Sales (removed)',d:mSecSales,c:'var(--red)',neg:true},
+    {l:'Closing Security',d:mSecClose,c:'var(--teal)',b:true},
+    {l:'NET SALE PROCEEDS',sec:true},
+    {l:'Net Proceeds',d:mNetProceeds,c:'var(--green)',b:true},
+    {l:'LOAN',sec:true},
+    {l:'Opening Balance',d:mLoanOpen,c:'var(--grey600)'},
+    {l:'Drawdowns',d:mLoanDraw,c:'var(--grey700)'},
+    {l:'Interest',d:mInterest,c:'var(--amber)'},
+    {l:'Repayments',d:mLoanRepay,c:'var(--green)',neg:true},
+    {l:'Closing Balance',d:mLoanClose,c:'var(--grey700)',b:true},
+    {l:'LVR',sec:true},
+    {l:'Opening LVR',d:mLVRopen,c:'var(--muted)',pct:true},
+    {l:'Closing LVR',d:mLVRclose,c:'var(--muted)',pct:true},
+    {l:'HOLDING',sec:true},
+    {l:'Unsold Units',d:unsoldCount,c:'var(--muted)'},
+    {l:'Holding Costs',d:mHoldCost,c:'var(--red)',neg:true},
+    {l:'Rental Income',d:mRental,c:'var(--teal)'}
+  ];
+
+  var tbH='';cfLines.forEach(function(li){
+    if(li.sec){tbH+='<tr class="cf-sec"><td>'+li.l+'</td>';for(var m=0;m<=months;m++)tbH+='<td></td>';tbH+='<td></td></tr>';return;}
+    tbH+='<tr class="'+(li.b?'cf-sub':'')+'"><td style="font-weight:'+(li.b?'600':'400')+'">'+li.l+'</td>';
+    var tot=0;for(var m=0;m<=months;m++){var v=li.d[m]||0;tot+=v;
+    if(li.pct){tbH+='<td style="color:'+li.c+'">'+fp(v)+'</td>';}
+    else{tbH+='<td style="color:'+li.c+'">'+(v===0?'—':(li.neg&&v>0?'-'+fd(v):fd(v)))+'</td>';}}
+    if(li.pct){tbH+='<td></td>';}else{tbH+='<td style="color:'+li.c+';font-weight:700">'+(li.neg&&tot>0?'-'+fd(tot):fd(tot))+'</td>';}
+    tbH+='</tr>';
+  });
+  document.getElementById('rs-cf-tbody').innerHTML=tbH;
+
+  // ── BANNER ──
+  document.getElementById('rs-banner').innerHTML=
+    '<div><div class="ab-label">Collateral</div><div class="ab-value">'+fd(totVal)+'</div></div>'
+    +'<div><div class="ab-label">Initial Advance</div><div class="ab-value">'+fd(totDebt)+'</div></div>'
+    +'<div><div class="ab-label">Total Interest</div><div class="ab-value">'+fd(totalInterest)+'</div></div>'
+    +'<div><div class="ab-label">Remaining Debt</div><div class="ab-value '+(finalDebt<1?'gn':'rd')+'">'+fd(finalDebt)+'</div></div>';
+
+  // ── RESULTS CARDS ──
+  document.getElementById('rs-ret-cards').innerHTML=
+    '<div class="scard neutral"><div class="sc-label">Gross Sales</div><div class="sc-value">'+fd(totSale)+'</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Selling Costs</div><div class="sc-value">'+fd(totSellCost)+'</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Holding Costs</div><div class="sc-value">'+fd(totalHold)+'</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Interest</div><div class="sc-value">'+fd(totalInterest)+'</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Rental Income</div><div class="sc-value" style="color:var(--teal)">'+fd(totalRent)+'</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Applied Rate</div><div class="sc-value">'+fp(appliedRate)+'</div></div>'
+    +'<div class="scard neutral"><div class="sc-label">Months</div><div class="sc-value">'+months+'</div></div>'
+    +'<div class="scard '+(finalDebt<1?'ok':'bad')+'"><div class="sc-label">Final Debt</div><div class="sc-value">'+fd(finalDebt)+'</div></div>';
+
+  // Waterfall
+  var wf=[
+    {l:'Opening Collateral (excl GST)',v:totVal},
+    {l:'Less: Selling Costs',v:-totSellCost,c:'red'},
+    {l:'Net Sale Proceeds',v:totNet,c:'green',b:true},
+    {l:'Less: Initial Advance',v:-totDebt,c:'red'},
+    {l:'Less: Interest (capitalised)',v:-totalInterest,c:'red'},
+    {l:'Less: Holding Costs',v:-totalHold,c:'red'},
+    {l:'Plus: Rental Income',v:totalRent,c:'green'},
+    {l:'Surplus / (Shortfall)',v:totNet-totDebt-totalInterest-totalHold+totalRent,c:totNet-totDebt-totalInterest-totalHold+totalRent>=0?'green':'red',b:true}
+  ];
+  document.getElementById('rs-waterfall').innerHTML=wf.map(function(w){
+    var c=w.c==='green'?'var(--green)':w.c==='red'?'var(--red)':'var(--text)';
+    return'<div class="row'+(w.b?' sub':'')+'"><span class="row-label">'+w.l+'</span><span class="row-value" style="color:'+c+';font-weight:'+(w.b?'700':'500')+'">'+fd(w.v)+'</span></div>';
+  }).join('');
+
+  // XIRR calculation — lender's perspective
+  // Cash flows: negative = money out (drawdown), positive = money in (repayments + interest)
+  var xirrFlows=[];
+  var xirrDates=[];
+  for(var m=0;m<=months;m++){
+    var d2=new Date(dDate.getTime()+m*30.44*86400000);
+    var cf=0;
+    if(loanDraw[m]>0) cf-=loanDraw[m]; // money out to borrower
+    if(loanRepay[m]>0) cf+=loanRepay[m]; // money back from borrower
+    if(!capInterest&&loanInterest[m]>0) cf+=loanInterest[m]; // interest payments received
+    if(cf!==0){xirrFlows.push(cf);xirrDates.push(d2);}
+  }
+  // Add final balance as a repayment at maturity if still outstanding
+  if(loanClose[months]>0){
+    var finalDate=new Date(dDate.getTime()+months*30.44*86400000);
+    var existingFinal=xirrDates.length>0&&xirrDates[xirrDates.length-1].getTime()===finalDate.getTime();
+    if(existingFinal){xirrFlows[xirrFlows.length-1]+=loanClose[months];}
+    else{xirrFlows.push(loanClose[months]);xirrDates.push(finalDate);}
+  }
+
+  var xirrResult=calcXIRR(xirrFlows,xirrDates);
+  sv('rs-xirr',xirrResult!==null?fp(xirrResult):'N/A');
+}
+
+function saveResModel(){sv('rs-sv-status','Coming soon');}
+
 // ── INIT ──
-window.addEventListener('load',async function(){initOG();initBTL();initUnits();initCosts();setMode('commercial');formatAllDollars();calc();await initAuth();});
+window.addEventListener('load',async function(){initOG();initBTL();initUnits();initCosts();initRSUnits();initRSHold();setMode('commercial');formatAllDollars();calc();calcRes();await initAuth();});
 </script>
 </body>
 </html>
