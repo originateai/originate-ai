@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>getkredit.ai — Get Started</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--teal:#0D9488;--teal-light:#14B8A6;--teal-dark:#0F766E;--teal-bg:#F0FDFA;--teal-subtle:#CCFBF1;--white:#fff;--grey50:#f8fafc;--grey100:#f1f5f9;--grey200:#e2e8f0;--grey500:#64748b;--grey600:#475569;--grey700:#334155;--grey800:#1e293b;--grey900:#0f172a;--text:#0f172a;--muted:#64748b;--border:#e2e8f0;--green:#059669;--red:#dc2626;--amber:#d97706;--radius:8px;--radius-lg:12px}
+body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey900);min-height:100vh;display:flex;flex-direction:column}
+.top-bar{padding:16px 32px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-family:'Source Serif 4',serif;font-size:22px;font-weight:700;color:white;text-decoration:none}.logo span{color:var(--teal-light)}
+.login-link{color:rgba(255,255,255,0.5);font-size:13px;text-decoration:none;padding:8px 16px;border:1px solid rgba(255,255,255,0.15);border-radius:var(--radius);transition:all 0.15s}.login-link:hover{color:white;border-color:rgba(255,255,255,0.3)}
+.chat-container{flex:1;display:flex;flex-direction:column;max-width:700px;width:100%;margin:0 auto;padding:0 20px 20px}
+.chat-header{text-align:center;padding:40px 0 30px}
+.chat-header h1{font-family:'Source Serif 4',serif;font-size:32px;font-weight:700;color:white;margin-bottom:8px}
+.chat-header p{color:rgba(255,255,255,0.5);font-size:15px}
+.messages{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:14px;padding-bottom:16px}
+.msg-bot{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);border-radius:16px 16px 16px 4px;padding:16px 20px;color:rgba(255,255,255,0.85);font-size:14px;line-height:1.65;max-width:85%}
+.msg-bot strong{color:var(--teal-light)}
+.msg-bot code{background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;font-size:12px}
+.msg-user{background:var(--teal);border-radius:16px 16px 4px 16px;padding:12px 18px;color:white;font-size:14px;line-height:1.5;max-width:85%;align-self:flex-end}
+.msg-typing{background:rgba(255,255,255,0.04);border-radius:16px 16px 16px 4px;padding:16px 20px;color:rgba(255,255,255,0.4);font-size:14px;max-width:85%}
+.msg-file{background:rgba(13,148,136,0.15);border:1px solid rgba(13,148,136,0.3);border-radius:12px 12px 4px 12px;padding:12px 18px;color:var(--teal-light);font-size:13px;align-self:flex-end;max-width:85%}
+/* Options */
+.options{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.opt-btn{padding:10px 18px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.8);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+.opt-btn:hover{background:var(--teal);border-color:var(--teal);color:white}
+/* Upload area */
+.upload-area{border:2px dashed rgba(255,255,255,0.15);border-radius:var(--radius-lg);padding:30px;text-align:center;cursor:pointer;transition:all 0.2s;margin-top:10px}
+.upload-area:hover{border-color:var(--teal);background:rgba(13,148,136,0.05)}
+.upload-area h3{color:rgba(255,255,255,0.7);font-size:14px;margin-bottom:6px}
+.upload-area p{color:rgba(255,255,255,0.3);font-size:12px}
+/* Input */
+.input-bar{display:flex;gap:10px;padding:12px 0;flex-shrink:0}
+.chat-input{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px 18px;color:white;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color 0.2s}
+.chat-input:focus{border-color:var(--teal)}
+.chat-input::placeholder{color:rgba(255,255,255,0.25)}
+.send-btn{background:var(--teal);border:none;border-radius:12px;padding:14px 24px;color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.15s}.send-btn:hover{background:var(--teal-dark)}
+.clip-btn{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:14px;color:rgba(255,255,255,0.5);font-size:16px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center}.clip-btn:hover{border-color:var(--teal);color:var(--teal-light)}
+/* Results card */
+.results-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:var(--radius-lg);padding:20px;margin-top:10px}
+.results-card h3{color:var(--teal-light);font-size:14px;font-weight:700;margin-bottom:12px}
+.rc-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);font-size:13px}
+.rc-row:last-child{border-bottom:none}
+.rc-val{color:white;font-weight:600;font-variant-numeric:tabular-nums}
+.rc-val.good{color:#6ee7b7}.rc-val.warn{color:#fbbf24}.rc-val.bad{color:#fca5a5}
+/* Paywall */
+.paywall{background:linear-gradient(135deg,rgba(13,148,136,0.15),rgba(13,148,136,0.05));border:1px solid rgba(13,148,136,0.3);border-radius:var(--radius-lg);padding:28px;text-align:center;margin-top:16px}
+.paywall h2{font-family:'Source Serif 4',serif;font-size:22px;color:white;margin-bottom:8px}
+.paywall p{color:rgba(255,255,255,0.5);font-size:13px;margin-bottom:20px;line-height:1.5}
+.paywall-btn{display:inline-block;padding:14px 36px;background:var(--teal);color:white;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;transition:background 0.15s}.paywall-btn:hover{background:var(--teal-dark)}
+.paywall-features{display:flex;gap:20px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+.paywall-feat{color:rgba(255,255,255,0.6);font-size:12px}
+.paywall-feat::before{content:'✓ ';color:var(--teal-light)}
+@media(max-width:768px){.chat-header h1{font-size:24px}.chat-container{padding:0 12px 12px}.messages{gap:10px}}
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <a class="logo" href="index.html">get<span>kredit.ai</span></a>
+  <a class="login-link" href="login.html">Sign in →</a>
+</div>
+
+<div class="chat-container">
+  <div class="chat-header">
+    <h1>Write your credit paper in 5 minutes</h1>
+    <p>Upload your docs. AI does the rest.</p>
+  </div>
+
+  <div class="messages" id="messages">
+    <div class="msg-bot">
+      G'day — I'm your AI credit analyst. I'll help you build a full credit paper and feasibility in minutes, not hours.
+      <br><br>
+      <strong>What type of finance are you looking for?</strong>
+      <div class="options" id="step1-options">
+        <button class="opt-btn" onclick="selectType('development')">🏗️ Development</button>
+        <button class="opt-btn" onclick="selectType('residual')">🏘️ Residual Stock</button>
+        <button class="opt-btn" onclick="selectType('investment')">📈 Investment</button>
+        <button class="opt-btn" onclick="selectType('site')">📍 Site Acquisition</button>
+        <button class="opt-btn" onclick="selectType('bridging')">🔄 Bridging</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-bar">
+    <label class="clip-btn"><input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xlsx" style="display:none" onchange="handleFile(this.files[0])" multiple>📎</label>
+    <input class="chat-input" id="chat-input" placeholder="Type your answer..." onkeydown="if(event.key==='Enter')sendMsg()">
+    <button class="send-btn" onclick="sendMsg()">Send</button>
+  </div>
+</div>
+
+<script>
+var dealType = '';
+var dealData = {type:'',docs:[],answers:{}};
+var chatHistory = [];
+var step = 0;
+var questionQueue = [];
+
+function addBot(html) {
+  var d = document.getElementById('messages');
+  d.innerHTML += '<div class="msg-bot">' + html + '</div>';
+  d.scrollTop = d.scrollHeight;
+}
+function addUser(text) {
+  var d = document.getElementById('messages');
+  d.innerHTML += '<div class="msg-user">' + text.replace(/</g,'&lt;') + '</div>';
+  d.scrollTop = d.scrollHeight;
+}
+function addFile(name, size) {
+  var d = document.getElementById('messages');
+  d.innerHTML += '<div class="msg-file">📎 ' + name + ' (' + size + ')</div>';
+  d.scrollTop = d.scrollHeight;
+}
+function addTyping() {
+  var d = document.getElementById('messages');
+  d.innerHTML += '<div class="msg-typing" id="typing">✦ Thinking...</div>';
+  d.scrollTop = d.scrollHeight;
+}
+function removeTyping() {
+  var t = document.getElementById('typing'); if(t) t.remove();
+}
+
+// Step 1: Select loan type
+function selectType(type) {
+  dealType = type;
+  dealData.type = type;
+  var labels = {development:'Development Finance',residual:'Residual Stock',investment:'Investment Loan',site:'Site Acquisition',bridging:'Bridging Finance'};
+  addUser(labels[type] || type);
+
+  // Remove options
+  var opts = document.getElementById('step1-options');
+  if(opts) opts.remove();
+
+  // Step 2: Upload docs
+  setTimeout(function() {
+    addBot('Great — <strong>' + labels[type] + '</strong>. Now upload everything you\'ve got. Valuations, contracts, QS reports, borrower financials, plans — whatever you have. I\'ll extract everything automatically.'
+      + '<div class="upload-area" onclick="document.getElementById(\'file-upload\').click()">'
+      + '<input type="file" id="file-upload" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.xlsx" style="display:none" onchange="handleFiles(this.files)" multiple>'
+      + '<h3>📄 Drop files here or click to upload</h3>'
+      + '<p>PDF, images, Word, Excel — any format, any size</p>'
+      + '</div>'
+      + '<br><span style="font-size:12px;opacity:0.5">Or just start typing your deal details and I\'ll ask the right questions.</span>');
+    step = 2;
+  }, 300);
+}
+
+// Handle file upload
+async function handleFile(file) { if(file) await processFile(file); }
+async function handleFiles(files) { for(var i=0; i<files.length; i++) await processFile(files[i]); }
+
+async function processFile(file) {
+  var sizeMB = (file.size/1024/1024).toFixed(1);
+  addFile(file.name, sizeMB + 'MB');
+  dealData.docs.push(file.name);
+
+  var ext = file.name.split('.').pop().toLowerCase();
+  addTyping();
+
+  // Update typing message
+  var msgs = ['✦ Reading document...','✦ Extracting details...','✦ Analysing content...','✦ Building your deal...'];
+  var mi = 0;
+  var li = setInterval(function(){ mi=(mi+1)%msgs.length; var t=document.getElementById('typing'); if(t) t.textContent=msgs[mi]; }, 2000);
+
+  try {
+    var base64;
+    if(ext === 'pdf') {
+      // Render PDF pages as images
+      var buf = await file.arrayBuffer();
+      var pdf = await pdfjsLib.getDocument({data: new Uint8Array(buf)}).promise;
+      var pageImages = [];
+      var maxPages = Math.min(pdf.numPages, 20);
+      for(var p=1; p<=maxPages; p++) {
+        var page = await pdf.getPage(p);
+        var scale = 1.5;
+        var vp = page.getViewport({scale:scale});
+        var canvas = document.createElement('canvas');
+        canvas.width = vp.width; canvas.height = vp.height;
+        await page.render({canvasContext:canvas.getContext('2d'), viewport:vp}).promise;
+        pageImages.push(canvas.toDataURL('image/jpeg',0.7).split(',')[1]);
+        var t = document.getElementById('typing');
+        if(t) t.textContent = '✦ Scanning page ' + p + '/' + maxPages + '...';
+      }
+
+      // Send in batches
+      var allText = '';
+      for(var b=0; b<pageImages.length; b+=15) {
+        var batch = pageImages.slice(b, b+15);
+        var res = await fetch('/.netlify/functions/doc-reader', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({fileBase64: batch[0], fileType:'jpg', images: batch, docType:'full-extraction'})
+        });
+        if(res.ok) {
+          var data = await res.json();
+          if(data) Object.assign(dealData.answers, data);
+        }
+      }
+    } else if(['jpg','jpeg','png'].includes(ext)) {
+      var reader = new FileReader();
+      var b64 = await new Promise(function(resolve) {
+        reader.onload = function(e) { resolve(e.target.result.split(',')[1]); };
+        reader.readAsDataURL(file);
+      });
+      var res = await fetch('/.netlify/functions/doc-reader', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({fileBase64:b64, fileType:ext, docType:'full-extraction'})
+      });
+      if(res.ok) {
+        var data = await res.json();
+        if(data) Object.assign(dealData.answers, data);
+      }
+    }
+
+    clearInterval(li);
+    removeTyping();
+
+    // Show what we extracted
+    var d = dealData.answers;
+    var extracted = [];
+    if(d.borrowerName) extracted.push('**Borrower:** ' + d.borrowerName);
+    if(d.address) extracted.push('**Property:** ' + d.address);
+    if(d.grv) extracted.push('**GRV:** $' + Number(d.grv).toLocaleString('en-AU'));
+    if(d.landCost || d.land_cost) extracted.push('**Land:** $' + Number(d.landCost||d.land_cost).toLocaleString('en-AU'));
+    if(d.constructionCost || d.construction_cost) extracted.push('**Construction:** $' + Number(d.constructionCost||d.construction_cost).toLocaleString('en-AU'));
+    if(d.units) extracted.push('**Units:** ' + d.units);
+    if(d.category) extracted.push('**Type:** ' + d.category);
+
+    if(extracted.length > 0) {
+      addBot('I found the following from your documents:<br><br>' + extracted.join('<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>') + '<br><br>Let me ask a few more questions to complete your feasibility.');
+    } else {
+      addBot('Document processed. Let me ask some questions to build your deal.');
+    }
+
+    // Start asking questions based on what we're missing
+    askNextQuestion();
+
+  } catch(e) {
+    clearInterval(li);
+    removeTyping();
+    addBot('Had trouble reading that file. Try uploading a different format or just type the details.');
+    console.error(e);
+  }
+}
+
+function askNextQuestion() {
+  var d = dealData.answers;
+  questionQueue = [];
+
+  if(!d.address) questionQueue.push({key:'address', q:'What\'s the <strong>property address</strong>?'});
+  if(!d.borrowerName) questionQueue.push({key:'borrowerName', q:'What\'s the <strong>borrower name</strong> (individual or entity)?'});
+
+  if(dealType === 'development' || dealType === 'site') {
+    if(!d.grv && !d.units) questionQueue.push({key:'grv', q:'What\'s the estimated <strong>GRV (Gross Realisable Value)</strong>? Or tell me the number of units and average price.'});
+    if(!d.landCost && !d.land_cost) questionQueue.push({key:'landCost', q:'What\'s the <strong>land cost / purchase price</strong>?'});
+    if(!d.constructionCost && !d.construction_cost) questionQueue.push({key:'constructionCost', q:'What\'s the estimated <strong>total construction cost</strong> (ex GST)?'});
+    if(!d.projectMonths) questionQueue.push({key:'projectMonths', q:'What\'s the <strong>target project timeline</strong> in months (construction + sell-down)?'});
+    if(!d.presales) questionQueue.push({key:'presales', q:'Do you have any <strong>unconditional presales</strong>? If so, how many and total value?'});
+  } else if(dealType === 'residual') {
+    if(!d.totalUnits) questionQueue.push({key:'totalUnits', q:'How many <strong>total units/lots</strong> in the project?'});
+    if(!d.unsoldUnits) questionQueue.push({key:'unsoldUnits', q:'How many are <strong>currently unsold</strong>?'});
+    if(!d.totalValue) questionQueue.push({key:'totalValue', q:'What\'s the <strong>total value of unsold stock</strong>?'});
+  } else if(dealType === 'investment') {
+    if(!d.netIncome) questionQueue.push({key:'netIncome', q:'What\'s the <strong>net income (p.a.)</strong> from the property?'});
+    if(!d.capRate) questionQueue.push({key:'capRate', q:'What\'s the current <strong>cap rate</strong>?'});
+    if(!d.purchasePrice) questionQueue.push({key:'purchasePrice', q:'What\'s the <strong>purchase price</strong>?'});
+  } else if(dealType === 'bridging') {
+    if(!d.currentValue) questionQueue.push({key:'currentValue', q:'What\'s the <strong>current property value</strong>?'});
+    if(!d.loanAmount) questionQueue.push({key:'loanAmount', q:'How much do you need to <strong>borrow</strong>?'});
+    if(!d.exitStrategy) questionQueue.push({key:'exitStrategy', q:'What\'s your <strong>exit strategy</strong>? (sale, refinance, development)'});
+  }
+
+  if(questionQueue.length > 0) {
+    var next = questionQueue.shift();
+    currentQuestion = next;
+    setTimeout(function() { addBot(next.q); }, 400);
+  } else {
+    // All info collected — show results
+    setTimeout(showResults, 500);
+  }
+}
+
+var currentQuestion = null;
+
+function sendMsg() {
+  var input = document.getElementById('chat-input');
+  var msg = input.value.trim();
+  if(!msg) return;
+  input.value = '';
+  addUser(msg);
+
+  if(currentQuestion) {
+    // Save answer
+    var val = msg.replace(/[$,]/g,'');
+    if(!isNaN(val) && val.length > 0) val = parseFloat(val);
+    dealData.answers[currentQuestion.key] = val;
+    currentQuestion = null;
+
+    // Ask next or show results
+    setTimeout(askNextQuestion, 300);
+  } else if(step === 0) {
+    // Free text before selecting type — treat as AI chat
+    sendToAI(msg);
+  } else {
+    // Free text after type selected — send to AI with context
+    sendToAI(msg);
+  }
+}
+
+async function sendToAI(msg) {
+  addTyping();
+  chatHistory.push({role:'user', content:msg});
+  try {
+    var res = await fetch('/.netlify/functions/ai-copilot', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message:msg, context:dealData.answers, history:chatHistory.slice(-8)})
+    });
+    removeTyping();
+    var data = await res.json();
+    var reply = (data.reply || 'Sorry, could you rephrase that?').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+    chatHistory.push({role:'assistant', content:data.reply||''});
+    addBot(reply);
+  } catch(e) {
+    removeTyping();
+    addBot('Connection error. Please try again.');
+  }
+}
+
+function showResults() {
+  var d = dealData.answers;
+
+  // Quick feasibility calc
+  var grv = parseFloat(d.grv) || 0;
+  var land = parseFloat(d.landCost || d.land_cost) || 0;
+  var construction = parseFloat(d.constructionCost || d.construction_cost) || 0;
+  var months = parseInt(d.projectMonths) || 24;
+
+  if(!grv && d.units && d.avgPrice) grv = parseInt(d.units) * parseFloat(d.avgPrice);
+  if(!grv && d.units) grv = parseInt(d.units) * 800000; // default estimate
+
+  var totalCost = land + construction;
+  if(totalCost === 0) totalCost = grv * 0.7; // estimate
+  if(construction === 0 && land > 0) construction = totalCost - land;
+
+  var margin = grv - totalCost;
+  var marginPct = totalCost > 0 ? margin / totalCost : 0;
+  var seniorDebt = totalCost * 0.65;
+  var ltc = totalCost > 0 ? seniorDebt / totalCost : 0;
+  var equity = totalCost - seniorDebt;
+
+  var marginClass = marginPct >= 0.2 ? 'good' : marginPct >= 0.15 ? 'warn' : 'bad';
+  var ltvClass = ltc <= 0.65 ? 'good' : ltc <= 0.75 ? 'warn' : 'bad';
+  var verdict = marginPct >= 0.2 ? '✓ Bankable — strong margin' : marginPct >= 0.15 ? '⚠ Marginal — lender dependent' : '✗ Below threshold — needs restructure';
+  var verdictClass = marginPct >= 0.2 ? 'good' : marginPct >= 0.15 ? 'warn' : 'bad';
+
+  function fmt(v) { return '$' + Math.round(v).toLocaleString('en-AU'); }
+
+  var html = '<strong>Here\'s your quick feasibility:</strong>'
+    + '<div class="results-card">'
+    + '<h3>📊 ' + (d.address || 'Your Project') + '</h3>'
+    + '<div class="rc-row"><span>GRV</span><span class="rc-val">' + fmt(grv) + '</span></div>'
+    + '<div class="rc-row"><span>Total Project Cost</span><span class="rc-val">' + fmt(totalCost) + '</span></div>'
+    + '<div class="rc-row"><span>Development Margin</span><span class="rc-val ' + marginClass + '">' + fmt(margin) + ' (' + (marginPct*100).toFixed(1) + '%)</span></div>'
+    + '<div class="rc-row"><span>Senior Debt (est.)</span><span class="rc-val">' + fmt(seniorDebt) + '</span></div>'
+    + '<div class="rc-row"><span>LTC</span><span class="rc-val ' + ltvClass + '">' + (ltc*100).toFixed(1) + '%</span></div>'
+    + '<div class="rc-row"><span>Equity Required</span><span class="rc-val">' + fmt(equity) + '</span></div>'
+    + '<div class="rc-row" style="border-top:1px solid rgba(255,255,255,0.1);padding-top:10px;margin-top:4px"><span style="font-weight:700;color:white">Verdict</span><span class="rc-val ' + verdictClass + '" style="font-size:14px">' + verdict + '</span></div>'
+    + '</div>';
+
+  addBot(html);
+
+  // Paywall
+  setTimeout(function() {
+    var d2 = document.getElementById('messages');
+    d2.innerHTML += '<div class="paywall">'
+      + '<h2>Your credit paper is ready to generate</h2>'
+      + '<p>Sign up to save this deal, generate a full credit paper, run detailed feasibility with cash flows, and start matching with lenders.</p>'
+      + '<div class="paywall-features">'
+      + '<span class="paywall-feat">Full credit paper</span>'
+      + '<span class="paywall-feat">Cash flow modelling</span>'
+      + '<span class="paywall-feat">Save & share deals</span>'
+      + '<span class="paywall-feat">DocuSeal e-signing</span>'
+      + '</div>'
+      + '<a class="paywall-btn" href="login.html?signup=true&type=' + dealType + '">Create free account →</a>'
+      + '<p style="margin-top:12px;font-size:11px;opacity:0.4">Free tier: 5 deals/month, 2 team members</p>'
+      + '</div>';
+    d2.scrollTop = d2.scrollHeight;
+  }, 800);
+}
+</script>
+</body>
+</html>
