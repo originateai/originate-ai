@@ -61,8 +61,8 @@ body{font-family:'DM Sans',sans-serif;color:#e2e8f0;background:var(--grey900);mi
 </div>
 </div>
 <script>
-var D={type:'',f:{},narrative:'',flags:[],docs:[]};
-var hist=[];var curQ=null;var qq=[];
+var D={type:'',f:{},narrative:'',flags:[],docs:[],shown:{},asked:{}};
+var hist=[];var curQ=null;var qq=[];var resultsShown=false;
 function $(i){return document.getElementById(i)}
 function fmt(v){if(!v||isNaN(v))return'—';return'$'+Math.round(Number(v)).toLocaleString('en-AU')}
 function pct(v){if(!v||isNaN(v))return'—';return(Number(v)*100).toFixed(1)+'%'}
@@ -102,21 +102,24 @@ async function handleFile(file){
         await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
         pgs.push(cv.toDataURL('image/jpeg',0.7).split(',')[1]);
       }
+      // Use doc-reader with first 3 pages for full structured extraction + narrative
+      try{
+        st('✦ Generating credit analysis...');
+        var firstPages=pgs.slice(0,3);
+        var content=firstPages.map(function(img){return{type:'image',source:{type:'base64',media_type:'image/jpeg',data:img}}});
+        content.push({type:'text',text:'Analyse these pages from a property document. Extract all details.'});
+        var r2=await fetch('/.netlify/functions/doc-reader',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileBase64:firstPages[0],fileType:'jpg',docType:'full-extraction'})});
+        if(r2.ok){var d2=await r2.json();console.log('doc-reader:',d2);mergeDocReader(d2);}else{console.error('doc-reader fail:',r2.status);}
+      }catch(e){console.error('doc-reader err:',e);}
+      // Also send all pages to extract-valuation for unit data
       for(var b=0;b<pgs.length;b+=15){
-        st('✦ AI analysing batch '+(Math.floor(b/15)+1)+'/'+Math.ceil(pgs.length/15)+'...');
+        st('✦ Extracting units batch '+(Math.floor(b/15)+1)+'...');
         var batch=pgs.slice(b,b+15);
         try{
-          // Use extract-valuation for unit data
           var r1=await fetch('/.netlify/functions/extract-valuation',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({images:batch,fileType:'images'})});
-          if(r1.ok){var d1=await r1.json();if(d1.success&&d1.data)mergeFlat(d1.data);}
-        }catch(e){}
+          if(r1.ok){var d1=await r1.json();console.log('extract-val:',d1);if(d1.success&&d1.data)mergeFlat(d1.data);}
+        }catch(e){console.error('extract-val err:',e);}
       }
-      // Also use doc-reader with first page for narrative + structured data
-      try{
-        st('✦ Generating credit narrative...');
-        var r2=await fetch('/.netlify/functions/doc-reader',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileBase64:pgs[0],fileType:'jpg',docType:'full-extraction'})});
-        if(r2.ok){var d2=await r2.json();mergeDocReader(d2);}
-      }catch(e){}
     } else {
       var b64=await new Promise(function(r){var rd=new FileReader();rd.onload=function(e){r(e.target.result.split(',')[1])};rd.readAsDataURL(file)});
       var r=await fetch('/.netlify/functions/doc-reader',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileBase64:b64,fileType:ext,docType:'full-extraction'})});
@@ -143,52 +146,62 @@ function mergeDocReader(d){
 }
 
 function showExtracted(){
+  console.log('All extracted fields:',JSON.stringify(D.f));
   var f=D.f;var lines=[];
-  if(f.address){var mu='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(f.address);lines.push('<strong>📍 '+f.address+'</strong> <a href="'+mu+'" target="_blank">[Google Maps ↗]</a>');}
-  if(f.borrowerName||f.entityName)lines.push('<strong>Borrower:</strong> '+(f.borrowerName||f.entityName));
-  if(f.assetType)lines.push('<strong>Asset:</strong> '+(f.propertySubtype||f.assetType).replace(/_/g,' '));
-  if(f.zoning)lines.push('<strong>Zoning:</strong> '+f.zoning);
-  if(f.landArea)lines.push('<strong>Land:</strong> '+Number(f.landArea).toLocaleString('en-AU')+'m²');
-  if(f.grv||f.adoptedValue)lines.push('<strong>GRV / Value:</strong> '+fmt(f.grv||f.adoptedValue));
-  if(f.grossIncome)lines.push('<strong>Gross Income:</strong> '+fmt(f.grossIncome)+' p.a.');
-  if(f.netIncome)lines.push('<strong>Net Income:</strong> '+fmt(f.netIncome)+' p.a.');
-  if(f.capRate)lines.push('<strong>Cap Rate:</strong> '+pct(f.capRate));
-  if(f.tenantName)lines.push('<strong>Tenant:</strong> '+f.tenantName+(f.tenantCovenant?' ('+f.tenantCovenant+')':''));
-  if(f.leaseTermRemaining)lines.push('<strong>Lease:</strong> '+f.leaseTermRemaining+' years remaining');
-  if(f.units)lines.push('<strong>Units:</strong> '+f.units+(f.avgPrice?' @ '+fmt(f.avgPrice)+' avg':''));
-  if(f.constructionCost)lines.push('<strong>Construction:</strong> '+fmt(f.constructionCost));
-  if(f.landValue||f.landCost)lines.push('<strong>Land Cost:</strong> '+fmt(f.landValue||f.landCost));
-  if(f.presalesCount)lines.push('<strong>Presales:</strong> '+f.presalesCount+' ('+fmt(f.presalesValue)+')');
-  if(f.builder)lines.push('<strong>Builder:</strong> '+f.builder);
-  if(f.architect)lines.push('<strong>Architect:</strong> '+f.architect);
+  function s(k,h){if(f[k]&&!D.shown[k]){D.shown[k]=true;lines.push(h);}}
+  if(f.address&&!D.shown.address){D.shown.address=true;var mu='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(f.address);lines.push('<strong>📍 '+f.address+'</strong> <a href="'+mu+'" target="_blank">[Google Maps ↗]</a>');}
+  if((f.borrowerName||f.entityName)&&!D.shown.borrower){D.shown.borrower=true;lines.push('<strong>Borrower:</strong> '+(f.borrowerName||f.entityName));}
+  s('assetType','<strong>Asset:</strong> '+(f.propertySubtype||f.assetType||'').replace(/_/g,' '));
+  s('zoning','<strong>Zoning:</strong> '+f.zoning);
+  if(f.landArea&&!D.shown.landArea){D.shown.landArea=true;lines.push('<strong>Land:</strong> '+Number(f.landArea).toLocaleString('en-AU')+'m²');}
+  if((f.grv||f.adoptedValue)&&!D.shown.grv){D.shown.grv=true;lines.push('<strong>GRV / Value:</strong> '+fmt(f.grv||f.adoptedValue));}
+  if(f.grossIncome&&!D.shown.gi){D.shown.gi=true;lines.push('<strong>Gross Income:</strong> '+fmt(f.grossIncome)+' p.a.');}
+  if(f.netIncome&&!D.shown.ni){D.shown.ni=true;lines.push('<strong>Net Income:</strong> '+fmt(f.netIncome)+' p.a.');}
+  s('capRate','<strong>Cap Rate:</strong> '+pct(f.capRate));
+  if(f.tenantName&&!D.shown.tenant){D.shown.tenant=true;lines.push('<strong>Tenant:</strong> '+f.tenantName+(f.tenantCovenant?' ('+f.tenantCovenant+')':''));}
+  if(f.leaseTermRemaining&&!D.shown.lease){D.shown.lease=true;lines.push('<strong>Lease:</strong> '+f.leaseTermRemaining+' yrs remaining');}
+  if(f.units&&!D.shown.units){D.shown.units=true;lines.push('<strong>Units:</strong> '+f.units+(f.avgPrice?' @ '+fmt(f.avgPrice)+' avg':''));}
+  s('constructionCost','<strong>Construction:</strong> '+fmt(f.constructionCost));
+  if((f.landValue||f.landCost)&&!D.shown.lv){D.shown.lv=true;lines.push('<strong>Land Cost:</strong> '+fmt(f.landValue||f.landCost));}
+  if(f.presalesCount&&!D.shown.ps){D.shown.ps=true;lines.push('<strong>Presales:</strong> '+f.presalesCount+' ('+fmt(f.presalesValue)+')');}
+  s('builder','<strong>Builder:</strong> '+f.builder);
+  s('architect','<strong>Architect:</strong> '+f.architect);
 
-  if(lines.length>0)ab('Here\'s what I extracted:<br><br>'+lines.join('<br>')+'<br><br>Let me ask a few more questions to complete your feasibility.');
-  else ab('Document processed. Let me ask some questions to build your deal.');
+  if(lines.length>0){
+    ab((D.docs.length>1?'More details extracted:':'Here\'s what I extracted:')+'<br><br>'+lines.join('<br>')+'<br><br>Upload more docs or I\'ll ask remaining questions.');
+  } else if(D.docs.length>1){
+    ab('No new fields from this document. I\'ll continue.');
+  } else {ab('Document processed. Let me ask some questions.');}
 
-  if(D.flags.length>0)ab('<strong>⚠ Flags:</strong><br>'+D.flags.map(function(fl){return'• '+fl}).join('<br>'));
-  askNext();
+  if(D.flags.length>0){var nf=D.flags.filter(function(x){return!D.shown['fl_'+x]});if(nf.length){nf.forEach(function(x){D.shown['fl_'+x]=true});ab('<strong>⚠ Flags:</strong><br>'+nf.map(function(x){return'• '+x}).join('<br>'));}}
+  if(!resultsShown)askNext();
 }
 
 function askNext(){
   var f=D.f;qq=[];
-  if(!f.address)qq.push({k:'address',q:'What\'s the <strong>property address</strong>?'});
-  if(!f.borrowerName&&!f.entityName)qq.push({k:'borrowerName',q:'<strong>Borrower / entity name</strong>?'});
+  function q(k,txt){if(!f[k]&&!D.asked[k])qq.push({k:k,q:txt});}
+  
+  q('address','What\'s the <strong>property address</strong>?');
+  if(!f.borrowerName&&!f.entityName&&!D.asked.borrowerName)qq.push({k:'borrowerName',q:'<strong>Borrower / entity name</strong>?'});
+  
   if(D.type==='development'||D.type==='site'){
-    if(!f.grv&&!f.units)qq.push({k:'grv',q:'What\'s the <strong>GRV</strong>? Or number of units and avg price.'});
-    if(!f.landValue&&!f.landCost)qq.push({k:'landValue',q:'<strong>Land / purchase price</strong>?'});
-    if(!f.constructionCost)qq.push({k:'constructionCost',q:'<strong>Total construction cost</strong> (ex GST)?'});
+    if(!f.grv&&!f.units&&!D.asked.grv)qq.push({k:'grv',q:'What\'s the <strong>GRV</strong>? Or number of units and avg price.'});
+    q('landValue','<strong>Land / purchase price</strong>?');
+    if(!f.landValue&&!f.landCost&&!D.asked.landValue){}// already pushed above
+    q('constructionCost','<strong>Total construction cost</strong> (ex GST)?');
   } else if(D.type==='investment'){
-    if(!f.grossIncome&&!f.netIncome)qq.push({k:'grossIncome',q:'<strong>Gross annual income</strong>?'});
-    if(!f.capRate)qq.push({k:'capRate',q:'<strong>Cap rate</strong>?'});
+    if(!f.grossIncome&&!f.netIncome&&!D.asked.grossIncome)qq.push({k:'grossIncome',q:'<strong>Gross annual income</strong>?'});
+    q('capRate','<strong>Cap rate</strong>?');
   } else if(D.type==='residual'){
-    if(!f.units)qq.push({k:'units',q:'How many <strong>total units/lots</strong>?'});
-    if(!f.grv)qq.push({k:'grv',q:'<strong>Total value of unsold stock</strong>?'});
+    q('units','How many <strong>total units/lots</strong>?');
+    q('grv','<strong>Total value of unsold stock</strong>?');
   } else if(D.type==='bridging'){
-    if(!f.grv)qq.push({k:'grv',q:'<strong>Current property value</strong>?'});
-    if(!f.loanAmount)qq.push({k:'loanAmount',q:'How much do you need to <strong>borrow</strong>?'});
+    q('grv','<strong>Current property value</strong>?');
+    q('loanAmount','How much do you need to <strong>borrow</strong>?');
   }
-  if(qq.length>0){curQ=qq.shift();setTimeout(function(){ab(curQ.q)},400);}
-  else setTimeout(showResults,500);
+
+  if(qq.length>0){curQ=qq.shift();D.asked[curQ.k]=true;setTimeout(function(){ab(curQ.q)},400);}
+  else{resultsShown=true;setTimeout(showResults,500);}
 }
 
 function sendMsg(){
