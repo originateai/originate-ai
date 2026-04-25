@@ -11,15 +11,17 @@ exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: 'Not allowed' };
 
   try {
-    const { fileBase64, fileType, docType, existingData } = JSON.parse(event.body);
+    const body = JSON.parse(event.body);
+    const { fileBase64, fileType, docType, existingData, images } = body;
 
-    if (!fileBase64) {
+    if (!fileBase64 && (!images || images.length === 0)) {
       return { statusCode: 400, headers, body: JSON.stringify({ error: 'No file provided' }) };
     }
 
     const mediaType = fileType === 'pdf' ? 'application/pdf' : 
                       fileType === 'png' ? 'image/png' :
-                      fileType === 'jpg' || fileType === 'jpeg' ? 'image/jpeg' : 'application/pdf';
+                      fileType === 'jpg' || fileType === 'jpeg' ? 'image/jpeg' : 
+                      fileType === 'images' ? 'image/jpeg' : 'application/pdf';
 
     const systemPrompt = `You are an expert commercial real estate credit analyst working for getkredit.ai, an Australian development finance and commercial property marketplace.
 
@@ -146,25 +148,25 @@ EXTRACTION RULES:
 5. Always extract zoning — confirms asset type (E4 = commercial, R2 = resi)
 6. Set fields to null where you cannot extract with reasonable confidence`;
 
-    const messages = [
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'document',
-            source: {
-              type: 'base64',
-              media_type: mediaType,
-              data: fileBase64
-            }
-          },
-          {
-            type: 'text',
-            text: `Analyse this ${docType || 'document'}. First determine the asset type and valuation methodology. Then extract ALL relevant fields — especially income, cap rate, outgoings, and BTL adjustments for commercial assets. Return ONLY the JSON object.`
-          }
-        ]
-      }
-    ];
+    // Build content - single file or multiple page images
+    let contentItems = [];
+    if (images && images.length > 0) {
+      images.forEach(img => {
+        contentItems.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: img } });
+      });
+    } else {
+      const isImage = ['png','jpg','jpeg','gif','webp'].includes(fileType);
+      contentItems.push({
+        type: isImage ? 'image' : 'document',
+        source: { type: 'base64', media_type: mediaType, data: fileBase64 }
+      });
+    }
+    contentItems.push({
+      type: 'text',
+      text: `Analyse this ${docType || 'document'}. First determine the asset type and valuation methodology. Then extract ALL relevant fields — especially income, cap rate, outgoings, and BTL adjustments for commercial assets. Return ONLY the JSON object.`
+    });
+
+    const messages = [{ role: 'user', content: contentItems }];
 
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
