@@ -4,19 +4,23 @@
 
 [functions]
   [functions.doc-reader]
-    timeout = 60
+    timeout = 120
   [functions.reminders]
     timeout = 60
     schedule = "0 21 * * *"
   [functions.save-conditions]
     timeout = 30
   [functions.credit-paper]
-    timeout = 60
+    timeout = 120
   [functions.extract-conditions]
     timeout = 120
   [functions.extract-valuation]
     timeout = 120
   [functions.ai-copilot]
+    timeout = 60
+  [functions.generate-document]
+    timeout = 120
+  [functions.docuseal]
     timeout = 60
 
 [[headers]]
