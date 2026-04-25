@@ -94,7 +94,7 @@ async function handleFile(file){
     if(ext==='pdf'){
       var buf=await file.arrayBuffer();
       var pdf=await pdfjsLib.getDocument({data:new Uint8Array(buf)}).promise;
-      var pgs=[];var mx=Math.min(pdf.numPages,20);
+      var pgs=[];var mx=Math.min(pdf.numPages,25);
       for(var p=1;p<=mx;p++){
         st('✦ Scanning page '+p+'/'+mx+'...');
         var pg=await pdf.getPage(p);var vp=pg.getViewport({scale:1.5});
@@ -102,28 +102,24 @@ async function handleFile(file){
         await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
         pgs.push(cv.toDataURL('image/jpeg',0.7).split(',')[1]);
       }
-      // Use doc-reader with first 3 pages for full structured extraction + narrative
-      try{
-        st('✦ Generating credit analysis...');
-        var firstPages=pgs.slice(0,3);
-        var content=firstPages.map(function(img){return{type:'image',source:{type:'base64',media_type:'image/jpeg',data:img}}});
-        content.push({type:'text',text:'Analyse these pages from a property document. Extract all details.'});
-        var r2=await fetch('/.netlify/functions/doc-reader',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileBase64:firstPages[0],fileType:'jpg',docType:'full-extraction'})});
-        if(r2.ok){var d2=await r2.json();console.log('doc-reader:',d2);mergeDocReader(d2);}else{console.error('doc-reader fail:',r2.status);}
-      }catch(e){console.error('doc-reader err:',e);}
-      // Also send all pages to extract-valuation for unit data
-      for(var b=0;b<pgs.length;b+=15){
-        st('✦ Extracting units batch '+(Math.floor(b/15)+1)+'...');
-        var batch=pgs.slice(b,b+15);
+      // Send ALL pages to doc-reader in batches of 10 — uses the full property finance system prompt
+      for(var b=0;b<pgs.length;b+=10){
+        var batchNum=Math.floor(b/10)+1;var totalBatches=Math.ceil(pgs.length/10);
+        st('✦ AI analysing pages '+(b+1)+'-'+Math.min(b+10,pgs.length)+' (batch '+batchNum+'/'+totalBatches+')...');
+        var batch=pgs.slice(b,b+10);
         try{
-          var r1=await fetch('/.netlify/functions/extract-valuation',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({images:batch,fileType:'images'})});
-          if(r1.ok){var d1=await r1.json();console.log('extract-val:',d1);if(d1.success&&d1.data)mergeFlat(d1.data);}
-        }catch(e){console.error('extract-val err:',e);}
+          var r=await fetch('/.netlify/functions/doc-reader',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({images:batch,fileType:'images',docType:D.type||'auto-detect',existingData:D.f})});
+          if(r.ok){var d=await r.json();console.log('doc-reader batch '+batchNum+':',d);mergeDocReader(d);}
+          else{console.error('doc-reader batch '+batchNum+' fail:',r.status);}
+        }catch(e){console.error('doc-reader batch err:',e);}
       }
     } else {
       var b64=await new Promise(function(r){var rd=new FileReader();rd.onload=function(e){r(e.target.result.split(',')[1])};rd.readAsDataURL(file)});
-      var r=await fetch('/.netlify/functions/doc-reader',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileBase64:b64,fileType:ext,docType:'full-extraction'})});
-      if(r.ok){var d=await r.json();mergeDocReader(d);}
+      st('✦ AI analysing document...');
+      var r=await fetch('/.netlify/functions/doc-reader',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({fileBase64:b64,fileType:ext,docType:D.type||'auto-detect',existingData:D.f})});
+      if(r.ok){var d=await r.json();console.log('doc-reader:',d);mergeDocReader(d);}
     }
     clearInterval(li);rt();showExtracted();
   }catch(e){clearInterval(li);rt();ab('Had trouble with that file. Try another or type details.');console.error(e);}
@@ -139,10 +135,25 @@ function mergeFlat(d){
 function mergeDocReader(d){
   var f=d.extractedFields||{};
   Object.keys(f).forEach(function(k){if(f[k]!=null&&f[k]!=='')D.f[k]=f[k]});
-  if(d.assetType)D.f.assetType=d.assetType;
+  if(d.assetType){
+    D.f.assetType=d.assetType;
+    // Auto-detect loan type if not set
+    if(!D.type){
+      if(d.assetType.indexOf('investment')>-1)D.type='investment';
+      else if(d.assetType.indexOf('resi_dev')>-1)D.type='development';
+      else if(d.assetType.indexOf('commercial_dev')>-1)D.type='development';
+      else if(d.assetType==='land')D.type='site';
+      else D.type='development';
+    }
+  }
   if(d.propertySubtype)D.f.propertySubtype=d.propertySubtype;
-  if(d.flags)D.flags=D.flags.concat(d.flags);
-  if(d.narrative)D.narrative=d.narrative;
+  if(d.valuationMethod)D.f.valuationMethod=d.valuationMethod;
+  if(d.confidence)D.f.confidence=Math.max(D.f.confidence||0,d.confidence);
+  if(d.flags&&d.flags.length)D.flags=D.flags.concat(d.flags);
+  if(d.narrative&&d.narrative.length>(D.narrative||'').length)D.narrative=d.narrative;
+  if(d.summary)D.f.summary=d.summary;
+  // Also merge unit breakdown if present
+  if(f.unitBreakdown&&f.unitBreakdown.length){D.f.unitBreakdown=f.unitBreakdown;if(!D.f.units)D.f.units=f.unitBreakdown.length;}
 }
 
 function showExtracted(){
@@ -211,68 +222,86 @@ function sendMsg(){
 }
 
 function showResults(){
-  var f=D.f;var grv=Number(f.grv||f.adoptedValue)||0;var land=Number(f.landValue||f.landCost)||0;var con=Number(f.constructionCost)||0;
-  var tpc=land+con;if(!tpc)tpc=grv*0.7;var margin=grv-tpc;var mp=tpc>0?margin/tpc:0;
-  var sr=tpc*0.65;var ltc=tpc>0?sr/tpc:0;var eq=tpc-sr;
-  var mc=mp>=0.2?'g':mp>=0.15?'w':'b';
-  var lc=ltc<=0.65?'g':ltc<=0.75?'w':'b';
-  var vt=mp>=0.2?'✓ Bankable — strong margin':mp>=0.15?'⚠ Marginal — lender dependent':'✗ Below threshold — needs restructure';
-
+  var f=D.f;
   var addr=f.address||'Your Project';
   var ml=f.address?'<a href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(f.address)+'" target="_blank" style="font-size:11px">[Map ↗]</a>':'';
-
   var h='<div class="dc"><div class="dch"><h3>'+addr+' '+ml+'</h3>';
   if(f.borrowerName||f.entityName)h+='<div class="da">'+(f.borrowerName||f.entityName)+'</div>';
-  if(f.assetType)h+='<div class="da">'+(f.propertySubtype||f.assetType).replace(/_/g,' ')+'</div>';
   h+='</div>';
-
-  // Property
   h+='<div class="ds">Property</div>';
   if(f.landArea)h+='<div class="dr"><span class="dl">Land Area</span><span class="dv">'+Number(f.landArea).toLocaleString('en-AU')+'m²</span></div>';
   if(f.zoning)h+='<div class="dr"><span class="dl">Zoning</span><span class="dv">'+f.zoning+'</span></div>';
   if(f.units)h+='<div class="dr"><span class="dl">Units / Lots</span><span class="dv">'+f.units+'</span></div>';
   if(f.tenantName)h+='<div class="dr"><span class="dl">Tenant</span><span class="dv">'+f.tenantName+'</span></div>';
-  if(f.leaseTermRemaining)h+='<div class="dr"><span class="dl">Lease Remaining</span><span class="dv">'+f.leaseTermRemaining+' yrs</span></div>';
-  if(f.wale)h+='<div class="dr"><span class="dl">WALE</span><span class="dv">'+f.wale+' yrs</span></div>';
+  if(f.leaseTermRemaining)h+='<div class="dr"><span class="dl">Lease</span><span class="dv">'+f.leaseTermRemaining+' yrs</span></div>';
 
-  // Income
-  if(f.grossIncome||f.netIncome){
-    h+='<div class="ds">Income</div>';
-    if(f.grossIncome)h+='<div class="dr"><span class="dl">Gross Income</span><span class="dv">'+fmt(f.grossIncome)+' p.a.</span></div>';
-    if(f.outgoings_total)h+='<div class="dr"><span class="dl">Outgoings</span><span class="dv b">-'+fmt(f.outgoings_total)+'</span></div>';
-    if(f.netIncome)h+='<div class="dr"><span class="dl">Net Income</span><span class="dv t">'+fmt(f.netIncome)+' p.a.</span></div>';
-    if(f.capRate)h+='<div class="dr"><span class="dl">Cap Rate</span><span class="dv">'+pct(f.capRate)+'</span></div>';
+  if(D.type==='development'||D.type==='site'){
+    var grv=Number(f.grv||f.adoptedValue)||0;var land=Number(f.landValue||f.landCost)||0;var con=Number(f.constructionCost)||0;
+    var tpc=land+con;if(!tpc)tpc=grv*0.7;var margin=grv-tpc;var mp=tpc>0?margin/tpc:0;
+    var sr=tpc*0.65;var ltc=tpc>0?sr/tpc:0;var eq=tpc-sr;
+    var mc=mp>=0.2?'g':mp>=0.15?'w':'b';var lc=ltc<=0.65?'g':ltc<=0.75?'w':'b';
+    var vt=mp>=0.2?'✓ Bankable — strong margin':mp>=0.15?'⚠ Marginal — lender dependent':'✗ Below threshold — needs restructure';
+    h+='<div class="ds">Feasibility</div>';
+    h+='<div class="dr"><span class="dl">GRV</span><span class="dv t">'+fmt(grv)+'</span></div>';
+    if(land)h+='<div class="dr"><span class="dl">Land Cost</span><span class="dv">'+fmt(land)+'</span></div>';
+    if(con)h+='<div class="dr"><span class="dl">Construction</span><span class="dv">'+fmt(con)+'</span></div>';
+    h+='<div class="dr"><span class="dl">Total Project Cost</span><span class="dv">'+fmt(tpc)+'</span></div>';
+    h+='<div class="dr"><span class="dl">Dev Margin</span><span class="dv '+mc+'">'+fmt(margin)+' ('+pct(mp)+')</span></div>';
+    h+='<div class="ds">Indicative Funding</div>';
+    h+='<div class="dr"><span class="dl">Senior Debt</span><span class="dv">'+fmt(sr)+'</span></div>';
+    h+='<div class="dr"><span class="dl">LTC</span><span class="dv '+lc+'">'+pct(ltc)+'</span></div>';
+    h+='<div class="dr"><span class="dl">Equity</span><span class="dv">'+fmt(eq)+'</span></div>';
+    h+='<div class="dvd '+mc+'">'+vt+'</div>';
+  } else if(D.type==='residual'){
+    var totVal=Number(f.grv||f.adoptedValue)||0;var units=Number(f.units)||0;
+    var lvr=0.7;var advance=totVal*lvr;var rate=0.12;var term=18;var interest=advance*rate*(term/12);
+    var coverage=advance>0?(totVal/advance):0;var cc=coverage>=1.4?'g':coverage>=1.2?'w':'b';
+    var vt=coverage>=1.4?'✓ Strong security coverage':'⚠ Review coverage';
+    h+='<div class="ds">Security Pool</div>';
+    h+='<div class="dr"><span class="dl">Collateral Value</span><span class="dv t">'+fmt(totVal)+'</span></div>';
+    if(units)h+='<div class="dr"><span class="dl">Unsold Units</span><span class="dv">'+units+'</span></div>';
+    h+='<div class="ds">Indicative Facility</div>';
+    h+='<div class="dr"><span class="dl">LVR</span><span class="dv">70%</span></div>';
+    h+='<div class="dr"><span class="dl">Cash Advance</span><span class="dv">'+fmt(advance)+'</span></div>';
+    h+='<div class="dr"><span class="dl">Rate (est.)</span><span class="dv">12.0%</span></div>';
+    h+='<div class="dr"><span class="dl">Term</span><span class="dv">18 months</span></div>';
+    h+='<div class="dr"><span class="dl">Est. Interest</span><span class="dv b">'+fmt(interest)+'</span></div>';
+    h+='<div class="dr"><span class="dl">Coverage</span><span class="dv '+cc+'">'+coverage.toFixed(2)+'x</span></div>';
+    h+='<div class="dvd '+cc+'">'+vt+'</div>';
+  } else if(D.type==='investment'){
+    var grv=Number(f.grv||f.adoptedValue||f.capitalisedValue)||0;
+    var ni=Number(f.netIncome)||0;var gi=Number(f.grossIncome)||0;var cr=Number(f.capRate)||0;
+    if(!grv&&ni&&cr)grv=ni/cr;var debt=grv*0.65;var eq=grv-debt;
+    var dscr=ni>0&&debt>0?ni/(debt*0.06):0;var dc=dscr>=1.3?'g':dscr>=1.1?'w':'b';
+    if(gi||ni){h+='<div class="ds">Income</div>';
+    if(gi)h+='<div class="dr"><span class="dl">Gross Income</span><span class="dv">'+fmt(gi)+' p.a.</span></div>';
+    if(ni)h+='<div class="dr"><span class="dl">Net Income</span><span class="dv t">'+fmt(ni)+' p.a.</span></div>';
+    if(cr)h+='<div class="dr"><span class="dl">Cap Rate</span><span class="dv">'+pct(cr)+'</span></div>';}
+    h+='<div class="ds">Valuation</div>';
+    h+='<div class="dr"><span class="dl">Adopted Value</span><span class="dv t">'+fmt(grv)+'</span></div>';
+    h+='<div class="ds">Funding</div>';
+    h+='<div class="dr"><span class="dl">Senior Debt (65%)</span><span class="dv">'+fmt(debt)+'</span></div>';
+    if(dscr>0)h+='<div class="dr"><span class="dl">DSCR</span><span class="dv '+dc+'">'+dscr.toFixed(2)+'x</span></div>';
+    h+='<div class="dvd '+dc+'">'+(dscr>=1.3?'✓ Strong debt coverage':'⚠ Review DSCR')+'</div>';
+  } else if(D.type==='bridging'){
+    var val=Number(f.grv||f.adoptedValue)||0;var loan=Number(f.loanAmount)||val*0.65;
+    var lvr=val>0?loan/val:0;var lc=lvr<=0.65?'g':lvr<=0.75?'w':'b';
+    h+='<div class="ds">Facility</div>';
+    h+='<div class="dr"><span class="dl">Value</span><span class="dv t">'+fmt(val)+'</span></div>';
+    h+='<div class="dr"><span class="dl">Loan</span><span class="dv">'+fmt(loan)+'</span></div>';
+    h+='<div class="dr"><span class="dl">LVR</span><span class="dv '+lc+'">'+pct(lvr)+'</span></div>';
+    h+='<div class="dvd '+lc+'">'+(lvr<=0.65?'✓ Within appetite':'⚠ Elevated LVR')+'</div>';
   }
-
-  // Feasibility
-  h+='<div class="ds">Feasibility</div>';
-  h+='<div class="dr"><span class="dl">GRV / Value</span><span class="dv t">'+fmt(grv)+'</span></div>';
-  if(land)h+='<div class="dr"><span class="dl">Land Cost</span><span class="dv">'+fmt(land)+'</span></div>';
-  if(con)h+='<div class="dr"><span class="dl">Construction</span><span class="dv">'+fmt(con)+'</span></div>';
-  h+='<div class="dr"><span class="dl">Total Project Cost</span><span class="dv">'+fmt(tpc)+'</span></div>';
-  h+='<div class="dr"><span class="dl">Development Margin</span><span class="dv '+mc+'">'+fmt(margin)+' ('+pct(mp)+')</span></div>';
-
-  // Funding
-  h+='<div class="ds">Indicative Funding</div>';
-  h+='<div class="dr"><span class="dl">Senior Debt (est.)</span><span class="dv">'+fmt(sr)+'</span></div>';
-  h+='<div class="dr"><span class="dl">LTC</span><span class="dv '+lc+'">'+pct(ltc)+'</span></div>';
-  h+='<div class="dr"><span class="dl">Equity Required</span><span class="dv">'+fmt(eq)+'</span></div>';
-  if(f.presalesCount)h+='<div class="dr"><span class="dl">Presales</span><span class="dv">'+f.presalesCount+' ('+fmt(f.presalesValue)+')</span></div>';
-
-  h+='<div class="dvd '+mc+'">'+vt+'</div></div>';
-
-  // Narrative
+  h+='</div>';
   if(D.narrative)h+='<div class="nar"><strong>AI Credit Summary:</strong><br><br>'+D.narrative.replace(/\n/g,'<br>')+'</div>';
-
   ab(h);
-
-  // Paywall
   setTimeout(function(){
     var m=$('msgs');
     m.innerHTML+='<div class="pw"><h2>Your credit paper is ready to generate</h2><p>Sign up to save this deal, generate a full credit paper with cash flows, and send for e-signing.</p><div class="pf"><span class="pfi">Full credit paper</span><span class="pfi">Cash flow modelling</span><span class="pfi">Lender matching</span><span class="pfi">DocuSeal e-signing</span><span class="pfi">Settlement tracking</span></div><a class="pwb" href="login.html?signup=true&type='+D.type+'">Create free account →</a><p style="margin-top:12px;font-size:11px;opacity:0.4">Free tier: 5 deals/month · 2 team members · Full AI</p></div>';
     m.scrollTop=m.scrollHeight;
   },800);
 }
+
 </script>
 </body>
 </html>
