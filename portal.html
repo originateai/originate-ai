@@ -140,7 +140,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 <body>
 
 <nav class="nav">
-  <a href="index.html" class="nav-logo">getkredit<span>.ai</span></a>
+  <a href="index.html" class="nav-logo">get<span>kredit.ai</span></a>
   <div class="nav-links">
     <a href="admin.html" id="nav-admin" style="display:none">Admin</a>
     <a href="portal.html" class="active">My Deals</a>
@@ -552,7 +552,7 @@ async function init() {
   }
 
   var name = user.user_metadata && user.user_metadata.full_name;
-  document.getElementById("user-name").textContent = name || user.email;
+  document.getElementById("nav-user").textContent = name || user.email;
 
   // Fetch deals for this borrower (match by email)
   var sbRes = await sb.from("deals").select("*").eq("borrower_email", user.email).order("created_at",{ascending:false});

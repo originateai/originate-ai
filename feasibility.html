@@ -167,7 +167,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 </head>
 <body>
 <nav class="nav">
-  <a class="nav-logo" href="index.html">getkredit<span>.ai</span></a>
+  <a class="nav-logo" href="index.html">get<span>kredit.ai</span></a>
   <div class="nav-links">
     <a href="admin.html" id="nav-admin" style="display:none">Admin</a>
     <a href="portal.html">My Deals</a>
@@ -183,9 +183,9 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 <div class="product-bar">
   <button class="product-tab active" onclick="showProduct('development')">Development</button>
   <button class="product-tab" onclick="showProduct('residual')">Residual Stock</button>
-  <button class="product-tab disabled" onclick="showProduct('investment')">Investment</button>
-  <button class="product-tab disabled" onclick="showProduct('site')">Site</button>
-  <button class="product-tab disabled" onclick="showProduct('bridging')">Bridging</button>
+  <button class="product-tab" onclick="showProduct('investment')">Investment</button>
+  <button class="product-tab" onclick="showProduct('site')">Site</button>
+  <button class="product-tab" onclick="showProduct('bridging')">Bridging</button>
 </div>
 
 <!-- DEVELOPMENT SUB-TABS -->
@@ -552,27 +552,329 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 </div>
 </div><!-- end product-residual -->
 
-<!-- PLACEHOLDERS -->
+<!-- INVESTMENT MODEL -->
 <div id="product-investment" class="hidden">
-  <div class="container"><div class="coming-soon"><h2>Investment Model</h2><p>Income-producing asset analysis with yield metrics, WALE, cap rate sensitivity, and DCF valuation. Coming soon.</p></div></div>
+<div class="tab-bar">
+  <button class="tab active" onclick="showInvTab('inv-property')">① Property</button>
+  <button class="tab" onclick="showInvTab('inv-income')">② Income</button>
+  <button class="tab" onclick="showInvTab('inv-funding')">③ Funding</button>
+  <button class="tab" onclick="showInvTab('inv-results')">④ Results</button>
 </div>
+<div class="save-bar">
+  <input class="mn" id="inv-model-name" placeholder="Model name..." value="Investment Model">
+  <button class="sv-btn sv-p" onclick="saveInvModel()">💾 Save</button>
+  <span class="sv-status" id="inv-sv-status"></span>
+</div>
+<div class="container">
+
+  <!-- INV TAB 1: PROPERTY -->
+  <div id="inv-property">
+    <div class="section"><div class="section-head">Property Details</div>
+      <div class="row"><span class="row-label">Property Address</span><input class="inp" id="inv-address" type="text" placeholder="e.g. 123 Pitt St, Sydney" style="width:300px"></div>
+      <div class="row"><span class="row-label">Asset Type</span>
+        <select class="inp" id="inv-asset-type" style="width:180px" onchange="calcInv()">
+          <option value="office">Office</option><option value="retail">Retail</option><option value="industrial">Industrial</option>
+          <option value="mixed">Mixed Use</option><option value="medical">Medical/Childcare</option><option value="other">Other</option>
+        </select>
+      </div>
+      <div class="row"><span class="row-label">NLA (sqm)</span><input class="inp" id="inv-nla" type="number" value="0" style="width:100px" onchange="calcInv()"></div>
+      <div class="row"><span class="row-label">Year Built</span><input class="inp" id="inv-year-built" type="number" value="2000" style="width:80px"></div>
+      <div class="row"><span class="row-label">Car Spaces</span><input class="inp" id="inv-carspaces" type="number" value="0" style="width:80px"></div>
+    </div>
+    <div class="section"><div class="section-head">Tenant Profile</div>
+      <div class="row"><span class="row-label">Primary Tenant</span><input class="inp" id="inv-tenant" type="text" placeholder="e.g. Woolworths" style="width:200px"></div>
+      <div class="row"><span class="row-label">Tenant Covenant</span>
+        <select class="inp" id="inv-covenant" style="width:140px">
+          <option value="strong">Strong (ASX / Govt)</option><option value="good">Good (National)</option>
+          <option value="moderate">Moderate (Regional)</option><option value="weak">Weak (SME/Startup)</option>
+        </select>
+      </div>
+      <div class="row"><span class="row-label">Occupancy</span><input class="inp" id="inv-occupancy" type="number" value="100" step="1" style="width:80px" onchange="calcInv()"><span class="pct">%</span></div>
+      <div class="row"><span class="row-label">Lease Term (total yrs)</span><input class="inp" id="inv-lease-total" type="number" value="10" step="0.5" style="width:80px" onchange="calcInv()"></div>
+      <div class="row"><span class="row-label">Remaining (yrs)</span><input class="inp" id="inv-wale" type="number" value="5" step="0.5" style="width:80px" onchange="calcInv()"></div>
+      <div class="row"><span class="row-label">Review Type</span>
+        <select class="inp" id="inv-review" style="width:140px">
+          <option value="fixed">Fixed</option><option value="cpi">CPI</option><option value="market">Market</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- INV TAB 2: INCOME -->
+  <div id="inv-income" class="hidden">
+    <div class="section"><div class="section-head">Income</div>
+      <div class="row"><span class="row-label">Gross Rent (p.a.)</span><input class="inp" id="inv-gross-rent" type="number" value="0" style="width:140px" onchange="calcInv()"><span class="pct">$</span></div>
+      <div class="row"><span class="row-label">Car Park Income (p.a.)</span><input class="inp" id="inv-carpark-income" type="number" value="0" style="width:140px" onchange="calcInv()"><span class="pct">$</span></div>
+      <div class="row"><span class="row-label">Other Income (p.a.)</span><input class="inp" id="inv-other-income" type="number" value="0" style="width:140px" onchange="calcInv()"><span class="pct">$</span></div>
+      <div class="row sub"><span class="row-label">Gross Income</span><span class="row-value" id="inv-gi" style="font-weight:700">—</span></div>
+      <div class="row"><span class="row-label">Vacancy Allowance</span><input class="inp" id="inv-vacancy" type="number" value="5" step="0.5" style="width:80px" onchange="calcInv()"><span class="pct">%</span></div>
+      <div class="row sub"><span class="row-label">Effective Gross Income</span><span class="row-value" id="inv-egi" style="font-weight:700">—</span></div>
+    </div>
+    <div class="section"><div class="section-head">Outgoings</div>
+      <div class="row"><span class="row-label">Council Rates</span><input class="inp" id="inv-rates" type="number" value="0" style="width:120px" onchange="calcInv()"><span class="pct">$</span></div>
+      <div class="row"><span class="row-label">Insurance</span><input class="inp" id="inv-insurance" type="number" value="0" style="width:120px" onchange="calcInv()"><span class="pct">$</span></div>
+      <div class="row"><span class="row-label">Land Tax</span><input class="inp" id="inv-landtax" type="number" value="0" style="width:120px" onchange="calcInv()"><span class="pct">$</span></div>
+      <div class="row"><span class="row-label">Management Fee</span><input class="inp" id="inv-mgmt" type="number" value="0" style="width:120px" onchange="calcInv()"><span class="pct">$</span></div>
+      <div class="row"><span class="row-label">Other Outgoings</span><input class="inp" id="inv-outgoings-other" type="number" value="0" style="width:120px" onchange="calcInv()"><span class="pct">$</span></div>
+      <div class="row sub"><span class="row-label">Total Outgoings</span><span class="row-value" id="inv-total-outgoings" style="font-weight:700">—</span></div>
+      <div class="row sub"><span class="row-label" style="font-weight:700">Net Operating Income (NOI)</span><span class="row-value" id="inv-noi" style="color:var(--teal);font-weight:700;font-size:16px">—</span></div>
+    </div>
+  </div>
+
+  <!-- INV TAB 3: FUNDING -->
+  <div id="inv-funding" class="hidden">
+    <div class="section"><div class="section-head">Valuation</div>
+      <div class="row"><span class="row-label">Market Cap Rate</span><input class="inp" id="inv-caprate" type="number" value="6.5" step="0.25" style="width:80px" onchange="calcInv()"><span class="pct">%</span></div>
+      <div class="row sub"><span class="row-label">Capitalised Value (NOI / Cap Rate)</span><span class="row-value" id="inv-capval" style="font-weight:700;font-size:16px">—</span></div>
+      <div class="row"><span class="row-label">Below-the-Line Adjustments</span><input class="inp" id="inv-btl" type="number" value="0" style="width:120px" onchange="calcInv()"><span class="pct">$</span></div>
+      <div class="row sub"><span class="row-label" style="font-weight:700">Adopted Value</span><span class="row-value" id="inv-adopted" style="color:var(--teal);font-weight:700;font-size:18px">—</span></div>
+    </div>
+    <div class="section"><div class="section-head">Loan Structure</div>
+      <div class="row"><span class="row-label">Purchase Price</span><input class="inp" id="inv-purchase" type="number" value="0" style="width:140px" onchange="calcInv()"><span class="pct">$</span></div>
+      <div class="row"><span class="row-label">LVR</span><input class="inp" id="inv-lvr" type="number" value="65" step="1" style="width:80px" onchange="calcInv()"><span class="pct">%</span></div>
+      <div class="row sub"><span class="row-label">Senior Debt</span><span class="row-value" id="inv-debt" style="font-weight:700">—</span></div>
+      <div class="row sub"><span class="row-label">Equity Required</span><span class="row-value" id="inv-equity" style="font-weight:700">—</span></div>
+      <div class="row"><span class="row-label">Interest Rate</span><input class="inp" id="inv-rate" type="number" value="6.5" step="0.1" style="width:80px" onchange="calcInv()"><span class="pct">% p.a.</span></div>
+      <div class="row"><span class="row-label">Loan Term</span><input class="inp" id="inv-term" type="number" value="36" step="6" style="width:80px" onchange="calcInv()"><span class="pct">months</span></div>
+    </div>
+  </div>
+
+  <!-- INV TAB 4: RESULTS -->
+  <div id="inv-results" class="hidden">
+    <div class="adopted-banner" id="inv-banner">
+      <div><div class="ab-label">Adopted Value</div><div class="ab-value tl" id="inv-r-value">—</div></div>
+      <div><div class="ab-label">NOI Yield</div><div class="ab-value" id="inv-r-yield">—</div></div>
+      <div><div class="ab-label">DSCR</div><div class="ab-value" id="inv-r-dscr">—</div></div>
+      <div><div class="ab-label">ICR</div><div class="ab-value" id="inv-r-icr">—</div></div>
+    </div>
+    <div class="summary-grid" id="inv-summary">
+      <div class="sc"><div class="sc-label">Gross Income</div><div class="sc-value" id="inv-s-gi">—</div></div>
+      <div class="sc"><div class="sc-label">Net Income (NOI)</div><div class="sc-value" id="inv-s-noi">—</div></div>
+      <div class="sc"><div class="sc-label">Cap Rate</div><div class="sc-value" id="inv-s-cap">—</div></div>
+      <div class="sc"><div class="sc-label">WALE</div><div class="sc-value" id="inv-s-wale">—</div></div>
+      <div class="sc"><div class="sc-label">Senior Debt</div><div class="sc-value" id="inv-s-debt">—</div></div>
+      <div class="sc"><div class="sc-label">LVR</div><div class="sc-value" id="inv-s-lvr">—</div></div>
+      <div class="sc"><div class="sc-label">Annual Debt Service</div><div class="sc-value" id="inv-s-service">—</div></div>
+      <div class="sc"><div class="sc-label">Cash-on-Cash Return</div><div class="sc-value" id="inv-s-coc">—</div></div>
+    </div>
+    <div id="inv-credit-box" class="credit-box ok" style="margin-top:16px">—</div>
+  </div>
+
+</div>
+</div><!-- end product-investment -->
+
+<!-- SITE ACQUISITION MODEL -->
 <div id="product-site" class="hidden">
-  <div class="container"><div class="coming-soon"><h2>Site Acquisition</h2><p>Pre-DA site feasibility with zoning analysis, GFA calculations, and highest-and-best-use modelling. Coming soon.</p></div></div>
+<div class="tab-bar">
+  <button class="tab active" onclick="showSiteTab('site-property')">① Site</button>
+  <button class="tab" onclick="showSiteTab('site-planning')">② Planning</button>
+  <button class="tab" onclick="showSiteTab('site-feasibility')">③ Feasibility</button>
+  <button class="tab" onclick="showSiteTab('site-results')">④ Results</button>
 </div>
+<div class="save-bar">
+  <input class="mn" id="site-model-name" placeholder="Model name..." value="Site Acquisition Model">
+  <button class="sv-btn sv-p" onclick="saveSiteModel()">💾 Save</button>
+  <span class="sv-status" id="site-sv-status"></span>
+</div>
+<div class="container">
+
+  <!-- SITE TAB 1: SITE -->
+  <div id="site-property">
+    <div class="section"><div class="section-head">Site Details</div>
+      <div class="row"><span class="row-label">Property Address</span><input class="inp" id="site-address" type="text" placeholder="e.g. 15 Railway Ave, Eastwood" style="width:300px"></div>
+      <div class="row"><span class="row-label">Land Area (sqm)</span><input class="inp" id="site-land-area" type="number" value="0" style="width:100px" onchange="calcSite()"></div>
+      <div class="row"><span class="row-label">Current Zoning</span><input class="inp" id="site-zoning" type="text" placeholder="e.g. R4 High Density" style="width:200px"></div>
+      <div class="row"><span class="row-label">Max FSR</span><input class="inp" id="site-fsr" type="number" value="0" step="0.1" style="width:80px" onchange="calcSite()"><span class="pct">:1</span></div>
+      <div class="row"><span class="row-label">Max Height (m)</span><input class="inp" id="site-height" type="number" value="0" step="1" style="width:80px"></div>
+      <div class="row"><span class="row-label">Min Lot Size (sqm)</span><input class="inp" id="site-min-lot" type="number" value="0" style="width:100px" onchange="calcSite()"></div>
+    </div>
+    <div class="section"><div class="section-head">Acquisition</div>
+      <div class="row"><span class="row-label">Purchase Price</span><input class="inp" id="site-purchase" type="number" value="0" style="width:140px" onchange="calcSite()"><span class="pct">$</span></div>
+      <div class="row"><span class="row-label">Stamp Duty</span><input class="inp" id="site-stamp-duty" type="number" value="0" style="width:120px" onchange="calcSite()"><span class="pct">$</span></div>
+      <div class="row"><span class="row-label">Legal / Due Diligence</span><input class="inp" id="site-legal" type="number" value="50000" style="width:120px" onchange="calcSite()"><span class="pct">$</span></div>
+      <div class="row sub"><span class="row-label">Total Acquisition Cost</span><span class="row-value" id="site-total-acq" style="font-weight:700">—</span></div>
+    </div>
+  </div>
+
+  <!-- SITE TAB 2: PLANNING -->
+  <div id="site-planning" class="hidden">
+    <div class="section"><div class="section-head">GFA Calculation</div>
+      <div class="row sub"><span class="row-label">Max GFA (Land × FSR)</span><span class="row-value" id="site-max-gfa" style="font-weight:700">—</span></div>
+      <div class="row"><span class="row-label">Efficiency (%)</span><input class="inp" id="site-efficiency" type="number" value="80" step="1" style="width:80px" onchange="calcSite()"><span class="pct">%</span></div>
+      <div class="row sub"><span class="row-label">Net Sellable Area</span><span class="row-value" id="site-nsa" style="font-weight:700">—</span></div>
+    </div>
+    <div class="section"><div class="section-head">Yield Estimate</div>
+      <div class="row"><span class="row-label">Avg Unit Size (sqm)</span><input class="inp" id="site-avg-unit" type="number" value="75" step="5" style="width:80px" onchange="calcSite()"></div>
+      <div class="row sub"><span class="row-label">Estimated Units</span><span class="row-value" id="site-est-units" style="font-weight:700">—</span></div>
+      <div class="row"><span class="row-label">DA Status</span>
+        <select class="inp" id="site-da-status" style="width:160px">
+          <option value="pre-da">Pre-DA</option><option value="lodged">DA Lodged</option>
+          <option value="approved">DA Approved</option><option value="complying">CDC/Complying</option>
+        </select>
+      </div>
+      <div class="row"><span class="row-label">DA Timeline (months)</span><input class="inp" id="site-da-months" type="number" value="12" style="width:80px"></div>
+    </div>
+  </div>
+
+  <!-- SITE TAB 3: FEASIBILITY -->
+  <div id="site-feasibility" class="hidden">
+    <div class="section"><div class="section-head">Hypothetical Development</div>
+      <div class="row"><span class="row-label">End Value / Unit (avg)</span><input class="inp" id="site-end-value" type="number" value="0" style="width:140px" onchange="calcSite()"><span class="pct">$</span></div>
+      <div class="row sub"><span class="row-label">GRV (est.)</span><span class="row-value" id="site-grv" style="color:var(--teal);font-weight:700;font-size:16px">—</span></div>
+      <div class="row"><span class="row-label">Construction Cost / sqm</span><input class="inp" id="site-con-rate" type="number" value="4500" step="100" style="width:120px" onchange="calcSite()"><span class="pct">$/sqm</span></div>
+      <div class="row sub"><span class="row-label">Est. Construction Cost</span><span class="row-value" id="site-con-total" style="font-weight:700">—</span></div>
+      <div class="row"><span class="row-label">Professional Fees (%)</span><input class="inp" id="site-pro-fees" type="number" value="8" step="0.5" style="width:80px" onchange="calcSite()"><span class="pct">%</span></div>
+    </div>
+    <div class="section"><div class="section-head">RLV Analysis</div>
+      <div class="row sub"><span class="row-label">Total Development Cost (ex land)</span><span class="row-value" id="site-tdc" style="font-weight:700">—</span></div>
+      <div class="row"><span class="row-label">Target Dev Margin (%)</span><input class="inp" id="site-target-margin" type="number" value="20" step="1" style="width:80px" onchange="calcSite()"><span class="pct">%</span></div>
+      <div class="row sub"><span class="row-label" style="font-weight:700">Residual Land Value (RLV)</span><span class="row-value" id="site-rlv" style="color:var(--teal);font-weight:700;font-size:18px">—</span></div>
+      <div class="row sub"><span class="row-label">RLV / sqm of Land</span><span class="row-value" id="site-rlv-sqm" style="font-weight:700">—</span></div>
+    </div>
+  </div>
+
+  <!-- SITE TAB 4: RESULTS -->
+  <div id="site-results" class="hidden">
+    <div class="adopted-banner" id="site-banner">
+      <div><div class="ab-label">RLV</div><div class="ab-value tl" id="site-r-rlv">—</div></div>
+      <div><div class="ab-label">Purchase Price</div><div class="ab-value" id="site-r-purchase">—</div></div>
+      <div><div class="ab-label">RLV vs Price</div><div class="ab-value" id="site-r-delta">—</div></div>
+      <div><div class="ab-label">RLV / sqm</div><div class="ab-value" id="site-r-sqm">—</div></div>
+    </div>
+    <div class="summary-grid" id="site-summary">
+      <div class="sc"><div class="sc-label">Land Area</div><div class="sc-value" id="site-s-area">—</div></div>
+      <div class="sc"><div class="sc-label">Max GFA</div><div class="sc-value" id="site-s-gfa">—</div></div>
+      <div class="sc"><div class="sc-label">Est. Units</div><div class="sc-value" id="site-s-units">—</div></div>
+      <div class="sc"><div class="sc-label">GRV</div><div class="sc-value" id="site-s-grv">—</div></div>
+      <div class="sc"><div class="sc-label">Construction</div><div class="sc-value" id="site-s-con">—</div></div>
+      <div class="sc"><div class="sc-label">Target Margin</div><div class="sc-value" id="site-s-margin">—</div></div>
+      <div class="sc"><div class="sc-label">Total Acq. Cost</div><div class="sc-value" id="site-s-acq">—</div></div>
+      <div class="sc"><div class="sc-label">DA Status</div><div class="sc-value" id="site-s-da">—</div></div>
+    </div>
+    <div id="site-credit-box" class="credit-box ok" style="margin-top:16px">—</div>
+  </div>
+
+</div>
+</div><!-- end product-site -->
+
+<!-- BRIDGING FINANCE MODEL -->
 <div id="product-bridging" class="hidden">
-  <div class="container"><div class="coming-soon"><h2>Bridging Finance</h2><p>Short-term bridging loan analysis with exit strategy modelling, LVR waterfall, and interest capitalisation. Coming soon.</p></div></div>
+<div class="tab-bar">
+  <button class="tab active" onclick="showBridgeTab('br-property')">① Security</button>
+  <button class="tab" onclick="showBridgeTab('br-facility')">② Facility</button>
+  <button class="tab" onclick="showBridgeTab('br-exit')">③ Exit Strategy</button>
+  <button class="tab" onclick="showBridgeTab('br-results')">④ Results</button>
 </div>
+<div class="save-bar">
+  <input class="mn" id="br-model-name" placeholder="Model name..." value="Bridging Model">
+  <button class="sv-btn sv-p" onclick="saveBridgeModel()">💾 Save</button>
+  <span class="sv-status" id="br-sv-status"></span>
+</div>
+<div class="container">
+
+  <!-- BR TAB 1: SECURITY -->
+  <div id="br-property">
+    <div class="section"><div class="section-head">Security Property</div>
+      <div class="row"><span class="row-label">Property Address</span><input class="inp" id="br-address" type="text" placeholder="e.g. 42 Beach Rd, Bondi" style="width:300px"></div>
+      <div class="row"><span class="row-label">Property Type</span>
+        <select class="inp" id="br-type" style="width:180px">
+          <option value="residential">Residential</option><option value="commercial">Commercial</option>
+          <option value="industrial">Industrial</option><option value="land">Vacant Land</option>
+          <option value="mixed">Mixed Use</option>
+        </select>
+      </div>
+      <div class="row"><span class="row-label">Current Value</span><input class="inp" id="br-value" type="number" value="0" style="width:140px" onchange="calcBridge()"><span class="pct">$</span></div>
+      <div class="row"><span class="row-label">Existing Debt</span><input class="inp" id="br-existing-debt" type="number" value="0" style="width:140px" onchange="calcBridge()"><span class="pct">$</span></div>
+      <div class="row sub"><span class="row-label">Net Equity</span><span class="row-value" id="br-net-equity" style="font-weight:700">—</span></div>
+    </div>
+    <div class="section"><div class="section-head">Additional Security (optional)</div>
+      <div class="row"><span class="row-label">Additional Property Value</span><input class="inp" id="br-add-value" type="number" value="0" style="width:140px" onchange="calcBridge()"><span class="pct">$</span></div>
+      <div class="row"><span class="row-label">Debt on Additional Property</span><input class="inp" id="br-add-debt" type="number" value="0" style="width:140px" onchange="calcBridge()"><span class="pct">$</span></div>
+      <div class="row sub"><span class="row-label">Total Security Pool</span><span class="row-value" id="br-total-security" style="color:var(--teal);font-weight:700;font-size:16px">—</span></div>
+    </div>
+  </div>
+
+  <!-- BR TAB 2: FACILITY -->
+  <div id="br-facility" class="hidden">
+    <div class="section"><div class="section-head">Loan Structure</div>
+      <div class="row"><span class="row-label">Loan Amount Required</span><input class="inp" id="br-loan" type="number" value="0" style="width:140px" onchange="calcBridge()"><span class="pct">$</span></div>
+      <div class="row"><span class="row-label">Purpose</span>
+        <select class="inp" id="br-purpose" style="width:200px">
+          <option value="purchase">Purchase / Settlement</option><option value="equity-release">Equity Release</option>
+          <option value="refinance">Refinance / Payoff</option><option value="construction-interim">Construction Interim</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="row"><span class="row-label">Term (months)</span><input class="inp" id="br-term" type="number" value="12" step="3" style="width:80px" onchange="calcBridge()"></div>
+      <div class="row"><span class="row-label">Interest Rate</span><input class="inp" id="br-rate" type="number" value="12" step="0.25" style="width:80px" onchange="calcBridge()"><span class="pct">% p.a.</span></div>
+      <div class="row"><span class="row-label">Establishment Fee</span><input class="inp" id="br-estab" type="number" value="2" step="0.25" style="width:80px" onchange="calcBridge()"><span class="pct">%</span></div>
+      <div class="row"><span class="row-label">Interest Capitalised?</span>
+        <select class="inp" id="br-cap-interest" style="width:120px" onchange="calcBridge()">
+          <option value="yes">Yes</option><option value="no">No — serviced</option>
+        </select>
+      </div>
+    </div>
+    <div class="section"><div class="section-head">Cost Summary</div>
+      <div class="row sub"><span class="row-label">Establishment Fee</span><span class="row-value" id="br-estab-amt" style="font-weight:700">—</span></div>
+      <div class="row sub"><span class="row-label">Total Interest (capitalised)</span><span class="row-value" id="br-interest-total" style="font-weight:700">—</span></div>
+      <div class="row sub"><span class="row-label" style="font-weight:700">Total Cost of Facility</span><span class="row-value" id="br-total-cost" style="color:var(--red);font-weight:700;font-size:16px">—</span></div>
+      <div class="row sub"><span class="row-label">Peak Debt (loan + capitalised interest)</span><span class="row-value" id="br-peak-debt" style="font-weight:700">—</span></div>
+    </div>
+  </div>
+
+  <!-- BR TAB 3: EXIT -->
+  <div id="br-exit" class="hidden">
+    <div class="section"><div class="section-head">Exit Strategy</div>
+      <div class="row"><span class="row-label">Primary Exit</span>
+        <select class="inp" id="br-exit-type" style="width:200px">
+          <option value="sale">Sale of Security</option><option value="refinance">Refinance to Term Loan</option>
+          <option value="settlement">Settlement of Sale (already exchanged)</option><option value="other">Other</option>
+        </select>
+      </div>
+      <div class="row"><span class="row-label">Expected Exit Value</span><input class="inp" id="br-exit-value" type="number" value="0" style="width:140px" onchange="calcBridge()"><span class="pct">$</span></div>
+      <div class="row"><span class="row-label">Exit Timeline (months)</span><input class="inp" id="br-exit-months" type="number" value="6" style="width:80px" onchange="calcBridge()"></div>
+    </div>
+    <div class="section"><div class="section-head">Exit Analysis</div>
+      <div class="row sub"><span class="row-label">Peak Debt at Exit</span><span class="row-value" id="br-exit-peak" style="font-weight:700">—</span></div>
+      <div class="row sub"><span class="row-label">Exit LVR</span><span class="row-value" id="br-exit-lvr" style="font-weight:700">—</span></div>
+      <div class="row sub"><span class="row-label">Surplus / (Shortfall)</span><span class="row-value" id="br-exit-surplus" style="font-weight:700;font-size:16px">—</span></div>
+    </div>
+  </div>
+
+  <!-- BR TAB 4: RESULTS -->
+  <div id="br-results" class="hidden">
+    <div class="adopted-banner" id="br-banner">
+      <div><div class="ab-label">Loan Amount</div><div class="ab-value tl" id="br-r-loan">—</div></div>
+      <div><div class="ab-label">LVR (Gross)</div><div class="ab-value" id="br-r-lvr">—</div></div>
+      <div><div class="ab-label">Total Cost</div><div class="ab-value" id="br-r-cost">—</div></div>
+      <div><div class="ab-label">Exit Surplus</div><div class="ab-value" id="br-r-surplus">—</div></div>
+    </div>
+    <div class="summary-grid" id="br-summary">
+      <div class="sc"><div class="sc-label">Security Value</div><div class="sc-value" id="br-s-value">—</div></div>
+      <div class="sc"><div class="sc-label">Existing Debt</div><div class="sc-value" id="br-s-existing">—</div></div>
+      <div class="sc"><div class="sc-label">Net Equity</div><div class="sc-value" id="br-s-equity">—</div></div>
+      <div class="sc"><div class="sc-label">Interest Rate</div><div class="sc-value" id="br-s-rate">—</div></div>
+      <div class="sc"><div class="sc-label">Term</div><div class="sc-value" id="br-s-term">—</div></div>
+      <div class="sc"><div class="sc-label">Peak Debt</div><div class="sc-value" id="br-s-peak">—</div></div>
+      <div class="sc"><div class="sc-label">Exit Strategy</div><div class="sc-value" id="br-s-exit">—</div></div>
+      <div class="sc"><div class="sc-label">Exit LVR</div><div class="sc-value" id="br-s-elvr">—</div></div>
+    </div>
+    <div id="br-credit-box" class="credit-box ok" style="margin-top:16px">—</div>
+  </div>
+
+</div>
+</div><!-- end product-bridging -->
 
 <!-- AI COPILOT PANEL -->
 <div id="ai-fab" onclick="toggleAI()" style="position:fixed;bottom:24px;right:24px;width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 16px rgba(13,148,136,0.3);z-index:100;font-size:18px;transition:transform 0.2s;opacity:0.85" onmouseenter="this.style.transform='scale(1.1)';this.style.opacity='1'" onmouseleave="this.style.transform='scale(1)';this.style.opacity='0.85'">✦</div>
 
 <div id="ai-panel" style="display:none;position:fixed;bottom:24px;right:24px;width:400px;height:560px;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,0.15);z-index:101;display:none;flex-direction:column;overflow:hidden">
-  <div style="background:var(--grey900);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+  <div style="background:var(--white);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;border-bottom:1px solid var(--border)">
     <div>
-      <div style="color:white;font-weight:700;font-size:15px">✦ AI Copilot</div>
-      <div style="color:rgba(255,255,255,0.4);font-size:11px">Property finance assistant</div>
+      <div style="color:var(--grey900);font-weight:700;font-size:15px">✦ AI Copilot</div>
+      <div style="color:var(--grey500);font-size:11px">Property finance assistant</div>
     </div>
-    <button onclick="toggleAI()" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:20px;cursor:pointer;padding:4px">×</button>
+    <button onclick="toggleAI()" style="background:none;border:none;color:var(--grey500);font-size:20px;cursor:pointer;padding:4px">×</button>
   </div>
   <div id="ai-messages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
     <div style="background:var(--teal-bg);border-radius:12px 12px 12px 2px;padding:12px 14px;font-size:13px;color:var(--teal-dark);max-width:85%;line-height:1.5">
@@ -610,21 +912,23 @@ var PRODUCT="development";
 // ── Product Switching ──
 function showProduct(p){
   console.log('showProduct:',p);
-  if(p!=='development'&&p!=='residual')return;
   PRODUCT=p;
   ['development','residual','investment','site','bridging'].forEach(function(id){
     var el=document.getElementById('product-'+id);
     if(el){
-      if(id===p){el.style.display='';el.classList.remove('hidden');console.log('product-'+id,'SHOW');}
-      else{el.style.display='none';console.log('product-'+id,'HIDE');}
+      if(id===p){el.style.display='';el.classList.remove('hidden');}
+      else{el.style.display='none';}
     }
   });
+  var labels={development:'Development',residual:'Residual Stock',investment:'Investment',site:'Site',bridging:'Bridging'};
   document.querySelectorAll('.product-tab').forEach(function(b){
-    var match=(p==='development'&&b.textContent.trim()==='Development')||(p==='residual'&&b.textContent.trim()==='Residual Stock');
-    b.classList.toggle('active',match);
+    b.classList.toggle('active',b.textContent.trim()===labels[p]);
   });
-  if(p==='residual'){setTimeout(function(){calcRes();},200);}
+  if(p==='residual')setTimeout(function(){calcRes();},200);
   if(p==='development')calc();
+  if(p==='investment')calcInv();
+  if(p==='site')calcSite();
+  if(p==='bridging')calcBridge();
 }
 
 // ── Formatters ──
@@ -1816,8 +2120,211 @@ async function sendAI(){
   }
 }
 
+// ── INVESTMENT MODEL ──────────────────────────────────────────────────────────
+var INV_TABS=['inv-property','inv-income','inv-funding','inv-results'];
+function showInvTab(t){INV_TABS.forEach(function(id){document.getElementById(id).classList.toggle('hidden',id!==t);});
+document.querySelectorAll('#product-investment .tab').forEach(function(b,i){b.classList.toggle('active',INV_TABS[i]===t);});calcInv();}
+
+function calcInv(){
+  var grossRent=Number(document.getElementById('inv-gross-rent').value)||0;
+  var carparkInc=Number(document.getElementById('inv-carpark-income').value)||0;
+  var otherInc=Number(document.getElementById('inv-other-income').value)||0;
+  var gi=grossRent+carparkInc+otherInc;
+  var vacPct=(Number(document.getElementById('inv-vacancy').value)||0)/100;
+  var egi=gi*(1-vacPct);
+  var rates=Number(document.getElementById('inv-rates').value)||0;
+  var ins=Number(document.getElementById('inv-insurance').value)||0;
+  var lt=Number(document.getElementById('inv-landtax').value)||0;
+  var mgmt=Number(document.getElementById('inv-mgmt').value)||0;
+  var oo=Number(document.getElementById('inv-outgoings-other').value)||0;
+  var totalOut=rates+ins+lt+mgmt+oo;
+  var noi=egi-totalOut;
+  var capRate=(Number(document.getElementById('inv-caprate').value)||6.5)/100;
+  var capVal=capRate>0?noi/capRate:0;
+  var btl=Number(document.getElementById('inv-btl').value)||0;
+  var adopted=capVal-btl;
+  var purchase=Number(document.getElementById('inv-purchase').value)||0;
+  var basis=purchase>0?purchase:adopted;
+  var lvrPct=(Number(document.getElementById('inv-lvr').value)||65)/100;
+  var debt=basis*lvrPct;
+  var equity=basis-debt;
+  var rate=(Number(document.getElementById('inv-rate').value)||6.5)/100;
+  var annualService=debt*rate;
+  var dscr=annualService>0?noi/annualService:0;
+  var icr=dscr; // simplified — same as DSCR for IO
+  var cocReturn=equity>0?(noi-annualService)/equity:0;
+  var wale=Number(document.getElementById('inv-wale').value)||0;
+  var f=function(v){return v?'$'+Math.round(v).toLocaleString('en-AU'):'—';};
+  var p=function(v){return v?(v*100).toFixed(1)+'%':'—';};
+  // Income tab
+  document.getElementById('inv-gi').textContent=f(gi);
+  document.getElementById('inv-egi').textContent=f(egi);
+  document.getElementById('inv-total-outgoings').textContent=f(totalOut);
+  document.getElementById('inv-noi').textContent=f(noi);
+  // Funding tab
+  document.getElementById('inv-capval').textContent=f(capVal);
+  document.getElementById('inv-adopted').textContent=f(adopted);
+  document.getElementById('inv-debt').textContent=f(debt);
+  document.getElementById('inv-equity').textContent=f(equity);
+  // Results
+  document.getElementById('inv-r-value').textContent=f(adopted);
+  document.getElementById('inv-r-yield').textContent=adopted>0?p(noi/adopted):'—';
+  document.getElementById('inv-r-dscr').textContent=dscr>0?dscr.toFixed(2)+'x':'—';
+  document.getElementById('inv-r-icr').textContent=icr>0?icr.toFixed(2)+'x':'—';
+  document.getElementById('inv-s-gi').textContent=f(gi);
+  document.getElementById('inv-s-noi').textContent=f(noi);
+  document.getElementById('inv-s-cap').textContent=p(capRate);
+  document.getElementById('inv-s-wale').textContent=wale?wale.toFixed(1)+' yrs':'—';
+  document.getElementById('inv-s-debt').textContent=f(debt);
+  document.getElementById('inv-s-lvr').textContent=p(lvrPct);
+  document.getElementById('inv-s-service').textContent=f(annualService);
+  document.getElementById('inv-s-coc').textContent=p(cocReturn);
+  var cb=document.getElementById('inv-credit-box');
+  if(dscr>=1.3){cb.className='credit-box ok';cb.textContent='✓ Strong debt coverage — DSCR '+dscr.toFixed(2)+'x';}
+  else if(dscr>=1.1){cb.className='credit-box warn';cb.textContent='⚠ Marginal DSCR '+dscr.toFixed(2)+'x — lender dependent';}
+  else if(noi>0){cb.className='credit-box bad';cb.textContent='✗ Weak DSCR '+dscr.toFixed(2)+'x — insufficient coverage';}
+  else{cb.className='credit-box bad';cb.textContent='Enter income data to calculate';}
+}
+function saveInvModel(){document.getElementById('inv-sv-status').textContent='Saved ✓';setTimeout(function(){document.getElementById('inv-sv-status').textContent='';},2000);}
+
+// ── SITE ACQUISITION MODEL ───────────────────────────────────────────────────
+var SITE_TABS=['site-property','site-planning','site-feasibility','site-results'];
+function showSiteTab(t){SITE_TABS.forEach(function(id){document.getElementById(id).classList.toggle('hidden',id!==t);});
+document.querySelectorAll('#product-site .tab').forEach(function(b,i){b.classList.toggle('active',SITE_TABS[i]===t);});calcSite();}
+
+function calcSite(){
+  var land=Number(document.getElementById('site-land-area').value)||0;
+  var fsr=Number(document.getElementById('site-fsr').value)||0;
+  var maxGFA=land*fsr;
+  var eff=(Number(document.getElementById('site-efficiency').value)||80)/100;
+  var nsa=maxGFA*eff;
+  var avgUnit=Number(document.getElementById('site-avg-unit').value)||75;
+  var estUnits=avgUnit>0?Math.floor(nsa/avgUnit):0;
+  var purchase=Number(document.getElementById('site-purchase').value)||0;
+  var stamp=Number(document.getElementById('site-stamp-duty').value)||0;
+  var legal=Number(document.getElementById('site-legal').value)||0;
+  var totalAcq=purchase+stamp+legal;
+  var endValue=Number(document.getElementById('site-end-value').value)||0;
+  var grv=endValue*estUnits;
+  var conRate=Number(document.getElementById('site-con-rate').value)||4500;
+  var conTotal=maxGFA*conRate;
+  var proFees=(Number(document.getElementById('site-pro-fees').value)||8)/100;
+  var tdc=conTotal*(1+proFees);
+  var targetMargin=(Number(document.getElementById('site-target-margin').value)||20)/100;
+  var rlv=grv>0?grv/(1+targetMargin)-tdc:0;
+  var rlvSqm=land>0?rlv/land:0;
+  var delta=purchase>0?rlv-purchase:0;
+  var f=function(v){return v?'$'+Math.round(v).toLocaleString('en-AU'):'—';};
+  // Planning
+  document.getElementById('site-max-gfa').textContent=maxGFA?Math.round(maxGFA).toLocaleString('en-AU')+' sqm':'—';
+  document.getElementById('site-nsa').textContent=nsa?Math.round(nsa).toLocaleString('en-AU')+' sqm':'—';
+  document.getElementById('site-est-units').textContent=estUnits||'—';
+  // Acquisition
+  document.getElementById('site-total-acq').textContent=f(totalAcq);
+  // Feasibility
+  document.getElementById('site-grv').textContent=f(grv);
+  document.getElementById('site-con-total').textContent=f(conTotal);
+  document.getElementById('site-tdc').textContent=f(tdc);
+  document.getElementById('site-rlv').textContent=f(rlv);
+  document.getElementById('site-rlv-sqm').textContent=rlvSqm?f(rlvSqm)+'/sqm':'—';
+  // Results
+  document.getElementById('site-r-rlv').textContent=f(rlv);
+  document.getElementById('site-r-purchase').textContent=f(purchase);
+  var dc=delta>=0?'gn':'rd';
+  document.getElementById('site-r-delta').textContent=f(delta);
+  document.getElementById('site-r-delta').className='ab-value '+(delta>=0?'gn':'rd');
+  document.getElementById('site-r-sqm').textContent=rlvSqm?f(rlvSqm)+'/sqm':'—';
+  document.getElementById('site-s-area').textContent=land?land.toLocaleString('en-AU')+' sqm':'—';
+  document.getElementById('site-s-gfa').textContent=maxGFA?Math.round(maxGFA).toLocaleString('en-AU')+' sqm':'—';
+  document.getElementById('site-s-units').textContent=estUnits||'—';
+  document.getElementById('site-s-grv').textContent=f(grv);
+  document.getElementById('site-s-con').textContent=f(conTotal);
+  document.getElementById('site-s-margin').textContent=(targetMargin*100).toFixed(0)+'%';
+  document.getElementById('site-s-acq').textContent=f(totalAcq);
+  document.getElementById('site-s-da').textContent=document.getElementById('site-da-status').value.replace(/-/g,' ');
+  var cb=document.getElementById('site-credit-box');
+  if(rlv>0&&purchase>0){
+    if(delta>=0){cb.className='credit-box ok';cb.textContent='✓ RLV exceeds purchase by '+f(delta)+' — viable acquisition';}
+    else{cb.className='credit-box bad';cb.textContent='✗ Purchase exceeds RLV by '+f(Math.abs(delta))+' — overpaying';}
+  } else if(rlv>0){cb.className='credit-box ok';cb.textContent='RLV: '+f(rlv)+' — enter purchase price to compare';}
+  else{cb.className='credit-box warn';cb.textContent='Enter site and revenue data to calculate RLV';}
+}
+function saveSiteModel(){document.getElementById('site-sv-status').textContent='Saved ✓';setTimeout(function(){document.getElementById('site-sv-status').textContent='';},2000);}
+
+// ── BRIDGING FINANCE MODEL ───────────────────────────────────────────────────
+var BR_TABS=['br-property','br-facility','br-exit','br-results'];
+function showBridgeTab(t){BR_TABS.forEach(function(id){document.getElementById(id).classList.toggle('hidden',id!==t);});
+document.querySelectorAll('#product-bridging .tab').forEach(function(b,i){b.classList.toggle('active',BR_TABS[i]===t);});calcBridge();}
+
+function calcBridge(){
+  var val=Number(document.getElementById('br-value').value)||0;
+  var existDebt=Number(document.getElementById('br-existing-debt').value)||0;
+  var addVal=Number(document.getElementById('br-add-value').value)||0;
+  var addDebt=Number(document.getElementById('br-add-debt').value)||0;
+  var totalSecurity=val+addVal;
+  var totalExisting=existDebt+addDebt;
+  var netEquity=totalSecurity-totalExisting;
+  var loan=Number(document.getElementById('br-loan').value)||0;
+  var term=Number(document.getElementById('br-term').value)||12;
+  var rate=(Number(document.getElementById('br-rate').value)||12)/100;
+  var estabPct=(Number(document.getElementById('br-estab').value)||2)/100;
+  var capInterest=document.getElementById('br-cap-interest').value==='yes';
+  var estabAmt=loan*estabPct;
+  var interestTotal=loan*rate*(term/12);
+  var totalCost=estabAmt+interestTotal;
+  var peakDebt=capInterest?loan+interestTotal+estabAmt:loan+estabAmt;
+  var grossLVR=totalSecurity>0?(loan+totalExisting)/totalSecurity:0;
+  // Exit
+  var exitVal=Number(document.getElementById('br-exit-value').value)||0;
+  var exitMonths=Number(document.getElementById('br-exit-months').value)||6;
+  var exitPeak=capInterest?loan+loan*rate*(exitMonths/12)+estabAmt:loan+estabAmt;
+  var exitLVR=exitVal>0?(exitPeak+totalExisting-loan)/exitVal:0; // if selling primary
+  if(exitVal===0)exitLVR=0;
+  var exitSurplus=exitVal-(exitPeak+totalExisting-loan); // surplus after repaying bridge + existing
+  // If exit is just the primary security
+  exitSurplus=exitVal-exitPeak;
+  var f=function(v){return v?'$'+Math.round(v).toLocaleString('en-AU'):'—';};
+  var p=function(v){return v?(v*100).toFixed(1)+'%':'—';};
+  // Security tab
+  document.getElementById('br-net-equity').textContent=f(netEquity);
+  document.getElementById('br-total-security').textContent=f(totalSecurity);
+  // Facility tab
+  document.getElementById('br-estab-amt').textContent=f(estabAmt);
+  document.getElementById('br-interest-total').textContent=f(interestTotal);
+  document.getElementById('br-total-cost').textContent=f(totalCost);
+  document.getElementById('br-peak-debt').textContent=f(peakDebt);
+  // Exit tab
+  document.getElementById('br-exit-peak').textContent=f(exitPeak);
+  document.getElementById('br-exit-lvr').textContent=exitVal>0?p(exitPeak/exitVal):'—';
+  var surplusEl=document.getElementById('br-exit-surplus');
+  surplusEl.textContent=exitVal>0?f(exitSurplus):'—';
+  surplusEl.style.color=exitSurplus>=0?'var(--green)':'var(--red)';
+  // Results
+  document.getElementById('br-r-loan').textContent=f(loan);
+  document.getElementById('br-r-lvr').textContent=p(grossLVR);
+  document.getElementById('br-r-lvr').className='ab-value '+(grossLVR<=0.65?'gn':grossLVR<=0.75?'':'rd');
+  document.getElementById('br-r-cost').textContent=f(totalCost);
+  document.getElementById('br-r-surplus').textContent=exitVal>0?f(exitSurplus):'—';
+  document.getElementById('br-r-surplus').className='ab-value '+(exitSurplus>=0?'gn':'rd');
+  document.getElementById('br-s-value').textContent=f(totalSecurity);
+  document.getElementById('br-s-existing').textContent=f(totalExisting);
+  document.getElementById('br-s-equity').textContent=f(netEquity);
+  document.getElementById('br-s-rate').textContent=(rate*100).toFixed(1)+'%';
+  document.getElementById('br-s-term').textContent=term+' months';
+  document.getElementById('br-s-peak').textContent=f(peakDebt);
+  var exitTypes={sale:'Sale',refinance:'Refinance',settlement:'Settlement',other:'Other'};
+  document.getElementById('br-s-exit').textContent=exitTypes[document.getElementById('br-exit-type').value]||'—';
+  document.getElementById('br-s-elvr').textContent=exitVal>0?p(exitPeak/exitVal):'—';
+  var cb=document.getElementById('br-credit-box');
+  if(loan>0&&grossLVR<=0.65){cb.className='credit-box ok';cb.textContent='✓ LVR '+p(grossLVR)+' — within appetite';}
+  else if(loan>0&&grossLVR<=0.75){cb.className='credit-box warn';cb.textContent='⚠ LVR '+p(grossLVR)+' — elevated, lender dependent';}
+  else if(loan>0){cb.className='credit-box bad';cb.textContent='✗ LVR '+p(grossLVR)+' — above threshold';}
+  else{cb.className='credit-box warn';cb.textContent='Enter loan amount and security to calculate';}
+}
+function saveBridgeModel(){document.getElementById('br-sv-status').textContent='Saved ✓';setTimeout(function(){document.getElementById('br-sv-status').textContent='';},2000);}
+
 // ── INIT ──
-window.addEventListener('load',async function(){initOG();initBTL();initUnits();initCosts();initRSUnits();initRSHold();setMode('commercial');formatAllDollars();calc();calcRes();await initAuth();
+window.addEventListener('load',async function(){initOG();initBTL();initUnits();initCosts();initRSUnits();initRSHold();setMode('commercial');formatAllDollars();calc();calcRes();calcInv();calcSite();calcBridge();await initAuth();
 setTimeout(function(){toggleAI();},1500);
 });
 </script>
