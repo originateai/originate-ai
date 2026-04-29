@@ -10,6 +10,8 @@
 <title>getkredit.ai — My Deals</title>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <style>
@@ -277,16 +279,18 @@ async function compressPDF(arrayBuffer) {
   try {
     var srcDoc = await PDFLib.PDFDocument.load(arrayBuffer, { ignoreEncryption: true });
     var pageCount = srcDoc.getPageCount();
-    if (arrayBuffer.byteLength < COMPRESS_THRESHOLD && pageCount <= MAX_PDF_PAGES) return arrayBuffer;
+    if (arrayBuffer.byteLength < COMPRESS_THRESHOLD && pageCount <= MAX_PDF_PAGES) return { type: 'buffer', data: arrayBuffer };
     var newDoc = await PDFLib.PDFDocument.create();
     var pagesToCopy = Math.min(pageCount, MAX_PDF_PAGES);
     var indices = []; for (var i = 0; i < pagesToCopy; i++) indices.push(i);
     var copiedPages = await newDoc.copyPages(srcDoc, indices);
     copiedPages.forEach(function(page) { newDoc.addPage(page); });
     var newBytes = await newDoc.save();
-    console.log('PDF compressed: ' + (arrayBuffer.byteLength/1024/1024).toFixed(1) + 'MB → ' + (newBytes.byteLength/1024/1024).toFixed(1) + 'MB (' + pagesToCopy + '/' + pageCount + ' pages)');
-    return newBytes.buffer;
-  } catch(e) { console.warn('PDF compression failed:', e.message); return arrayBuffer; }
+    var sizeMB = newBytes.byteLength / 1024 / 1024;
+    console.log('PDF compressed: ' + (arrayBuffer.byteLength/1024/1024).toFixed(1) + 'MB → ' + sizeMB.toFixed(1) + 'MB (' + pagesToCopy + '/' + pageCount + ' pages)');
+    if (sizeMB > 4.5) { console.log('Still too large — using page images'); return { type: 'use-images', data: arrayBuffer }; }
+    return { type: 'buffer', data: newBytes.buffer };
+  } catch(e) { console.warn('PDF compression failed — using page images:', e.message); return { type: 'use-images', data: arrayBuffer }; }
 }
 
 function arrayBufferToBase64(buffer) {
@@ -323,7 +327,7 @@ function handleAIFiles(files) {
     if (file.size > 20 * 1024 * 1024) { alert(file.name + " is too large — max 20MB."); continue; }
     var ext = file.name.split('.').pop().toLowerCase();
     if (['pdf','png','jpg','jpeg'].indexOf(ext) === -1) { alert(file.name + " — unsupported format."); continue; }
-    var entry = { file: file, name: file.name, type: ext, status: 'ready', base64: null };
+    var entry = { file: file, name: file.name, type: ext, status: 'ready', base64: null, images: null };
     aiPendingDocs.push(entry);
     var idx = aiPendingDocs.length - 1;
     if (ext === 'pdf') {
@@ -331,8 +335,24 @@ function handleAIFiles(files) {
         var reader = new FileReader();
         reader.onload = async function(e) {
           try {
-            var compressed = await compressPDF(e.target.result);
-            aiPendingDocs[j].base64 = arrayBufferToBase64(compressed);
+            var result = await compressPDF(e.target.result);
+            if (result.type === 'buffer') {
+              aiPendingDocs[j].base64 = arrayBufferToBase64(result.data);
+            } else {
+              // Render pages as images via pdf.js
+              var pdf = await pdfjsLib.getDocument({ data: new Uint8Array(result.data) }).promise;
+              var pageImages = []; var maxPg = Math.min(pdf.numPages, 15);
+              for (var p = 1; p <= maxPg; p++) {
+                var pg = await pdf.getPage(p);
+                var vp = pg.getViewport({ scale: 1.5 });
+                var cv = document.createElement('canvas'); cv.width = vp.width; cv.height = vp.height;
+                await pg.render({ canvasContext: cv.getContext('2d'), viewport: vp }).promise;
+                pageImages.push(cv.toDataURL('image/jpeg', 0.7).split(',')[1]);
+              }
+              aiPendingDocs[j].images = pageImages;
+              aiPendingDocs[j].type = 'images';
+              console.log('PDF rendered as ' + pageImages.length + ' images');
+            }
           } catch(err) {
             var fb = new FileReader();
             fb.onload = function(e2) { aiPendingDocs[j].base64 = e2.target.result.split(',')[1]; };
@@ -390,18 +410,40 @@ async function runAIAnalysis() {
     aiPendingDocs[i].status = 'reading';
     renderAIFileList();
     try {
-      var res = await fetch(DOC_READER_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fileBase64: aiPendingDocs[i].base64,
-          fileType: aiPendingDocs[i].type,
-          docType: 'auto-detect',
-          existingData: {}
-        })
-      });
-      if (!res.ok) throw new Error('API error ' + res.status);
-      var result = await res.json();
+      var doc = aiPendingDocs[i];
+      var result;
+
+      if (doc.type === 'images' && doc.images) {
+        // Send page images in batches
+        var merged = { extractedFields: {}, flags: [], narrative: '', summary: '' };
+        for (var b = 0; b < doc.images.length; b += 8) {
+          var batch = doc.images.slice(b, b + 8);
+          var br = await fetch(DOC_READER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ images: batch, fileType: 'images', docType: 'auto-detect', existingData: {} }) });
+          if (br.ok) {
+            var d = await br.json();
+            if (d.extractedFields) for (var k in d.extractedFields) { if (d.extractedFields[k] != null) merged.extractedFields[k] = d.extractedFields[k]; }
+            if (d.flags && d.flags.length) merged.flags = merged.flags.concat(d.flags);
+            if (d.narrative && d.narrative.length > merged.narrative.length) merged.narrative = d.narrative;
+            if (d.summary) merged.summary = d.summary;
+          }
+        }
+        result = merged;
+      } else {
+        var res = await fetch(DOC_READER_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileBase64: doc.base64,
+            fileType: doc.type,
+            docType: 'auto-detect',
+            existingData: {}
+          })
+        });
+        if (!res.ok) throw new Error('API error ' + res.status);
+        result = await res.json();
+      }
+
       aiPendingDocs[i].status = 'done';
       aiPendingDocs[i].result = result;
 
