@@ -187,7 +187,7 @@ async function doReset() {
   btn.disabled = true; btn.textContent = 'Sending...';
 
   var result = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + '/login.html'
+    redirectTo: window.location.origin + '/reset-password.html'
   });
 
   if (result.error) {
