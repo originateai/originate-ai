@@ -209,17 +209,17 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 
 <nav class="nav">
   <div style="display:flex;align-items:center">
-    <a class="nav-logo" href="index.html">get<span>kredit.ai</span></a>
-    <span class="nav-badge">Admin</span>
+    <a class="nav-logo" href="admin.html">get<span>kredit.ai</span></a>
   </div>
   <div class="nav-right">
-    <a class="nav-link active" href="#" onclick="showAdminTab('deals',this)">Deals</a>
+    <a class="nav-link active" href="#" onclick="showAdminTab('deals',this)">Dashboard</a>
+    <a class="nav-link" href="analysis.html">Analysis</a>
+    <a class="nav-link" href="credit-paper.html">Credit Paper</a>
+    <a class="nav-link" href="settlement.html">Settlement</a>
     <a class="nav-link" href="#" onclick="showAdminTab('contacts',this)">Contacts</a>
     <a class="nav-link" href="#" onclick="showAdminTab('lenders-tab',this)">Lenders</a>
-    <a class="nav-link" href="settlement.html">Settlement</a>
-    <a class="nav-link" href="credit-paper.html">Credit Paper</a>
-    <a class="nav-link" href="feasibility.html">Feasibility</a>
-    <a class="nav-link" href="#" onclick="doLogout()">Sign Out</a>
+    <span id="nav-user" style="font-size:12px;color:var(--grey500);padding:7px 10px"></span>
+    <a class="nav-link" href="#" onclick="doLogout()" style="color:var(--red)">Sign Out</a>
   </div>
 </nav>
 
@@ -238,7 +238,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
   <!-- Filters -->
   <div class="filters">
     <button class="filter-btn active" onclick="filterDeals('all',this)">All</button>
-    <button class="filter-btn" onclick="filterDeals('feasibility_complete',this)">Feasibility</button>
+    <button class="filter-btn" onclick="filterDeals('feasibility_complete',this)">Analysis</button>
     <button class="filter-btn" onclick="filterDeals('submitted',this)">Submitted</button>
     <button class="filter-btn" onclick="filterDeals('under_review',this)">Under Review</button>
     <button class="filter-btn" onclick="filterDeals('approved',this)">Approved</button>
@@ -764,7 +764,7 @@ async function generateFundingRequest(dealId) {
     + '<div class="row"><span class="key">Contingency</span><span class="val">' + fd(d.contingency) + '</span></div>'
     + '</div>';
 
-  html += '<div class="section"><div class="section-head">Feasibility</div>'
+  html += '<div class="section"><div class="section-head">Analysis</div>'
     + '<div class="row"><span class="key">Net Realisation Value</span><span class="val">' + fd(d.calc_nrv) + '</span></div>'
     + '<div class="row"><span class="key">Total Development Cost</span><span class="val">' + fd(d.calc_tdc) + '</span></div>'
     + '<div class="row"><span class="key">Facility Requested</span><span class="val teal">' + fd(d.calc_facility) + '</span></div>'
@@ -1480,21 +1480,31 @@ function copyAdminNarrative(dealId) {
 }
 
 async function init() {
-  // Auth check — admin/broker only
+  // Auth check
   var session = await sb.auth.getSession();
-  if (!session.data.session) {
-    window.location.href = "login.html";
-    return;
-  }
-  var role = session.data.session.user.user_metadata && session.data.session.user.user_metadata.role;
+  if (!session.data.session) { window.location.href = "login.html"; return; }
+
+  var user = session.data.session.user;
+  var role = user.user_metadata && user.user_metadata.role;
   if (role !== 'admin' && role !== 'broker') {
-    alert("Access denied. Admin or broker account required.");
-    window.location.href = "login.html";
-    return;
+    window.location.href = "login.html"; return;
   }
 
-  // Load all deals
-  var res = await sb.from("deals").select("*").order("created_at",{ascending:false});
+  // Load profile and show name in nav
+  try {
+    var { data: profile } = await sb.from('profiles').select('full_name,company_name,phone').eq('id', user.id).single();
+    window._brokerProfile = profile || {};
+    var displayName = (profile && profile.full_name) || user.email.split('@')[0];
+    var navUser = document.getElementById('nav-user');
+    if (navUser) navUser.textContent = displayName;
+  } catch(e) {
+    window._brokerProfile = {};
+  }
+
+  // Load deals (brokers see their own, admins see all)
+  var query = sb.from("deals").select("*").order("created_at",{ascending:false});
+  if (role === 'broker') query = query.eq('broker_id', user.id);
+  var res = await query;
   allDeals = res.data || [];
   document.getElementById("loading").style.display = "none";
   document.getElementById("deals-table").style.display = "table";
