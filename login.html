@@ -223,12 +223,11 @@ async function doLogin() {
 
   // Check user role from metadata
   var role = result.data.user.user_metadata && result.data.user.user_metadata.role;
-  if (role === 'admin' || role === 'broker') {
-    window.location.href = 'admin.html';
-  } else if (role === 'lender') {
+  if (role === 'lender') {
     window.location.href = 'lender-portal.html';
   } else {
-    window.location.href = 'portal.html';
+    // brokers, admins, and everyone else go to dashboard
+    window.location.href = 'admin.html';
   }
 }
 
@@ -373,12 +372,10 @@ async function checkAuth() {
   var session = await sb.auth.getSession();
   if (session.data.session) {
     var role = session.data.session.user.user_metadata && session.data.session.user.user_metadata.role;
-    if (role === 'admin' || role === 'broker') {
-      window.location.href = 'admin.html';
-    } else if (role === 'lender') {
+    if (role === 'lender') {
       window.location.href = 'lender-portal.html';
     } else {
-      window.location.href = 'portal.html';
+      window.location.href = 'admin.html';
     }
   }
 }
