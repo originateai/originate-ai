@@ -90,23 +90,89 @@ exports.handler = async (event) => {
 </table></td></tr></table></body></html>`;
   }
 
-  // ── DEAL INFO BLOCK (reused across templates) ───────────────────────────
+  // ── HELPERS ─────────────────────────────────────────────────────────────
+  const fmtNum = v => v ? '$' + Number(v).toLocaleString('en-AU') : null;
+  const fmtPct = v => v ? (v < 1 ? (v * 100).toFixed(1) : Number(v).toFixed(1)) + '%' : null;
+  const fmtMo  = v => v ? v + ' months' : null;
+
+  // Full deal summary — used in lender emails
+  function dealSummary(deal) {
+    if (!deal) return '';
+
+    const section = (title, rows) => {
+      const filled = rows.filter(r => r[1]);
+      if (!filled.length) return '';
+      return `<div style="margin-bottom:20px">
+        <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0D9488;padding:8px 0;border-bottom:2px solid #0D9488;margin-bottom:10px">${title}</div>
+        ${filled.map(r => `<div style="display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:13px">
+          <span style="color:#64748b">${r[0]}</span>
+          <span style="color:#0f172a;font-weight:600;text-align:right;max-width:60%">${r[1]}</span>
+        </div>`).join('')}
+      </div>`;
+    };
+
+    const typeLabel = {resi_dev:'Residential Development',commercial_dev:'Commercial Development',commercial_investment:'Commercial Investment',land:'Land Acquisition',mixed_use:'Mixed Use'}[deal.category] || deal.category || '—';
+
+    return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:20px 24px;margin:20px 0">
+      ${section('Project', [
+        ['Address', deal.address],
+        ['Asset Type', typeLabel + (deal.sub_category ? ' — ' + deal.sub_category : '')],
+        ['DA Status', deal.da_status],
+        ['Zoning', deal.zoning],
+        ['Deal Reference', deal.deal_number],
+      ])}
+      ${section('Borrower', [
+        ['Borrower / Sponsor', deal.borrower_name],
+        ['Entity', deal.company_name],
+        ['ABN', deal.abn],
+      ])}
+      ${section('Revenue', [
+        ['Gross Realisable Value (GRV)', fmtNum(deal.grv)],
+        ['Net Realisable Value (NRV)', fmtNum(deal.calc_nrv)],
+        ['No. of Units / Lots', deal.units ? String(deal.units) : null],
+        ['Avg Sale Price', fmtNum(deal.avg_price)],
+        ['Presales', deal.presales_value ? fmtNum(deal.presales_value) + (deal.presales_count ? ' (' + deal.presales_count + ' contracts)' : '') : null],
+      ])}
+      ${section('Project Costs', [
+        ['Land Cost / Value', fmtNum(deal.land_cost || deal.land_value)],
+        ['Construction', fmtNum(deal.construction_cost)],
+        ['Professional Fees', fmtNum(deal.prof_fees)],
+        ['Marketing & Selling', fmtNum(deal.marketing_costs)],
+        ['Contingency', fmtNum(deal.contingency)],
+        ['Total Development Cost (TDC)', fmtNum(deal.calc_tdc)],
+      ])}
+      ${section('Funding Request', [
+        ['Facility Amount', fmtNum(deal.calc_facility)],
+        ['Equity / Cash Contribution', fmtNum(deal.calc_equity)],
+        ['Loan Term', fmtMo(deal.total_loan_term)],
+        ['Facility Type', deal.facility_type || null],
+      ])}
+      ${section('Credit Metrics', [
+        ['LVR (Loan to Value Ratio)', fmtPct(deal.calc_lvr)],
+        ['LTC (Loan to Cost Ratio)', fmtPct(deal.calc_ltc)],
+        ['Profit on Cost (POC)', fmtPct(deal.calc_poc)],
+        ['Development IRR', fmtPct(deal.calc_irr)],
+        ['Debt Cover Ratio', deal.calc_debt_cover ? Number(deal.calc_debt_cover).toFixed(2) + 'x' : null],
+      ])}
+    </div>`;
+  }
+
+  // Short deal block — for internal/status emails
   function dealBlock(deal) {
     if (!deal) return '';
     const rows = [
-      deal.address ? ['Project', deal.address] : null,
-      deal.borrower_name ? ['Borrower', deal.borrower_name] : null,
-      deal.company_name ? ['Company', deal.company_name] : null,
-      deal.grv ? ['GRV', '$' + Number(deal.grv).toLocaleString('en-AU')] : null,
-      deal.calc_tdc ? ['Total Dev Cost', '$' + Number(deal.calc_tdc).toLocaleString('en-AU')] : null,
-      deal.calc_facility ? ['Facility', '$' + Number(deal.calc_facility).toLocaleString('en-AU')] : null,
-      deal.deal_number ? ['Deal #', deal.deal_number] : null,
+      deal.address        ? ['Project',    deal.address] : null,
+      deal.borrower_name  ? ['Borrower',   deal.borrower_name] : null,
+      deal.company_name   ? ['Entity',     deal.company_name] : null,
+      deal.grv            ? ['GRV',        fmtNum(deal.grv)] : null,
+      deal.calc_facility  ? ['Facility',   fmtNum(deal.calc_facility)] : null,
+      deal.calc_lvr       ? ['LVR',        fmtPct(deal.calc_lvr)] : null,
+      deal.calc_poc       ? ['POC',        fmtPct(deal.calc_poc)] : null,
+      deal.deal_number    ? ['Deal #',     deal.deal_number] : null,
     ].filter(Boolean);
-
     return `<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px 20px;margin:16px 0">
       ${rows.map(r => `<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px">
-        <span style="color:#64748b">${r[0]}</span>
-        <span style="color:#0f172a;font-weight:600">${r[1]}</span>
+        <span style="color:#64748b">${r[0]}</span><span style="color:#0f172a;font-weight:600">${r[1]}</span>
       </div>`).join('')}
     </div>`;
   }
@@ -216,15 +282,18 @@ exports.handler = async (event) => {
 
     lender_invitation: (deal, extra) => ({
       to: extra.lender_email,
-      subject: `New Deal Opportunity — ${deal.address || 'Project'} — ${deal.grv ? '$' + Number(deal.grv).toLocaleString('en-AU') : ''}`,
+      subject: `New Deal Opportunity — ${deal.address || 'Project'} — ${deal.grv ? '$' + Number(deal.grv).toLocaleString('en-AU') + ' GRV' : ''}`,
       html: wrap('#0F172A', 'NEW DEAL OPPORTUNITY',
         `<div style="font-size:15px;color:#0f172a;margin-bottom:8px">Hi ${extra.lender_contact || 'there'},</div>
-         <div style="font-size:14px;color:#475569;line-height:1.7">A new development deal has been submitted that matches your lending criteria. Please review the details and submit your response via the lender portal.</div>
-         ${dealBlock(deal)}
-         <div style="background:#F0FDFA;border:1px solid #CCFBF1;border-radius:8px;padding:12px 16px;margin:16px 0;font-size:13px;color:#0F766E">
-           <strong>Action required:</strong> Log in to the lender portal to review the full deal pack and submit your indicative terms.
-         </div>`,
-        `${APP_URL}/lender-portal.html?deal=${deal.id}`, 'Review Deal →')
+         <div style="font-size:14px;color:#475569;line-height:1.7;margin-bottom:16px">
+           A new deal has been submitted that matches your lending criteria. Please review the full deal summary below and submit your indicative terms via the lender portal.
+         </div>
+         ${dealSummary(deal)}
+         <div style="background:#F0FDFA;border:1px solid #CCFBF1;border-radius:8px;padding:14px 18px;margin:16px 0;font-size:13px;color:#0F766E;line-height:1.6">
+           <strong>Action required:</strong> Log in to the lender portal to submit your indicative terms, interest rate, and any conditions. This opportunity is being shared with a select panel of lenders.
+         </div>
+         <div style="font-size:12px;color:#94a3b8;margin-top:12px">Sent by ${extra.broker_name || 'your broker'} via getkredit.ai</div>`,
+        `${APP_URL}/lender-portal.html?deal=${deal.id}`, 'Review Deal & Submit Terms →')
     }),
 
     // ── WELCOME EMAIL ──
@@ -307,11 +376,64 @@ exports.handler = async (event) => {
   // ── MAIN HANDLER ────────────────────────────────────────────────────────
   try {
     const body = JSON.parse(event.body);
-    const { type, deal_id, extra } = body;
+    const { type, deal_id, extra, lenders, deal: dealFromBody } = body;
 
     if (!type) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing email type' }) };
 
-    // For welcome/password_reset, no deal needed
+    // ── SEND TO LENDER PANEL (bulk send) ──────────────────────────────────
+    if (type === 'send_to_lenders') {
+      if (!lenders || !lenders.length) {
+        return { statusCode: 400, headers, body: JSON.stringify({ error: 'No lenders provided' }) };
+      }
+
+      // Fetch full deal from Supabase for complete data
+      let deal = deal_id ? (await fetchDeal(deal_id) || {}) : (dealFromBody || {});
+
+      // Get broker profile for sender name
+      let brokerName = 'Your Broker';
+      if (deal.broker_id && SUPABASE_URL && SUPABASE_KEY) {
+        try {
+          const pRes = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${deal.broker_id}&select=full_name,company_name`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+          });
+          const pData = await pRes.json();
+          if (pData && pData[0]) {
+            brokerName = pData[0].company_name || pData[0].full_name || brokerName;
+          }
+        } catch(e) {}
+      }
+
+      const results = [];
+      for (const lender of lenders) {
+        if (!lender.email) continue;
+        try {
+          const email = templates.lender_invitation(deal, {
+            lender_email: lender.email,
+            lender_contact: lender.name,
+            broker_name: brokerName
+          });
+          const result = await sendEmail(email.to, email.subject, email.html);
+          results.push({ lender: lender.name, email: lender.email, sent: true, id: result.id });
+        } catch(e) {
+          results.push({ lender: lender.name, email: lender.email, sent: false, error: e.message });
+        }
+      }
+
+      // Also notify broker that emails were sent
+      if (deal.borrower_name || deal.address) {
+        try {
+          const session = await sb?.auth?.getSession?.();
+        } catch(e) {}
+      }
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ success: true, type: 'send_to_lenders', sent: results.filter(r=>r.sent).length, results })
+      };
+    }
+
+    // ── SINGLE TEMPLATE EMAILS ─────────────────────────────────────────────
     let deal = {};
     if (deal_id) {
       deal = await fetchDeal(deal_id) || {};
