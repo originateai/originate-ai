@@ -22,6 +22,13 @@
   --green:#059669;--red:#dc2626;--amber:#d97706;--blue:#2563EB;
   --radius:8px;--radius-lg:12px;
 }
+
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--grey700);margin-bottom:5px;letter-spacing:0.2px}
+.form-input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--white);transition:border-color 0.2s}
+.form-input:focus{outline:none;border-color:var(--teal)}
+.form-input::placeholder{color:var(--grey500)}
+textarea.form-input{resize:vertical}
+
 body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50);min-height:100vh}
 
 .nav{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:10}
@@ -299,8 +306,13 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 
   <!-- LENDERS TAB -->
   <div id="tab-lenders-tab" style="display:none">
-    <div style="font-family:'Source Serif 4',serif;font-size:22px;font-weight:700;color:var(--grey900);margin-bottom:8px">Lender Panel</div>
-    <div style="font-size:13px;color:var(--grey500);margin-bottom:20px">All lenders on your panel</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div style="font-family:'Source Serif 4',serif;font-size:22px;font-weight:700;color:var(--grey900)">Lender Panel</div>
+        <div style="font-size:13px;color:var(--grey500);margin-top:4px">Your private lender contacts and their criteria</div>
+      </div>
+      <button class="ld-btn primary" onclick="openAddLender()">+ Add Lender</button>
+    </div>
     <div class="table-wrap">
       <table class="deals-table" id="lenders-table">
         <thead>
@@ -309,12 +321,113 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
             <th>Type</th>
             <th>Contact</th>
             <th>Email</th>
-            <th class="num">Facility Range</th>
-            <th>Status</th>
+            <th class="num">Max LVR</th>
+            <th class="num">Max LTC</th>
+            <th class="num">Rate</th>
+            <th class="num">Loan Range</th>
+            <th></th>
           </tr>
         </thead>
-        <tbody id="lenders-tbody"></tbody>
+        <tbody id="lenders-tbody">
+          <tr><td colspan="9" style="text-align:center;color:var(--grey500);padding:40px">Loading lenders...</td></tr>
+        </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- ADD/EDIT LENDER MODAL -->
+  <div id="lender-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;display:none;align-items:center;justify-content:center">
+    <div style="background:var(--white);border-radius:var(--radius-lg);width:600px;max-width:95vw;max-height:90vh;overflow-y:auto;padding:32px;position:relative">
+      <button onclick="closeLenderModal()" style="position:absolute;top:16px;right:16px;background:none;border:none;font-size:22px;cursor:pointer;color:var(--grey500)">×</button>
+      <div style="font-family:'Source Serif 4',serif;font-size:20px;font-weight:700;margin-bottom:24px" id="lender-modal-title">Add Lender</div>
+      <input type="hidden" id="lm-id">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div style="grid-column:1/-1">
+          <label class="form-label">Lender Name *</label>
+          <input class="form-input" id="lm-name" placeholder="e.g. Mezzanine Capital Partners">
+        </div>
+        <div>
+          <label class="form-label">Lender Type</label>
+          <select class="form-input" id="lm-type">
+            <option value="bank">Bank</option>
+            <option value="non_bank">Non-Bank</option>
+            <option value="private">Private Credit</option>
+            <option value="mezzanine">Mezzanine</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Contact Name</label>
+          <input class="form-input" id="lm-contact" placeholder="Jane Smith">
+        </div>
+        <div>
+          <label class="form-label">Contact Email *</label>
+          <input class="form-input" id="lm-email" type="email" placeholder="jane@lender.com.au">
+        </div>
+        <div>
+          <label class="form-label">Contact Phone</label>
+          <input class="form-input" id="lm-phone" placeholder="0400 000 000">
+        </div>
+        <div>
+          <label class="form-label">Max LVR (%)</label>
+          <input class="form-input" id="lm-lvr" type="number" placeholder="70" min="0" max="100">
+        </div>
+        <div>
+          <label class="form-label">Max LTC (%)</label>
+          <input class="form-input" id="lm-ltc" type="number" placeholder="75" min="0" max="100">
+        </div>
+        <div>
+          <label class="form-label">Min POC (%)</label>
+          <input class="form-input" id="lm-poc" type="number" placeholder="15" min="0">
+        </div>
+        <div>
+          <label class="form-label">Rate From (%)</label>
+          <input class="form-input" id="lm-rate-from" type="number" placeholder="8.5" step="0.1">
+        </div>
+        <div>
+          <label class="form-label">Rate To (%)</label>
+          <input class="form-input" id="lm-rate-to" type="number" placeholder="12.0" step="0.1">
+        </div>
+        <div>
+          <label class="form-label">Min Loan ($)</label>
+          <input class="form-input" id="lm-min-loan" type="number" placeholder="1000000">
+        </div>
+        <div>
+          <label class="form-label">Max Loan ($)</label>
+          <input class="form-input" id="lm-max-loan" type="number" placeholder="20000000">
+        </div>
+        <div style="grid-column:1/-1">
+          <label class="form-label">Asset Types</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" value="resi_dev" class="lm-asset"> Residential Dev</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" value="commercial" class="lm-asset"> Commercial</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" value="land" class="lm-asset"> Land</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" value="industrial" class="lm-asset"> Industrial</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" value="bridging" class="lm-asset"> Bridging</label>
+          </div>
+        </div>
+        <div style="grid-column:1/-1">
+          <label class="form-label">States</label>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" value="NSW" class="lm-state"> NSW</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" value="VIC" class="lm-state"> VIC</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" value="QLD" class="lm-state"> QLD</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" value="WA" class="lm-state"> WA</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" value="SA" class="lm-state"> SA</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" value="ACT" class="lm-state"> ACT</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" value="TAS" class="lm-state"> TAS</label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13px"><input type="checkbox" value="NT" class="lm-state"> NT</label>
+          </div>
+        </div>
+        <div style="grid-column:1/-1">
+          <label class="form-label">Notes</label>
+          <textarea class="form-input" id="lm-notes" rows="3" placeholder="Any notes about this lender's appetite, preferences, or quirks..."></textarea>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:24px">
+        <button class="ld-btn primary" onclick="saveLender()" id="lm-save-btn" style="flex:1">Save Lender</button>
+        <button class="ld-btn" onclick="closeLenderModal()">Cancel</button>
+      </div>
+      <div id="lm-msg" style="margin-top:12px;font-size:13px;display:none"></div>
     </div>
   </div>
 
@@ -423,7 +536,7 @@ function showDetail(id) {
     + (d.address ? '<div style="margin-bottom:16px;border-radius:8px;overflow:hidden;border:1px solid var(--border)"><iframe width="100%" height="180" style="border:0" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps/embed/v1/place?key=' + GMAPS_KEY + '&q=' + encodeURIComponent(d.address) + '&zoom=15"></iframe></div>' : '')
     + '<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">'
     + '<button class="ld-btn primary" onclick="generateFundingRequest(\'' + d.id + '\')">📄 Generate Funding Request</button>'
-    + '<button class="ld-btn" onclick="openFeasibility(\'' + d.id + '\')" style="background:var(--teal-bg);color:var(--teal-dark);border-color:var(--teal-subtle)">📊 Feasibility</button>'
+    + '<button class="ld-btn" onclick="window.location.href=\'analysis.html?deal='+d.id" style="background:var(--teal-bg);color:var(--teal-dark);border-color:var(--teal-subtle)">📊 Analysis</button>'
     + '<button class="ld-btn" onclick="window.open(\'settlement.html?deal=' + d.id + '\',\'_blank\')" style="background:var(--teal-bg);color:var(--teal-dark);border-color:var(--teal-subtle)">🏦 Settlement</button>'
     + '<button class="ld-btn" onclick="window.open(\'credit-paper.html\',\'_blank\')" style="background:var(--grey50)">📋 Credit Paper</button>'
     + '</div>'
@@ -436,7 +549,7 @@ function showDetail(id) {
     + '</select>'
     + (d.released_to_lenders
       ? '<div style="margin-top:8px;font-size:12px;color:var(--green)">✓ Released to lenders ' + (d.released_at ? new Date(d.released_at).toLocaleDateString("en-AU") : '') + '</div>'
-      : '<button class="ld-btn primary" style="margin-top:10px;width:100%" onclick="releaseDeal(\'' + d.id + '\')">🚀 Release to Lenders</button>')
+      : '<button class="ld-btn primary" style="margin-top:10px;width:100%;background:var(--teal)" onclick="sendToPanel(\'' + d.id + '\')">🚀 Send to Lender Panel</button>')
     + '</div>'
     + '<div class="detail-section">'
     + '<div class="detail-section-head">Borrower <span class="edit-hint">click any value to edit</span></div>'
@@ -710,7 +823,14 @@ async function generateFundingRequest(dealId) {
   // Build HTML for the funding request
   var html = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
     + '<style>'
-    + 'body{font-family:Arial,sans-serif;color:#1a1a2e;padding:40px;max-width:800px;margin:0 auto}'
+    + '
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--grey700);margin-bottom:5px;letter-spacing:0.2px}
+.form-input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--white);transition:border-color 0.2s}
+.form-input:focus{outline:none;border-color:var(--teal)}
+.form-input::placeholder{color:var(--grey500)}
+textarea.form-input{resize:vertical}
+
+body{font-family:Arial,sans-serif;color:#1a1a2e;padding:40px;max-width:800px;margin:0 auto}'
     + 'h1{color:#0D9488;font-size:24px;margin-bottom:4px}'
     + '.subtitle{color:#64748b;font-size:14px;margin-bottom:30px}'
     + '.logo{font-size:22px;font-weight:700;margin-bottom:4px} .logo span{color:#0D9488}'
@@ -1001,7 +1121,14 @@ async function saveBenchmarkFromDeal(dealId) {
 function printReport(btn) {
   var content = btn.closest('div[style*="max-width"]').querySelector('div[style*="white-space"]').textContent;
   var win = window.open("", "_blank");
-  win.document.write('<html><head><style>body{font-family:Arial,sans-serif;padding:40px;max-width:700px;margin:0 auto;font-size:13px;line-height:1.8;color:#334155}h1{color:#0D9488;font-size:20px}</style></head><body><h1>getkredit.ai — Lender Comparison Report</h1><pre style="white-space:pre-wrap;font-family:Arial,sans-serif">' + content + '</pre></body></html>');
+  win.document.write('<html><head><style>
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--grey700);margin-bottom:5px;letter-spacing:0.2px}
+.form-input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--white);transition:border-color 0.2s}
+.form-input:focus{outline:none;border-color:var(--teal)}
+.form-input::placeholder{color:var(--grey500)}
+textarea.form-input{resize:vertical}
+
+body{font-family:Arial,sans-serif;padding:40px;max-width:700px;margin:0 auto;font-size:13px;line-height:1.8;color:#334155}h1{color:#0D9488;font-size:20px}</style></head><body><h1>getkredit.ai — Lender Comparison Report</h1><pre style="white-space:pre-wrap;font-family:Arial,sans-serif">' + content + '</pre></body></html>');
   win.document.close();
   setTimeout(function(){win.print()}, 300);
 }
@@ -1618,24 +1745,245 @@ function exportContacts(format) {
 // ─────────────────────────────────────────────
 // LENDERS TAB
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// LENDER PANEL
+// ─────────────────────────────────────────────
+var allLenders = [];
+
 async function loadLendersTab() {
-  var res = await sb.from("lenders").select("*").order("name");
-  var lenders = res.data || [];
   var tbody = document.getElementById("lenders-tbody");
   if (!tbody) return;
-  tbody.innerHTML = lenders.map(function(l) {
-    var facRange = "";
-    if (l.facility_min && l.facility_max) facRange = fd(l.facility_min) + " — " + fd(l.facility_max);
-    else if (l.facility_max) facRange = "Up to " + fd(l.facility_max);
+  var session = await sb.auth.getSession();
+  if (!session.data.session) return;
+  var userId = session.data.session.user.id;
+
+  var { data, error } = await sb.from("lender_panel")
+    .select("*")
+    .eq("broker_id", userId)
+    .order("lender_name");
+
+  allLenders = data || [];
+
+  if (allLenders.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:48px;color:var(--grey500)">No lenders yet. Click <strong>+ Add Lender</strong> to build your panel.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = allLenders.map(function(l) {
+    var typeLabels = {bank:'Bank',non_bank:'Non-Bank',private:'Private',mezzanine:'Mezz'};
+    var rateStr = l.rate_from && l.rate_to ? l.rate_from + "–" + l.rate_to + "%" : l.rate_from ? l.rate_from + "%+" : "—";
+    var loanRange = l.min_loan && l.max_loan ? fd(l.min_loan) + " – " + fd(l.max_loan) : l.max_loan ? "Up to " + fd(l.max_loan) : "—";
     return '<tr>'
-      + '<td class="td-name">' + (l.name || "—") + '</td>'
-      + '<td><span class="td-badge b-feasibility">' + (l.type || "—") + '</span></td>'
+      + '<td><div style="font-weight:600;color:var(--grey900)">' + (l.lender_name || "—") + '</div></td>'
+      + '<td><span class="td-badge b-feasibility">' + (typeLabels[l.lender_type] || l.lender_type || "—") + '</span></td>'
       + '<td>' + (l.contact_name || "—") + '</td>'
-      + '<td>' + (l.contact_email || "—") + '</td>'
-      + '<td class="num">' + (facRange || "—") + '</td>'
-      + '<td>' + statusBadge(l.status === "Active" ? "approved" : "draft") + '</td>'
+      + '<td style="color:var(--teal)">' + (l.contact_email ? '<a href="mailto:' + l.contact_email + '" style="color:var(--teal);text-decoration:none">' + l.contact_email + '</a>' : "—") + '</td>'
+      + '<td class="num">' + (l.max_lvr ? (l.max_lvr * 100).toFixed(0) + "%" : "—") + '</td>'
+      + '<td class="num">' + (l.max_ltc ? (l.max_ltc * 100).toFixed(0) + "%" : "—") + '</td>'
+      + '<td class="num">' + rateStr + '</td>'
+      + '<td class="num" style="font-size:12px">' + loanRange + '</td>'
+      + '<td style="white-space:nowrap">'
+        + '<button onclick="openEditLender('' + l.id + '')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;margin-right:4px">Edit</button>'
+        + '<button onclick="deleteLender('' + l.id + '')" style="background:none;border:1px solid rgba(220,38,38,0.2);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;color:var(--red)">Remove</button>'
+      + '</td>'
       + '</tr>';
   }).join("");
+}
+
+function openAddLender() {
+  document.getElementById("lender-modal-title").textContent = "Add Lender";
+  document.getElementById("lm-id").value = "";
+  document.getElementById("lm-name").value = "";
+  document.getElementById("lm-type").value = "non_bank";
+  document.getElementById("lm-contact").value = "";
+  document.getElementById("lm-email").value = "";
+  document.getElementById("lm-phone").value = "";
+  document.getElementById("lm-lvr").value = "";
+  document.getElementById("lm-ltc").value = "";
+  document.getElementById("lm-poc").value = "";
+  document.getElementById("lm-rate-from").value = "";
+  document.getElementById("lm-rate-to").value = "";
+  document.getElementById("lm-min-loan").value = "";
+  document.getElementById("lm-max-loan").value = "";
+  document.getElementById("lm-notes").value = "";
+  document.querySelectorAll(".lm-asset, .lm-state").forEach(function(cb){ cb.checked = false; });
+  var modal = document.getElementById("lender-modal");
+  modal.style.display = "flex";
+}
+
+function openEditLender(id) {
+  var l = allLenders.find(function(x){ return x.id === id; });
+  if (!l) return;
+  document.getElementById("lender-modal-title").textContent = "Edit Lender";
+  document.getElementById("lm-id").value = l.id;
+  document.getElementById("lm-name").value = l.lender_name || "";
+  document.getElementById("lm-type").value = l.lender_type || "non_bank";
+  document.getElementById("lm-contact").value = l.contact_name || "";
+  document.getElementById("lm-email").value = l.contact_email || "";
+  document.getElementById("lm-phone").value = l.contact_phone || "";
+  document.getElementById("lm-lvr").value = l.max_lvr ? (l.max_lvr * 100).toFixed(0) : "";
+  document.getElementById("lm-ltc").value = l.max_ltc ? (l.max_ltc * 100).toFixed(0) : "";
+  document.getElementById("lm-poc").value = l.min_poc ? (l.min_poc * 100).toFixed(0) : "";
+  document.getElementById("lm-rate-from").value = l.rate_from || "";
+  document.getElementById("lm-rate-to").value = l.rate_to || "";
+  document.getElementById("lm-min-loan").value = l.min_loan || "";
+  document.getElementById("lm-max-loan").value = l.max_loan || "";
+  document.getElementById("lm-notes").value = l.notes || "";
+  document.querySelectorAll(".lm-asset").forEach(function(cb){
+    cb.checked = l.asset_types && l.asset_types.indexOf(cb.value) > -1;
+  });
+  document.querySelectorAll(".lm-state").forEach(function(cb){
+    cb.checked = l.states && l.states.indexOf(cb.value) > -1;
+  });
+  document.getElementById("lender-modal").style.display = "flex";
+}
+
+function closeLenderModal() {
+  document.getElementById("lender-modal").style.display = "none";
+  document.getElementById("lm-msg").style.display = "none";
+}
+
+async function saveLender() {
+  var btn = document.getElementById("lm-save-btn");
+  var msg = document.getElementById("lm-msg");
+  var name = document.getElementById("lm-name").value.trim();
+  var email = document.getElementById("lm-email").value.trim();
+  if (!name) { showLmMsg("Lender name is required.", "error"); return; }
+  if (!email) { showLmMsg("Contact email is required.", "error"); return; }
+
+  btn.disabled = true; btn.textContent = "Saving...";
+
+  var session = await sb.auth.getSession();
+  var userId = session.data.session.user.id;
+
+  var assetTypes = Array.from(document.querySelectorAll(".lm-asset:checked")).map(function(cb){ return cb.value; });
+  var states = Array.from(document.querySelectorAll(".lm-state:checked")).map(function(cb){ return cb.value; });
+
+  var payload = {
+    broker_id: userId,
+    lender_name: name,
+    lender_type: document.getElementById("lm-type").value,
+    contact_name: document.getElementById("lm-contact").value.trim(),
+    contact_email: email,
+    contact_phone: document.getElementById("lm-phone").value.trim(),
+    max_lvr: document.getElementById("lm-lvr").value ? parseFloat(document.getElementById("lm-lvr").value) / 100 : null,
+    max_ltc: document.getElementById("lm-ltc").value ? parseFloat(document.getElementById("lm-ltc").value) / 100 : null,
+    min_poc: document.getElementById("lm-poc").value ? parseFloat(document.getElementById("lm-poc").value) / 100 : null,
+    rate_from: document.getElementById("lm-rate-from").value ? parseFloat(document.getElementById("lm-rate-from").value) : null,
+    rate_to: document.getElementById("lm-rate-to").value ? parseFloat(document.getElementById("lm-rate-to").value) : null,
+    min_loan: document.getElementById("lm-min-loan").value ? parseFloat(document.getElementById("lm-min-loan").value) : null,
+    max_loan: document.getElementById("lm-max-loan").value ? parseFloat(document.getElementById("lm-max-loan").value) : null,
+    asset_types: assetTypes.length ? assetTypes : null,
+    states: states.length ? states : null,
+    notes: document.getElementById("lm-notes").value.trim() || null,
+    active: true
+  };
+
+  var id = document.getElementById("lm-id").value;
+  var result;
+  if (id) {
+    result = await sb.from("lender_panel").update(payload).eq("id", id).select().single();
+  } else {
+    result = await sb.from("lender_panel").insert(payload).select().single();
+  }
+
+  btn.disabled = false; btn.textContent = "Save Lender";
+
+  if (result.error) {
+    showLmMsg("Error: " + result.error.message, "error");
+    return;
+  }
+
+  showLmMsg("Saved ✓", "success");
+  setTimeout(function() { closeLenderModal(); loadLendersTab(); }, 800);
+}
+
+async function deleteLender(id) {
+  if (!confirm("Remove this lender from your panel?")) return;
+  await sb.from("lender_panel").delete().eq("id", id);
+  loadLendersTab();
+}
+
+function showLmMsg(text, type) {
+  var el = document.getElementById("lm-msg");
+  el.textContent = text;
+  el.style.display = "block";
+  el.style.color = type === "error" ? "var(--red)" : "var(--green)";
+}
+
+// Match deal against lender criteria and send
+async function sendToPanel(dealId) {
+  var deal = allDeals.find(function(d){ return d.id === dealId; });
+  if (!deal) return;
+
+  if (allLenders.length === 0) {
+    alert("No lenders on your panel yet. Go to the Lenders tab to add some.");
+    return;
+  }
+
+  // Match lenders against deal metrics
+  var lvr = deal.calc_lvr || 0;
+  var ltc = deal.calc_ltc || 0;
+  var poc = deal.calc_poc || 0;
+  var facility = deal.calc_facility || 0;
+
+  var matched = allLenders.filter(function(l) {
+    if (!l.active) return false;
+    if (l.max_lvr && lvr > l.max_lvr) return false;
+    if (l.max_ltc && ltc > l.max_ltc) return false;
+    if (l.min_poc && poc < l.min_poc) return false;
+    if (l.min_loan && facility < l.min_loan) return false;
+    if (l.max_loan && facility > l.max_loan) return false;
+    return true;
+  });
+
+  if (matched.length === 0) {
+    alert("No lenders on your panel match this deal's metrics (LVR: " + (lvr*100).toFixed(0) + "%, LTC: " + (ltc*100).toFixed(0) + "%, POC: " + (poc*100).toFixed(0) + "%). You can still send manually from the Lenders tab.");
+    return;
+  }
+
+  var names = matched.map(function(l){ return l.lender_name; }).join(", ");
+  if (!confirm(matched.length + " lender" + (matched.length > 1 ? "s" : "") + " matched:
+
+" + names + "
+
+Send credit paper to all matched lenders?")) return;
+
+  // Save lender_responses records and trigger emails
+  var session = await sb.auth.getSession();
+  var inserts = matched.map(function(l) {
+    return {
+      deal_id: dealId,
+      lender_id: l.id,
+      lender_name: l.lender_name,
+      response_type: "pending",
+      sent_at: new Date().toISOString()
+    };
+  });
+
+  await sb.from("lender_responses").upsert(inserts, { onConflict: "deal_id,lender_id" });
+
+  // Send emails via deal-email function
+  try {
+    await fetch("/.netlify/functions/deal-email", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        type: "send_to_lenders",
+        deal_id: dealId,
+        lenders: matched.map(function(l){ return { name: l.lender_name, email: l.contact_email }; }),
+        deal: deal
+      })
+    });
+  } catch(e) { console.warn("Email send failed:", e); }
+
+  // Update deal status
+  await sb.from("deals").update({ status: "submitted" }).eq("id", dealId);
+  deal.status = "submitted";
+  renderTable(allDeals);
+
+  alert("✓ Sent to " + matched.length + " lender" + (matched.length > 1 ? "s" : "") + ". Deal status updated to Submitted.");
+  closeDetail();
 }
 
 init();
@@ -1725,7 +2073,14 @@ function printFR() {
   var win = window.open('', '_blank');
   win.document.write('<html><head><title>Funding Request — getkredit.ai</title>');
   win.document.write('<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">');
-  win.document.write('<style>body{font-family:DM Sans,sans-serif;padding:40px;color:#0f172a;max-width:800px;margin:0 auto}@media print{body{padding:20px}}</style>');
+  win.document.write('<style>
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--grey700);margin-bottom:5px;letter-spacing:0.2px}
+.form-input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--white);transition:border-color 0.2s}
+.form-input:focus{outline:none;border-color:var(--teal)}
+.form-input::placeholder{color:var(--grey500)}
+textarea.form-input{resize:vertical}
+
+body{font-family:DM Sans,sans-serif;padding:40px;color:#0f172a;max-width:800px;margin:0 auto}@media print{body{padding:20px}}</style>');
   win.document.write('</head><body>');
   win.document.write(content);
   win.document.write('</body></html>');
