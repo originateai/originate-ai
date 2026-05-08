@@ -56,7 +56,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 <div class="hdr"><h1>Write your credit paper in 5 minutes</h1><p>Upload your docs. AI does the rest.</p></div>
 <div id="msgs"></div>
 <div class="ib">
-<label class="cb"><input type="file" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleFile(this.files[0])">📎</label>
+<label class="cb"><input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.xlsb,.csv,.tsv,.jpg,.jpeg,.png,.gif,.webp,.heic" style="display:none" onchange="handleFile(this.files[0])">📎</label>
 <input class="ci" id="inp" placeholder="Type your answer..." onkeydown="if(event.key==='Enter')sendMsg()">
 <button class="sb" onclick="sendMsg()">Send</button>
 </div>
@@ -80,7 +80,7 @@ ab('G\'day — I\'m your AI credit analyst. I\'ll help you build a full credit p
 function pk(t){
   D.type=t;var l={development:'Development Finance',residual:'Residual Stock',investment:'Investment Loan',site:'Site Acquisition',bridging:'Bridging Finance'};
   au(l[t]);var o=$('s1');if(o)o.remove();
-  setTimeout(function(){ab('Great — <strong>'+l[t]+'</strong>. Upload everything you\'ve got — valuations, contracts, QS reports, borrower financials. I\'ll extract everything automatically.<div class="ua" onclick="$(\'fu\').click()"><input type="file" id="fu" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="handleFile(this.files[0])"><h3>📄 Drop files here or click to upload</h3><p>PDF, images — any format, any size</p></div><br><span style="font-size:12px;opacity:0.4">Or just type your deal details below.</span>');},300);
+  setTimeout(function(){ab('Great — <strong>'+l[t]+'</strong>. Upload everything you\'ve got — valuations, contracts, QS reports, borrower financials. I\'ll extract everything automatically.<div class="ua" onclick="$(\'fu\').click()"><input type="file" id="fu" accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.xlsb,.csv,.tsv,.jpg,.jpeg,.png,.gif,.webp,.heic" style="display:none" onchange="handleFile(this.files[0])"><h3>📄 Drop files here or click to upload</h3><p>PDF, Excel, Word, images — any format</p></div><br><span style="font-size:12px;opacity:0.4">Or just type your deal details below.</span>');},300);
 }
 
 async function handleFile(file){
@@ -279,7 +279,7 @@ function showResults(){
     var sr=tpc*0.65;var ltc=tpc>0?sr/tpc:0;var eq=tpc-sr;
     var mc=mp>=0.2?'g':mp>=0.15?'w':'b';var lc=ltc<=0.65?'g':ltc<=0.75?'w':'b';
     var vt=mp>=0.2?'✓ Bankable — strong margin':mp>=0.15?'⚠ Marginal — lender dependent':'✗ Below threshold — needs restructure';
-    h+='<div class="ds">Feasibility</div>';
+    h+='<div class="ds">Analysis</div>';
     h+='<div class="dr"><span class="dl">GRV</span><span class="dv t">'+fmt(grv)+'</span></div>';
     if(land)h+='<div class="dr"><span class="dl">Land Cost</span><span class="dv">'+fmt(land)+'</span></div>';
     if(con)h+='<div class="dr"><span class="dl">Construction</span><span class="dv">'+fmt(con)+'</span></div>';

@@ -275,7 +275,7 @@ input[type=file]{display:none}
       <button class="ts-upload-btn" onclick="document.getElementById('ts-file-input').click()">
         &#8679; Upload Term Sheet PDF
       </button>
-      <input type="file" id="ts-file-input" accept=".pdf,.jpg,.jpeg,.png" onchange="tsHandleFile(this.files[0])">
+      <input type="file" id="ts-file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.xlsb,.csv,.jpg,.jpeg,.png" onchange="tsHandleFile(this.files[0])">
     </div>
 
     <!-- Loading state -->
@@ -393,7 +393,7 @@ input[type=file]{display:none}
             <div class="dr-upload-label"><strong>Click to upload</strong> or drag &amp; drop</div>
             <div class="dr-upload-hint">PDF, DOC, DOCX, XLSX, JPG, PNG</div>
           </div>
-          <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx,.xlsx,.jpg,.jpeg,.png" onchange="handleFiles(this.files)">
+          <input type="file" id="file-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.xlsb,.csv,.jpg,.jpeg,.png" onchange="handleFiles(this.files)">
         </div>
 
         <div class="dr-section" id="dr-files-section" style="display:none">

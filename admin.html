@@ -646,7 +646,7 @@ function showDetail(id) {
     + '<div class="doc-upload-area" onclick="triggerUpload(\'' + d.id + '\')">'
     + '<div class="doc-upload-text"><strong>Click to upload</strong> or drag and drop<br>PDF, DOC, XLS, JPG up to 20MB</div>'
     + '</div>'
-    + '<input type="file" id="file-input-' + d.id + '" style="display:none" onchange="handleUpload(\'' + d.id + '\',this)" accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png">'
+    + '<input type="file" id="file-input-' + d.id + '" style="display:none" onchange="handleUpload(\'' + d.id + '\',this)" accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.xlsb,.csv,.jpg,.jpeg,.png">'
     + '<div class="upload-progress" id="upload-prog-' + d.id + '">Uploading...</div>'
     + '</div>'
     + '</div>'
@@ -1405,7 +1405,7 @@ function openAdminAIReader(dealId) {
   if (!zone) return;
   zone.innerHTML = '<div class="admin-ai-upload" onclick="document.getElementById(\'admin-ai-input-' + dealId + '\').click()" ondragover="event.preventDefault();this.classList.add(\'dragover\')" ondragleave="this.classList.remove(\'dragover\')" ondrop="adminAIDrop(event,\'' + dealId + '\')">'
     + '<div style="font-size:13px;color:var(--grey600)"><strong style="color:var(--teal)">Click to upload</strong> or drag & drop<br><span style="font-size:11px;color:var(--grey500)">Valuation · Financials · QS Report — PDF up to 20MB</span></div>'
-    + '<input type="file" id="admin-ai-input-' + dealId + '" accept=".pdf,.png,.jpg,.jpeg" multiple style="display:none" onchange="adminAIAddFiles(\'' + dealId + '\',this.files)">'
+    + '<input type="file" id="admin-ai-input-' + dealId + '" accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.xlsb,.csv,.tsv,.jpg,.jpeg,.png,.gif,.webp,.heic" multiple style="display:none" onchange="adminAIAddFiles(\'' + dealId + '\',this.files)">'
     + '</div>'
     + '<div class="admin-ai-filelist" id="admin-ai-list-' + dealId + '"></div>'
     + '<button class="admin-ai-btn" id="admin-ai-btn-' + dealId + '" style="display:none" onclick="adminAIAnalyse(\'' + dealId + '\')">✨ Analyse with AI</button>';

@@ -344,7 +344,7 @@ function renderDeals(deals) {
       + '<div class="rf-group"><label class="rf-label">Line Fee (%)</label><input class="rf-input" id="rf-line-' + d.id + '" type="number" step="0.01" placeholder="1.50" value="' + (existing && existing.offered_line_fee ? (existing.offered_line_fee*100).toFixed(2) : '') + '"></div>'
       + '<div class="rf-group"><label class="rf-label">App Fee (%)</label><input class="rf-input" id="rf-app-' + d.id + '" type="number" step="0.01" placeholder="1.00" value="' + (existing && existing.offered_app_fee ? (existing.offered_app_fee*100).toFixed(2) : '') + '"></div>'
       + '<div class="rf-group rf-full"><label class="rf-label">Conditions / Notes</label><textarea class="rf-input" id="rf-cond-' + d.id + '" rows="3" placeholder="Any conditions, requirements, or notes...">' + (existing && existing.conditions ? existing.conditions : '') + '</textarea></div>'
-      + '<div class="rf-group rf-full"><label class="rf-label">Upload Term Sheet (optional)</label><input type="file" id="rf-file-' + d.id + '" accept=".pdf,.doc,.docx"></div>'
+      + '<div class="rf-group rf-full"><label class="rf-label">Upload Term Sheet (optional)</label><input type="file" id="rf-file-' + d.id + '" accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.xlsb,.csv,.jpg,.jpeg,.png"></div>'
       + '<div class="rf-actions">'
       + '<button class="ld-btn primary" onclick="submitResponse(\'' + d.id + '\')">Submit</button>'
       + '<button class="ld-btn" onclick="hideResponseForm(\'' + d.id + '\')">Cancel</button>'

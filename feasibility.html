@@ -1703,7 +1703,7 @@ async function handleValuationFile(file){
         if(allUnits.length>0){
           document.getElementById('rs-unit-body').innerHTML='';rsUnitId=0;
           allUnits.forEach(function(u){
-            addRSUnit({lot:u.lot||'',addr:u.address||address||'',area:u.area||0,br:u.bedrooms||'',bath:u.bathrooms||'',park:u.parking||'',intArea:u.internalArea||0,val:u.valuationExGST||u.valuation||0,dateAdded:'',salePrice:u.valuation||0,forecastSale:'',actualSale:''});
+            addRSUnit({lot:u.lot||u.lotNumber||String(i+1),addr:u.address||u.streetAddress||address||'',area:u.area||u.landArea||u.totalArea||0,br:u.bedrooms||u.beds||'',bath:u.bathrooms||u.baths||'',park:u.parking||u.cars||u.carSpaces||'',intm:u.internalArea||u.internalM2||u.internal||0,val:u.valuationExGST||u.valuation||u.value||0,added:'',salePrice:u.salePrice||u.valuationExGST||u.valuation||0,saleFc:'',actualSale:''});
           });
           formatAllDollars();calcRes();
           var summary='✓ Extracted <strong>'+allUnits.length+' units</strong> from '+pageCount+' pages';
@@ -1754,13 +1754,13 @@ async function doExtract(base64,ext,msgDiv,li){
       units=data.unitBreakdown.map(function(u){return{
         lot:u.lot||u.unit||u.type||'',addr:u.address||data.address||'',area:u.area||u.landArea||0,
         br:u.beds||u.bedrooms||'',bath:u.baths||u.bathrooms||'',park:u.parking||u.cars||'',
-        intArea:u.internalArea||u.internal||0,val:u.value||u.price||u.valuation||0,
-        dateAdded:'',salePrice:u.price||u.value||u.valuation||0,forecastSale:'',actualSale:''
+        intm:u.internalArea||u.internalM2||u.internal||u.intArea||0,val:u.value||u.price||u.valuation||0,
+        added:'',salePrice:u.salePrice||u.valuationExGST||u.price||u.value||u.valuation||0,saleFc:'',actualSale:''
       };});
     }
     if(units.length===0&&data.units&&typeof data.units==='number'&&data.avgPrice){
       for(var i=0;i<data.units;i++){
-        units.push({lot:''+(i+1),addr:data.address||'',area:0,br:'',bath:'',park:'',intArea:0,val:data.avgPrice,dateAdded:'',salePrice:data.avgPrice,forecastSale:'',actualSale:''});
+        units.push({lot:''+(i+1),addr:data.address||data.projectName||'',area:0,br:'',bath:'',park:'',intm:0,val:data.avgPrice||data.avg_price||0,added:'',salePrice:data.avgPrice||data.avg_price||0,saleFc:'',actualSale:''});
       }
     }
 

@@ -147,7 +147,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
     <a href="admin.html" id="nav-admin" style="display:none">Admin</a>
     <a href="portal.html" class="active">My Deals</a>
     <a href="settlement.html">Settlement</a>
-    <a href="feasibility.html">Feasibility</a>
+    <a href="analysis.html">Analysis</a>
     <a href="credit-paper.html">Credit Paper</a>
     <a href="development-chat.html">+ New Deal</a>
   </div>
@@ -183,7 +183,7 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
       <div class="uz-icon">📄</div>
       <div class="uz-label"><strong>Click to upload</strong> or drag and drop</div>
       <div class="uz-hint">Valuation · Financials · QS Report · Loan Summary — PDF up to 20MB</div>
-      <input type="file" id="ai-file-input" accept=".pdf,.png,.jpg,.jpeg" multiple style="display:none" onchange="handleAIFiles(this.files)">
+      <input type="file" id="ai-file-input" accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,.xlsb,.csv,.tsv,.jpg,.jpeg,.png,.gif,.webp,.heic" multiple style="display:none" onchange="handleAIFiles(this.files)">
     </div>
     <div class="ai-file-list" id="ai-file-list"></div>
     <button class="ai-analyse-btn" id="ai-analyse-btn" style="display:none" onclick="runAIAnalysis()">✨ Analyse with AI</button>
