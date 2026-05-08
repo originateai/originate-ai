@@ -38,6 +38,12 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 .nav-right{display:flex;gap:6px;align-items:center}
 .nav-link{font-size:13px;color:var(--grey600);text-decoration:none;padding:7px 14px;border-radius:var(--radius);transition:all 0.15s;font-weight:500}
 .nav-link:hover{color:var(--teal);background:var(--teal-bg)}
+.nav-links{display:flex;gap:4px;align-items:center}
+.nav-links a{font-size:13px;color:var(--grey600);text-decoration:none;font-weight:500;padding:7px 12px;border-radius:var(--radius);transition:all 0.15s}
+.nav-links a:hover{color:var(--teal);background:var(--teal-bg)}
+.nav-links a.active{color:var(--teal-dark);background:var(--teal-subtle);font-weight:600}
+.nav-right{display:flex;align-items:center;gap:8px}
+
 .nav-link.active{color:var(--teal-dark);background:var(--teal-subtle);font-weight:600}
 
 .container{max-width:1400px;margin:0 auto;padding:28px 40px}
@@ -215,18 +221,18 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 <body>
 
 <nav class="nav">
-  <div style="display:flex;align-items:center">
-    <a class="nav-logo" href="admin.html">get<span>kredit.ai</span></a>
+  <a class="nav-logo" href="admin.html">get<span>kredit.ai</span></a>
+  <div class="nav-links">
+    <a href="admin.html" class="active" onclick="showAdminTab('deals',this);return false;">Dashboard</a>
+    <a href="analysis.html">Analysis</a>
+    <a href="credit-paper.html">Credit Paper</a>
+    <a href="settlement.html">Settlement</a>
   </div>
   <div class="nav-right">
-    <a class="nav-link active" href="#" onclick="showAdminTab('deals',this)">Dashboard</a>
-    <a class="nav-link" href="analysis.html">Analysis</a>
-    <a class="nav-link" href="credit-paper.html">Credit Paper</a>
-    <a class="nav-link" href="settlement.html">Settlement</a>
-    <a class="nav-link" href="#" onclick="showAdminTab('contacts',this)">Contacts</a>
-    <a class="nav-link" href="#" onclick="showAdminTab('lenders-tab',this)">Lenders</a>
-    <span id="nav-user" style="font-size:12px;color:var(--grey500);padding:7px 10px"></span>
-    <a class="nav-link" href="#" onclick="doLogout()" style="color:var(--red)">Sign Out</a>
+    <span id="nav-user" style="font-size:12px;color:var(--grey500);padding:0 8px"></span>
+    <a href="#" onclick="showAdminTab('contacts',this);return false;" class="nav-link">Contacts</a>
+    <a href="#" onclick="showAdminTab('lenders-tab',this);return false;" class="nav-link">Lenders</a>
+    <a href="#" onclick="doLogout()" class="nav-link" style="color:var(--red)">Sign Out</a>
   </div>
 </nav>
 
