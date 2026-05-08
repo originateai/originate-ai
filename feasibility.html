@@ -26,16 +26,17 @@ html,body{overflow-x:hidden;overflow-y:auto}
 --radius:8px;--radius-lg:12px;
 }
 body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50);min-height:100vh;font-size:13px}
-.nav{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:10}
-.nav-logo{font-family:'Source Serif 4',serif;font-size:21px;font-weight:700;color:var(--grey900);text-decoration:none}
+.nav{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:100}
+.nav-logo{font-family:'Source Serif 4',serif;font-size:21px;font-weight:700;color:var(--grey900);text-decoration:none;display:flex;align-items:baseline;gap:1px}
 .nav-logo span{color:var(--teal)}
 .nav-links{display:flex;gap:4px;align-items:center}
-.nav-links a{font-size:13px;color:var(--grey600);text-decoration:none;font-weight:500;padding:7px 12px;border-radius:var(--radius);transition:all 0.15s}
+.nav-links a{font-size:13px;color:var(--grey600);text-decoration:none;font-weight:500;padding:7px 14px;border-radius:var(--radius);transition:all 0.15s;white-space:nowrap}
 .nav-links a:hover{color:var(--teal);background:var(--teal-bg)}
 .nav-links a.active{color:var(--teal-dark);background:var(--teal-subtle);font-weight:600}
-.nav-right{display:flex;gap:12px;align-items:center}
-.nav-link{font-size:13px;color:var(--grey500);text-decoration:none;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);transition:all 0.15s;background:var(--white)}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-link{font-size:13px;color:var(--grey500);text-decoration:none;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);transition:all 0.15s;background:var(--white);white-space:nowrap;font-weight:500}
 .nav-link:hover{border-color:var(--teal);color:var(--teal)}
+.nav-link.active{color:var(--teal-dark);background:var(--teal-subtle);border-color:var(--teal-subtle);font-weight:600}
 .tab-bar{background:var(--white);border-bottom:1px solid var(--border);display:flex;gap:0;padding:0 40px;overflow-x:auto}
 .tab{padding:14px 20px;font-size:13px;font-weight:500;color:var(--grey500);cursor:pointer;border-bottom:2.5px solid transparent;transition:all 0.2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;white-space:nowrap}
 .tab:hover{color:var(--teal)}
@@ -176,8 +177,8 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
     <a href="settlement.html">Settlement</a>
   </div>
   <div class="nav-right">
-    <span id="nav-user" style="font-size:12px;color:var(--grey500);padding:0 8px"></span>
-    <a href="admin.html" class="nav-link">← Dashboard</a>
+    <span id="nav-user" style="font-size:12px;color:var(--grey500)"></span>
+    <a href="admin.html" class="nav-link">← Dashboard</a><a href="#" onclick="doLogout()" class="nav-link">Sign Out</a>
   </div>
 </nav>
 <div class="product-bar">
@@ -1550,7 +1551,7 @@ async function handleCopilotFile(file) {
   }
 }
 
-// Handle XLSX / CSV — convert to text via SheetJS and send to AI copilot
+// Handle XLSX / CSV — parse columns directly and populate the unit schedule table
 async function handleSpreadsheetFile(file) {
   var msgDiv = document.getElementById('ai-messages');
   msgDiv.innerHTML += '<div class="ai-user">📎 ' + file.name + ' (' + Math.round(file.size/1024) + 'KB)</div>';
@@ -1562,67 +1563,128 @@ async function handleSpreadsheetFile(file) {
     var reader = new FileReader();
     reader.onload = async function(e) {
       var typing = document.getElementById(typingId);
-
-      // Parse with SheetJS
       var wb = XLSX.read(e.target.result, { type: 'array' });
-      var textParts = [];
 
-      wb.SheetNames.forEach(function(name) {
-        var ws = wb.Sheets[name];
-        var csv = XLSX.utils.sheet_to_csv(ws, { blankrows: false });
-        // Trim to avoid giant files — send first 200 rows per sheet
-        var rows = csv.split('\n').filter(function(r) { return r.replace(/,/g,'').trim(); });
-        var trimmed = rows.slice(0, 200).join('\n');
-        if (trimmed.trim()) {
-          textParts.push('=== Sheet: ' + name + ' ===\n' + trimmed);
-        }
-      });
+      // Use first sheet
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false });
 
-      if (textParts.length === 0) {
+      if (!rows || rows.length === 0) {
         if (typing) typing.remove();
-        msgDiv.innerHTML += '<div class="ai-bot" style="color:var(--red)">Spreadsheet appears empty — nothing to extract.</div>';
+        msgDiv.innerHTML += '<div class="ai-bot" style="color:var(--red)">Spreadsheet appears empty or has no rows.</div>';
         msgDiv.scrollTop = msgDiv.scrollHeight;
         return;
       }
 
-      var spreadsheetText = textParts.join('\n\n');
-      if (typing) typing.textContent = '✦ Analysing with AI...';
+      // Normalise header keys — lowercase, strip spaces/punctuation
+      function norm(k) { return String(k).toLowerCase().replace(/[^a-z0-9]/g,''); }
 
-      // Get current deal context
-      var ctx = {};
-      try { ctx = getAIContext ? getAIContext() : {}; } catch(e) {}
+      // Column aliases — maps normalised header → our field
+      var aliases = {
+        lot:        ['lot','lotno','lotnumber','unit','unitno','number','no'],
+        addr:       ['address','streetaddress','street','addr','location','property','propertyaddress','fulladress','fulladdress'],
+        area:       ['area','landarea','totalarea','sitearea','m2','sqm','size'],
+        br:         ['br','bed','beds','bedroom','bedrooms'],
+        bath:       ['bath','baths','bathroom','bathrooms'],
+        park:       ['park','parking','car','cars','carspaces','carspace','garage'],
+        intm:       ['intm','internalarea','internal','internalm2','intarea','intm2','livingarea'],
+        val:        ['val','value','valuation','valuationexgst','valexgst','assessedvalue','valuationamount'],
+        salePrice:  ['saleprice','price','listprice','askingprice','reserveprice'],
+        saleFc:     ['forecastsale','saledate','expectedsale','settlementdate','forecast','salefcdate','targetdate'],
+        added:      ['dateadded','added','addeddate','valuationdate','valdate'],
+      };
 
-      var prompt = 'I have uploaded a spreadsheet file: ' + file.name + '\n\nContents:\n' + spreadsheetText + '\n\nPlease analyse this data in the context of my deal and tell me what you can see — key figures, income, costs, schedule, or anything relevant to a development finance assessment.';
-
-      try {
-        var res = await fetch('/.netlify/functions/ai-copilot', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: prompt, context: ctx, history: [] })
+      // Build a key map from the actual headers
+      var headers = Object.keys(rows[0]).map(norm);
+      var keyMap = {};
+      Object.keys(aliases).forEach(function(field) {
+        aliases[field].forEach(function(alias) {
+          headers.forEach(function(h, i) {
+            if (h === alias && !keyMap[field]) {
+              keyMap[field] = Object.keys(rows[0])[i];
+            }
+          });
         });
+      });
 
+      // Helper to get a value from a row
+      function get(row, field) {
+        var key = keyMap[field];
+        return key ? row[key] : '';
+      }
+
+      function toNum(v) {
+        if (!v) return 0;
+        var n = parseFloat(String(v).replace(/[^0-9.\-]/g,''));
+        return isNaN(n) ? 0 : n;
+      }
+
+      // Filter out rows that have no address AND no lot — likely header/footer rows
+      var dataRows = rows.filter(function(r) {
+        return get(r,'addr') || get(r,'lot') || toNum(get(r,'val')) > 0;
+      });
+
+      if (dataRows.length === 0) {
         if (typing) typing.remove();
-
-        if (!res.ok) {
-          msgDiv.innerHTML += '<div class="ai-bot" style="color:var(--red)">Error analysing spreadsheet (' + res.status + '). Try again.</div>';
-          msgDiv.scrollTop = msgDiv.scrollHeight;
-          return;
-        }
-
-        var data = await res.json();
-        var reply = (data && data.reply) ? data.reply : 'I read the spreadsheet but could not generate a summary.';
-        msgDiv.innerHTML += '<div style="background:var(--teal-bg);border-radius:12px 12px 12px 2px;padding:12px 14px;font-size:13px;color:var(--teal-dark);max-width:90%;line-height:1.6">' + reply.replace(/\n/g,'<br>') + '</div>';
+        msgDiv.innerHTML += '<div class="ai-bot" style="color:var(--red)">Could not find any property rows. Check column headers include Address, Lot, Value etc.</div>';
         msgDiv.scrollTop = msgDiv.scrollHeight;
+        return;
+      }
 
-      } catch(fetchErr) {
-        if (typing) typing.remove();
-        msgDiv.innerHTML += '<div class="ai-bot" style="color:var(--red)">Network error: ' + fetchErr.message + '</div>';
-        msgDiv.scrollTop = msgDiv.scrollHeight;
+      // Clear existing units and populate
+      var rsBody = document.getElementById('rs-unit-body');
+      if (rsBody) {
+        rsBody.innerHTML = '';
+        rsUnitId = 0;
+      }
+
+      var count = 0;
+      dataRows.forEach(function(row, i) {
+        var lot  = get(row,'lot')  || String(i+1);
+        var addr = get(row,'addr') || '';
+        var area = toNum(get(row,'area'));
+        var br   = get(row,'br')   || '';
+        var bath = get(row,'bath') || '';
+        var park = get(row,'park') || '';
+        var intm = toNum(get(row,'intm'));
+        var val  = toNum(get(row,'val'));
+        var sp   = toNum(get(row,'salePrice')) || val;
+        var saleFc = get(row,'saleFc') || '';
+        var added  = get(row,'added')  || '';
+
+        if (!addr && !lot && val === 0) return; // skip blank rows
+
+        addRSUnit({ lot:lot, addr:addr, area:area, br:br, bath:bath, park:park, intm:intm, val:val, salePrice:sp, saleFc:saleFc, added:added });
+        count++;
+      });
+
+      calcRes();
+
+      if (typing) typing.remove();
+      msgDiv.innerHTML += '<div style="background:var(--teal-bg);border-radius:12px 12px 12px 2px;padding:12px 14px;font-size:13px;color:var(--teal-dark);max-width:90%;line-height:1.6">✓ Imported <strong>' + count + ' units</strong> from <em>' + file.name + '</em>.<br>Columns mapped: ' + Object.keys(keyMap).join(', ') + '.<br>Check the unit schedule and adjust any missing fields manually.</div>';
+      msgDiv.scrollTop = msgDiv.scrollHeight;
+
+      // If we couldn't map address, send to AI for a chat analysis as fallback
+      if (!keyMap.addr) {
+        var csv = XLSX.utils.sheet_to_csv(ws, { blankrows: false });
+        var prompt = 'I uploaded a tenancy/unit schedule: ' + file.name + '. I could not auto-detect an address column. Here are the first 20 rows:\n\n' + csv.split('\n').slice(0,20).join('\n') + '\n\nWhat column contains the street address?';
+        try {
+          var ctx = {};
+          try { ctx = getAIContext ? getAIContext() : {}; } catch(ex) {}
+          var res = await fetch('/.netlify/functions/ai-copilot', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:prompt,context:ctx,history:[]}) });
+          var data = await res.json();
+          if (data && data.reply) {
+            msgDiv.innerHTML += '<div style="background:var(--teal-bg);border-radius:12px 12px 12px 2px;padding:12px 14px;font-size:13px;color:var(--teal-dark);max-width:90%;line-height:1.6">' + data.reply.replace(/\n/g,'<br>') + '</div>';
+            msgDiv.scrollTop = msgDiv.scrollHeight;
+          }
+        } catch(ex) {}
       }
     };
     reader.readAsArrayBuffer(file);
 
   } catch(err) {
+    var typing = document.getElementById(typingId);
+    if (typing) typing.remove();
     msgDiv.innerHTML += '<div class="ai-bot" style="color:var(--red)">Could not read spreadsheet: ' + err.message + '</div>';
     msgDiv.scrollTop = msgDiv.scrollHeight;
   }

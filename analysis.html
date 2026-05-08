@@ -26,16 +26,17 @@ html,body{overflow-x:hidden;overflow-y:auto}
 --radius:8px;--radius-lg:12px;
 }
 body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50);min-height:100vh;font-size:13px}
-.nav{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:10}
-.nav-logo{font-family:'Source Serif 4',serif;font-size:21px;font-weight:700;color:var(--grey900);text-decoration:none}
+.nav{height:64px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 40px;position:sticky;top:0;z-index:100}
+.nav-logo{font-family:'Source Serif 4',serif;font-size:21px;font-weight:700;color:var(--grey900);text-decoration:none;display:flex;align-items:baseline;gap:1px}
 .nav-logo span{color:var(--teal)}
 .nav-links{display:flex;gap:4px;align-items:center}
-.nav-links a{font-size:13px;color:var(--grey600);text-decoration:none;font-weight:500;padding:7px 12px;border-radius:var(--radius);transition:all 0.15s}
+.nav-links a{font-size:13px;color:var(--grey600);text-decoration:none;font-weight:500;padding:7px 14px;border-radius:var(--radius);transition:all 0.15s;white-space:nowrap}
 .nav-links a:hover{color:var(--teal);background:var(--teal-bg)}
 .nav-links a.active{color:var(--teal-dark);background:var(--teal-subtle);font-weight:600}
-.nav-right{display:flex;gap:12px;align-items:center}
-.nav-link{font-size:13px;color:var(--grey500);text-decoration:none;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);transition:all 0.15s;background:var(--white)}
+.nav-right{display:flex;align-items:center;gap:8px}
+.nav-link{font-size:13px;color:var(--grey500);text-decoration:none;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);transition:all 0.15s;background:var(--white);white-space:nowrap;font-weight:500}
 .nav-link:hover{border-color:var(--teal);color:var(--teal)}
+.nav-link.active{color:var(--teal-dark);background:var(--teal-subtle);border-color:var(--teal-subtle);font-weight:600}
 .tab-bar{background:var(--white);border-bottom:1px solid var(--border);display:flex;gap:0;padding:0 40px;overflow-x:auto}
 .tab{padding:14px 20px;font-size:13px;font-weight:500;color:var(--grey500);cursor:pointer;border-bottom:2.5px solid transparent;transition:all 0.2s;background:none;border-top:none;border-left:none;border-right:none;font-family:'DM Sans',sans-serif;white-space:nowrap}
 .tab:hover{color:var(--teal)}
@@ -176,8 +177,8 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
     <a href="settlement.html">Settlement</a>
   </div>
   <div class="nav-right">
-    <span id="nav-user" style="font-size:12px;color:var(--grey500);padding:0 8px"></span>
-    <a href="admin.html" class="nav-link">← Dashboard</a>
+    <span id="nav-user" style="font-size:12px;color:var(--grey500)"></span>
+    <a href="admin.html" class="nav-link">← Dashboard</a><a href="#" onclick="doLogout()" class="nav-link">Sign Out</a>
   </div>
 </nav>
 <div class="product-bar">
