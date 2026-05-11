@@ -1599,15 +1599,22 @@ function copyAdminNarrative(dealId) {
 }
 
 async function init() {
+  // Loop guard — prevent redirect bouncing
+  var redirectCount = parseInt(sessionStorage.getItem('gk_redirect_count') || '0');
+  if (redirectCount > 2) {
+    sessionStorage.removeItem('gk_redirect_count');
+    document.body.innerHTML = '<div style="padding:40px;font-family:Arial;color:#0f172a"><h2>Session error</h2><p>Please <a href="login.html">sign in again</a>.</p></div>';
+    return;
+  }
+  sessionStorage.removeItem('gk_redirect_count');
+
   // Auth check
   var session = await sb.auth.getSession();
-  if (!session.data.session) { window.location.href = "login.html"; return; }
+  if (!session.data.session) { sessionStorage.setItem("gk_redirect_count", String(parseInt(sessionStorage.getItem("gk_redirect_count")||"0")+1)); window.location.href = "login.html"; return; }
 
   var user = session.data.session.user;
-  var role = user.user_metadata && user.user_metadata.role;
-  if (role !== 'admin' && role !== 'broker') {
-    window.location.href = "login.html"; return;
-  }
+  var role = (user.user_metadata && user.user_metadata.role) || 'broker';
+  // Allow any authenticated user — role defaults to broker
 
   // Load profile and show name in nav
   try {
