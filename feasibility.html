@@ -1551,143 +1551,174 @@ async function handleCopilotFile(file) {
   }
 }
 
-// Handle XLSX / CSV — parse columns directly and populate the unit schedule table
+// Handle XLSX / CSV — parse columns and populate unit schedule directly
 async function handleSpreadsheetFile(file) {
   var msgDiv = document.getElementById('ai-messages');
   msgDiv.innerHTML += '<div class="ai-user">📎 ' + file.name + ' (' + Math.round(file.size/1024) + 'KB)</div>';
-  var typingId = 'ai-typing-' + Date.now();
-  msgDiv.innerHTML += '<div class="ai-typing" id="' + typingId + '">✦ Reading spreadsheet...</div>';
+  var typId = 'tp-' + Date.now();
+  msgDiv.innerHTML += '<div class="ai-typing" id="' + typId + '">✦ Reading spreadsheet...</div>';
   msgDiv.scrollTop = msgDiv.scrollHeight;
+  function gt() { return document.getElementById(typId); }
 
-  try {
-    var reader = new FileReader();
-    reader.onload = async function(e) {
-      var typing = document.getElementById(typingId);
+  var reader = new FileReader();
+  reader.onerror = function() {
+    gt() && gt().remove();
+    msgDiv.innerHTML += '<div class="ai-bot" style="color:var(--red)">Could not read file.</div>';
+  };
+  reader.onload = function(e) {
+    try {
       var wb = XLSX.read(e.target.result, { type: 'array' });
-
-      // Use first sheet
       var ws = wb.Sheets[wb.SheetNames[0]];
-      var rows = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false });
+      // Get raw rows including header row
+      var allRows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
 
-      if (!rows || rows.length === 0) {
-        if (typing) typing.remove();
-        msgDiv.innerHTML += '<div class="ai-bot" style="color:var(--red)">Spreadsheet appears empty or has no rows.</div>';
+      if (!allRows || allRows.length < 2) {
+        gt() && gt().remove();
+        msgDiv.innerHTML += '<div class="ai-bot" style="color:var(--red)">Spreadsheet appears empty or has no data rows.</div>';
         msgDiv.scrollTop = msgDiv.scrollHeight;
         return;
       }
 
-      // Normalise header keys — lowercase, strip spaces/punctuation
-      function norm(k) { return String(k).toLowerCase().replace(/[^a-z0-9]/g,''); }
-
-      // Column aliases — maps normalised header → our field
-      var aliases = {
-        lot:        ['lot','lotno','lotnumber','unit','unitno','number','no'],
-        addr:       ['address','streetaddress','street','addr','location','property','propertyaddress','fulladress','fulladdress'],
-        area:       ['area','landarea','totalarea','sitearea','m2','sqm','size'],
-        br:         ['br','bed','beds','bedroom','bedrooms'],
-        bath:       ['bath','baths','bathroom','bathrooms'],
-        park:       ['park','parking','car','cars','carspaces','carspace','garage'],
-        intm:       ['intm','internalarea','internal','internalm2','intarea','intm2','livingarea'],
-        val:        ['val','value','valuation','valuationexgst','valexgst','assessedvalue','valuationamount'],
-        salePrice:  ['saleprice','price','listprice','askingprice','reserveprice'],
-        saleFc:     ['forecastsale','saledate','expectedsale','settlementdate','forecast','salefcdate','targetdate'],
-        added:      ['dateadded','added','addeddate','valuationdate','valdate'],
-      };
-
-      // Build a key map from the actual headers
-      var headers = Object.keys(rows[0]).map(norm);
-      var keyMap = {};
-      Object.keys(aliases).forEach(function(field) {
-        aliases[field].forEach(function(alias) {
-          headers.forEach(function(h, i) {
-            if (h === alias && !keyMap[field]) {
-              keyMap[field] = Object.keys(rows[0])[i];
-            }
-          });
-        });
-      });
-
-      // Helper to get a value from a row
-      function get(row, field) {
-        var key = keyMap[field];
-        return key ? row[key] : '';
+      // Find the header row — first row with 3+ non-empty cells
+      var headerRowIdx = 0;
+      for (var h = 0; h < Math.min(10, allRows.length); h++) {
+        var nonEmpty = allRows[h].filter(function(c){ return String(c).trim() !== ''; }).length;
+        if (nonEmpty >= 3) { headerRowIdx = h; break; }
       }
 
+      var rawHeaders = allRows[headerRowIdx].map(function(h){ return String(h||'').trim(); });
+
+      // Fuzzy match — normalise then find closest
+      function norm(s) { return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+      var nHeaders = rawHeaders.map(norm);
+
+      function findCol(candidates) {
+        for (var i = 0; i < candidates.length; i++) {
+          var cn = norm(candidates[i]);
+          var idx = nHeaders.indexOf(cn);
+          if (idx > -1) return idx;
+          // Partial match
+          for (var j = 0; j < nHeaders.length; j++) {
+            if (nHeaders[j].indexOf(cn) > -1 || cn.indexOf(nHeaders[j]) > -1) return j;
+          }
+        }
+        return -1;
+      }
+
+      // Column candidates — order matters (most specific first)
+      var cols = {
+        lot:  findCol(['lot no','lot#','lot number','lotno','unit no','unit number','unitno','s.no','sno','serial','lot']),
+        addr: findCol(['property name','property address','street address','address','unit address','location','description','property']),
+        area: findCol(['land area','site area','lot area','total area','area m2','area','m2','sqm']),
+        br:   findCol(['bedrooms','bedroom','beds','br']),
+        bath: findCol(['bathrooms','bathroom','baths','bath']),
+        park: findCol(['car spaces','carspaces','parking','cars','car','park']),
+        intm: findCol(['internal area','internal m2','int area','int. (m','floor area','living area','internal']),
+        val:  findCol(['val (excl gst)','valuation excl','val excl','value excl','nrv','valuation','value','val']),
+        sp:   findCol(['sale price','saleprice','contract price','list price','asking price','price']),
+        sfc:  findCol(['forecast sale','settlement date','sale date','expected sale','forecast']),
+        add:  findCol(['date added','valuation date','added']),
+      };
+
+      function getCell(row, colIdx) {
+        if (colIdx < 0 || colIdx >= row.length) return '';
+        return String(row[colIdx]||'').trim();
+      }
       function toNum(v) {
-        if (!v) return 0;
         var n = parseFloat(String(v).replace(/[^0-9.\-]/g,''));
         return isNaN(n) ? 0 : n;
       }
+      function toDate(v) {
+        if (!v) return '';
+        // Excel date serial number
+        if (typeof v === 'number') {
+          var d = new Date(Math.round((v - 25569) * 86400 * 1000));
+          return d.toISOString().split('T')[0];
+        }
+        // DD/MM/YYYY → YYYY-MM-DD
+        var m = String(v).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) return m[3] + '-' + m[2].padStart(2,'0') + '-' + m[1].padStart(2,'0');
+        return String(v);
+      }
 
-      // Filter out rows that have no address AND no lot — likely header/footer rows
-      var dataRows = rows.filter(function(r) {
-        return get(r,'addr') || get(r,'lot') || toNum(get(r,'val')) > 0;
+      // Data rows start after header
+      var dataRows = allRows.slice(headerRowIdx + 1).filter(function(row) {
+        var addr = getCell(row, cols.addr);
+        var lot  = getCell(row, cols.lot);
+        var val  = toNum(getCell(row, cols.val));
+        var sp   = toNum(getCell(row, cols.sp));
+        return addr || lot || val > 0 || sp > 0;
       });
 
-      if (dataRows.length === 0) {
-        if (typing) typing.remove();
-        msgDiv.innerHTML += '<div class="ai-bot" style="color:var(--red)">Could not find any property rows. Check column headers include Address, Lot, Value etc.</div>';
+      if (!dataRows.length) {
+        gt() && gt().remove();
+        msgDiv.innerHTML += '<div class="ai-bot" style="color:var(--red)">No data rows found.<br>Headers detected: ' + rawHeaders.filter(Boolean).join(', ') + '</div>';
         msgDiv.scrollTop = msgDiv.scrollHeight;
         return;
       }
 
-      // Clear existing units and populate
+      // Switch to Residual Stock → Security Pool
+      showProduct('residual');
+      showResTab('rs-stock');
+
+      // Clear existing units
       var rsBody = document.getElementById('rs-unit-body');
-      if (rsBody) {
-        rsBody.innerHTML = '';
-        rsUnitId = 0;
-      }
+      if (rsBody) { rsBody.innerHTML = ''; rsUnitId = 0; }
 
       var count = 0;
       dataRows.forEach(function(row, i) {
-        var lot  = get(row,'lot')  || String(i+1);
-        var addr = get(row,'addr') || '';
-        var area = toNum(get(row,'area'));
-        var br   = get(row,'br')   || '';
-        var bath = get(row,'bath') || '';
-        var park = get(row,'park') || '';
-        var intm = toNum(get(row,'intm'));
-        var val  = toNum(get(row,'val'));
-        var sp   = toNum(get(row,'salePrice')) || val;
-        var saleFc = get(row,'saleFc') || '';
-        var added  = get(row,'added')  || '';
+        var rawAddr = getCell(row, cols.addr);
+        var rawLot  = getCell(row, cols.lot);
 
-        if (!addr && !lot && val === 0) return; // skip blank rows
+        // Split "Unit G04/123 Smith Street" format
+        var lot, addr;
+        var m = rawAddr.match(/^(Unit\s+\S+)\/(.*)/i);
+        if (m) {
+          lot  = rawLot || m[1].trim();
+          addr = m[2].replace(/\s*\(.*?\)\s*$/, '').trim();
+        } else {
+          lot  = rawLot || String(i + 1);
+          addr = rawAddr.replace(/\s*\(.*?\)\s*$/, '').trim();
+        }
 
-        addRSUnit({ lot:lot, addr:addr, area:area, br:br, bath:bath, park:park, intm:intm, val:val, salePrice:sp, saleFc:saleFc, added:added });
+        var val = toNum(getCell(row, cols.val));
+        var sp  = toNum(getCell(row, cols.sp)) || val;
+        if (!addr && !lot && val === 0 && sp === 0) return;
+
+        addRSUnit({
+          lot:      lot,
+          addr:     addr,
+          area:     toNum(getCell(row, cols.area)),
+          br:       getCell(row, cols.br),
+          bath:     getCell(row, cols.bath),
+          park:     getCell(row, cols.park),
+          intm:     toNum(getCell(row, cols.intm)),
+          val:      val,
+          salePrice:sp,
+          saleFc:   toDate(getCell(row, cols.sfc)),
+          added:    toDate(getCell(row, cols.add)),
+        });
         count++;
       });
 
       calcRes();
+      gt() && gt().remove();
 
-      if (typing) typing.remove();
-      msgDiv.innerHTML += '<div style="background:var(--teal-bg);border-radius:12px 12px 12px 2px;padding:12px 14px;font-size:13px;color:var(--teal-dark);max-width:90%;line-height:1.6">✓ Imported <strong>' + count + ' units</strong> from <em>' + file.name + '</em>.<br>Columns mapped: ' + Object.keys(keyMap).join(', ') + '.<br>Check the unit schedule and adjust any missing fields manually.</div>';
+      var mappedCols = Object.keys(cols).filter(function(k){ return cols[k] > -1; })
+        .map(function(k){ return rawHeaders[cols[k]]; }).filter(Boolean);
+
+      msgDiv.innerHTML += '<div style="background:var(--teal-bg);border-radius:12px 12px 12px 2px;padding:12px 14px;font-size:13px;color:var(--teal-dark);line-height:1.6">'
+        + '✓ Imported <strong>' + count + ' units</strong> into the Security Pool.<br>'
+        + '<span style="font-size:12px;opacity:0.8">Columns found: ' + mappedCols.join(', ') + '</span></div>';
       msgDiv.scrollTop = msgDiv.scrollHeight;
 
-      // If we couldn't map address, send to AI for a chat analysis as fallback
-      if (!keyMap.addr) {
-        var csv = XLSX.utils.sheet_to_csv(ws, { blankrows: false });
-        var prompt = 'I uploaded a tenancy/unit schedule: ' + file.name + '. I could not auto-detect an address column. Here are the first 20 rows:\n\n' + csv.split('\n').slice(0,20).join('\n') + '\n\nWhat column contains the street address?';
-        try {
-          var ctx = {};
-          try { ctx = getAIContext ? getAIContext() : {}; } catch(ex) {}
-          var res = await fetch('/.netlify/functions/ai-copilot', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:prompt,context:ctx,history:[]}) });
-          var data = await res.json();
-          if (data && data.reply) {
-            msgDiv.innerHTML += '<div style="background:var(--teal-bg);border-radius:12px 12px 12px 2px;padding:12px 14px;font-size:13px;color:var(--teal-dark);max-width:90%;line-height:1.6">' + data.reply.replace(/\n/g,'<br>') + '</div>';
-            msgDiv.scrollTop = msgDiv.scrollHeight;
-          }
-        } catch(ex) {}
-      }
-    };
-    reader.readAsArrayBuffer(file);
-
-  } catch(err) {
-    var typing = document.getElementById(typingId);
-    if (typing) typing.remove();
-    msgDiv.innerHTML += '<div class="ai-bot" style="color:var(--red)">Could not read spreadsheet: ' + err.message + '</div>';
-    msgDiv.scrollTop = msgDiv.scrollHeight;
-  }
+    } catch(err) {
+      gt() && gt().remove();
+      msgDiv.innerHTML += '<div class="ai-bot" style="color:var(--red)">Error reading spreadsheet: ' + err.message + '</div>';
+      msgDiv.scrollTop = msgDiv.scrollHeight;
+    }
+  };
+  reader.readAsArrayBuffer(file);
 }
 
 async function handleValuationFile(file){
@@ -2219,11 +2250,14 @@ function getModelContext(){
       if(inps.length>=2) ctx.costs.push({name:inps[0].value,amount:inps[1].value});
     });
   } else if(PRODUCT==='residual'){
-    ctx.units=document.querySelectorAll('#rs-unit-body tr').length;
-    ctx.collateral=document.getElementById('rs-tot-val')?document.getElementById('rs-tot-val').textContent:'';
-    ctx.loanBalance=document.getElementById('rs-init-advance')?document.getElementById('rs-init-advance').textContent:'';
-    ctx.lvr=document.getElementById('rs-init-lvr')?document.getElementById('rs-init-lvr').value+'%':'';
-    ctx.rate=document.getElementById('rs-applied-rate')?document.getElementById('rs-applied-rate').textContent:'';
+    ctx.productType = 'residual';
+    ctx.loanType = 'Residual Stock — completed titled units, no presales required, no construction risk';
+    ctx.units = document.querySelectorAll('#rs-unit-body tr').length;
+    ctx.totalSecurityPool = document.getElementById('rs-tot-val') ? document.getElementById('rs-tot-val').textContent : '';
+    ctx.totalDebtAlloc = document.getElementById('rs-tot-debt') ? document.getElementById('rs-tot-debt').textContent : '';
+    ctx.loanAmount = document.getElementById('rs-init-advance') ? document.getElementById('rs-init-advance').textContent : '';
+    ctx.lvr = document.getElementById('rs-init-lvr') ? document.getElementById('rs-init-lvr').value + '%' : '';
+    ctx.interestRate = document.getElementById('rs-applied-rate') ? document.getElementById('rs-applied-rate').textContent : '';
   }
   return ctx;
 }
