@@ -448,6 +448,8 @@ body{font-family:'DM Sans',sans-serif;color:var(--text);background:var(--grey50)
 var SUPABASE_URL = SUPABASE_CONFIG.url;
 var SUPABASE_KEY = SUPABASE_CONFIG.key;
 var sb = (typeof supabase !== 'undefined' && supabase.createClient) ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Google Maps key — add to Netlify env vars as GMAPS_KEY, or maps show as address text
+var GMAPS_KEY = '';
 
 var allDeals = [];
 var currentFilter = "all";
@@ -854,7 +856,7 @@ async function generateFundingRequest(dealId) {
     + '</div></div>';
 
   if (d.address) {
-    html += '<div class="map"><img src="https://maps.googleapis.com/maps/api/staticmap?center=' + encodeURIComponent(d.address) + '&zoom=15&size=760x200&markers=color:0x0D9488|' + encodeURIComponent(d.address) + '&key=' + GMAPS_KEY + '" width="100%" style="display:block;border-radius:8px"></div>';
+    html += GMAPS_KEY ? '<div class="map"><img src="https://maps.googleapis.com/maps/api/staticmap?center=' + encodeURIComponent(d.address) + '&zoom=15&size=760x200&markers=color:0x0D9488|' + encodeURIComponent(d.address) + '&key=' + GMAPS_KEY + '" width="100%" style="display:block;border-radius:8px"></div>' : '<div style="padding:8px 0;font-size:13px;color:#64748b">📍 ' + d.address + '</div>';
   }
 
   html += '<div class="section"><div class="section-head">Borrower & Project</div>'
@@ -1618,7 +1620,7 @@ async function init() {
 
   // Load profile and show name in nav
   try {
-    var { data: profile } = await sb.from('profiles').select('full_name,company_name,phone').eq('id', user.id).single();
+    var { data: profile } = await sb.from('profiles').select('full_name,company_name,phone').eq('id', user.id).maybeSingle();
     window._brokerProfile = profile || {};
     var displayName = (profile && profile.full_name) || user.email.split('@')[0];
     var navUser = document.getElementById('nav-user');
@@ -1993,7 +1995,7 @@ function generateFundingRequest(dealId) {
   var today = new Date().toLocaleDateString("en-AU", {day:"2-digit",month:"long",year:"numeric"});
   var ref = "GK-" + new Date().getFullYear() + "-" + String(Math.floor(Math.random()*900)+100);
 
-  var mapHtml = d.address ? '<iframe width="100%" height="200" style="border:0;border-radius:8px;margin-bottom:20px" loading="lazy" src="https://www.google.com/maps/embed/v1/place?key=' + GMAPS_KEY + '&q=' + encodeURIComponent(d.address) + '&zoom=15"></iframe>' : '';
+  var mapHtml = (d.address && GMAPS_KEY) ? '<iframe width="100%" height="200" style="border:0;border-radius:8px;margin-bottom:20px" loading="lazy" src="https://www.google.com/maps/embed/v1/place?key=' + GMAPS_KEY + '&q=' + encodeURIComponent(d.address) + '&zoom=15"></iframe>' : d.address ? '<div style="padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:20px;font-size:14px">📍 ' + d.address + '</div>' : '';
 
   var html = '<div style="text-align:center;margin-bottom:30px">'
     + '<div style="font-family:Source Serif 4,serif;font-size:28px;font-weight:700;color:#0f172a">get<span style="color:#0D9488">kredit.ai</span></div>'
